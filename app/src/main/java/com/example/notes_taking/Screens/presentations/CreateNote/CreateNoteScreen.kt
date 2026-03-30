@@ -191,35 +191,47 @@ fun BasicTextField_Title(value: String, onValueChange: (String) -> Unit) {
 // ======= Content TextField =======
 @Composable
 fun BasicTextField_Content(value: String, onValueChange: (String) -> Unit) {
-    TextField(
-        value = value, onValueChange = onValueChange, placeholder = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+    ) {
+        if (value.isEmpty()) {
+            Row(
+                verticalAlignment = Alignment.Top,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            ) {
                 Text(
-                    text = "Note something down or click on image to upload image ",
+                    text = "Note something down or click on image to upload image",
                     fontSize = 15.sp,
                     fontFamily = ManropeFontFamily,
                     color = Color(0xFFCCCCCC),
-                    modifier = Modifier.weight(1f)
                 )
                 Icon(
                     painter = painterResource(id = R.drawable.imageicon),
                     contentDescription = null,
                     tint = Color(0xFFCCCCCC),
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier
+                        .size(20.dp)
+                        .padding(top = 2.dp)
                 )
             }
-        }, textStyle = TextStyle(
-            fontSize = 15.sp,
-            fontFamily = ManropeFontFamily,
-            color = TextPrimary,
-            lineHeight = 22.sp
-        ), colors = TextFieldDefaults.colors(
-            unfocusedContainerColor = Color.Transparent,
-            focusedContainerColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            focusedIndicatorColor = Color.Transparent
-        ), modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight(), maxLines = Int.MAX_VALUE
-    )
+        }
+
+        TextField(
+            value = value, onValueChange = onValueChange, textStyle = TextStyle(
+                fontSize = 15.sp,
+                fontFamily = ManropeFontFamily,
+                color = TextPrimary,
+                lineHeight = 22.sp
+            ), colors = TextFieldDefaults.colors(
+                unfocusedContainerColor = Color.Transparent,
+                focusedContainerColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent
+            ), modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(), maxLines = Int.MAX_VALUE
+        )
+    }
 }

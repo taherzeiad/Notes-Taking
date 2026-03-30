@@ -30,7 +30,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
         scale.animateTo(
             targetValue = 1f, animationSpec = tween(durationMillis = 800)
         )
-        delay(2000)
+        delay(1000)
         onSplashFinished()
     }
 
