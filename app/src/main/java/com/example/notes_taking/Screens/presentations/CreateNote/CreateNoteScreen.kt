@@ -3,8 +3,10 @@ package com.example.notes_taking.Screens.presentations.CreateNote
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -191,47 +193,40 @@ fun BasicTextField_Title(value: String, onValueChange: (String) -> Unit) {
 // ======= Content TextField =======
 @Composable
 fun BasicTextField_Content(value: String, onValueChange: (String) -> Unit) {
-    Box(
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        textStyle = TextStyle(
+            fontSize = 15.sp,
+            fontFamily = ManropeFontFamily,
+            color = TextPrimary,
+            lineHeight = 22.sp
+        ),
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
-    ) {
-        if (value.isEmpty()) {
-            Row(
-                verticalAlignment = Alignment.Top,
-                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-            ) {
-                Text(
-                    text = "Note something down or click on image to upload image",
-                    fontSize = 15.sp,
-                    fontFamily = ManropeFontFamily,
-                    color = Color(0xFFCCCCCC),
-                )
-                Icon(
-                    painter = painterResource(id = R.drawable.imageicon),
-                    contentDescription = null,
-                    tint = Color(0xFFCCCCCC),
-                    modifier = Modifier
-                        .size(20.dp)
-                        .padding(top = 2.dp)
-                )
+            .padding(start = 16.dp, top = 4.dp),
+        decorationBox = { innerTextField ->
+            Box {
+                if (value.isEmpty()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Note something down or click on image to upload image ",
+                            fontSize = 15.sp,
+                            fontFamily = ManropeFontFamily,
+                            color = Color(0xFFCCCCCC)
+                        )
+                        Icon(
+                            imageVector = Icons.Outlined.Image,
+                            contentDescription = null,
+                            tint = Color(0xFFCCCCCC),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+                innerTextField() // ← المؤشر والنص بنفس موقع الـ placeholder تماماً
             }
-        }
-
-        TextField(
-            value = value, onValueChange = onValueChange, textStyle = TextStyle(
-                fontSize = 15.sp,
-                fontFamily = ManropeFontFamily,
-                color = TextPrimary,
-                lineHeight = 22.sp
-            ), colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Color.Transparent,
-                focusedContainerColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent
-            ), modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(), maxLines = Int.MAX_VALUE
-        )
-    }
+        })
 }
