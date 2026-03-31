@@ -2,6 +2,7 @@ package com.example.notes_taking.Screens.presentations.Home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -12,6 +13,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -97,22 +100,76 @@ fun HomeScreen(onAddNote: () -> Unit) {
             // ======= Header =======
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "All Notes",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = ManropeFontFamily,
-                        color = TextPrimary
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = null,
-                        tint = TextPrimary
-                    )
+
+                // State للقائمة
+                var expanded by remember { mutableStateOf(false) }
+                var selectedFilter by remember { mutableStateOf("All Notes") }
+
+                val filterOptions = listOf("All Notes", "Pinned Notes", "Others")
+
+                Box {
+                    // زر الـ Header
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { expanded = true }
+                    ) {
+                        Text(
+                            text = selectedFilter,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = ManropeFontFamily,
+                            color = TextPrimary
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = if (expanded)
+                                Icons.Default.ArrowDropUp
+                            else
+                                Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            tint = TextPrimary
+                        )
+                    }
+
+                    // القائمة المنسدلة
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier
+                            .background(CardWhite)
+                            .clip(RoundedCornerShape(12.dp))
+                    ) {
+                        filterOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = option,
+                                        fontFamily = ManropeFontFamily,
+                                        fontSize = 15.sp,
+                                        color = if (option == selectedFilter) FabColor else TextPrimary,
+                                        fontWeight = if (option == selectedFilter)
+                                            FontWeight.Bold
+                                        else
+                                            FontWeight.Normal
+                                    )
+                                },
+                                onClick = {
+                                    selectedFilter = option
+                                    expanded = false
+                                },
+                                leadingIcon = {
+                                    if (option == selectedFilter) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = FabColor,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            )
+                        }
+                    }
                 }
             }
 
