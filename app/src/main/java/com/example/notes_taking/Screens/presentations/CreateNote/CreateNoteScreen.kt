@@ -1,16 +1,20 @@
 package com.example.notes_taking.Screens.presentations.CreateNote
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.Spellcheck
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -140,6 +144,89 @@ fun CreateNoteScreen(onBack: () -> Unit) {
                 })
         }
 
+        // ======= Gemini Button =======
+        var geminiMenuExpanded by remember { mutableStateOf(false) }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 16.dp, bottom = 88.dp)
+        ) {
+            IconButton(
+                onClick = { geminiMenuExpanded = true },
+                modifier = Modifier.size(48.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.gemini_icon),
+                    contentDescription = "Gemini",
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+
+            DropdownMenu(
+                expanded = geminiMenuExpanded,
+                onDismissRequest = { geminiMenuExpanded = false },
+                modifier = Modifier
+                    .background(Color.White)
+                    .clip(RoundedCornerShape(12.dp))
+            ) {
+                // ======= Rephrase =======
+                DropdownMenuItem(
+                    text = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AutoAwesome,
+                                contentDescription = null,
+                                tint = Color(0xFF4285F4),
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = "Rephrase Text",
+                                fontFamily = ManropeFontFamily,
+                                fontSize = 14.sp,
+                                color = TextPrimary
+                            )
+                        }
+                    },
+                    onClick = {
+                        geminiMenuExpanded = false
+                        // TODO: Rephrase
+                    }
+                )
+
+                HorizontalDivider(color = Color(0xFFF0F0F0))
+
+                // ======= Diacritize =======
+                DropdownMenuItem(
+                    text = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Spellcheck,
+                                contentDescription = null,
+                                tint = Color(0xFF4285F4),
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = "Diacritize Text",
+                                fontFamily = ManropeFontFamily,
+                                fontSize = 14.sp,
+                                color = TextPrimary
+                            )
+                        }
+                    },
+                    onClick = {
+                        geminiMenuExpanded = false
+                        // TODO: Diacritize
+                    }
+                )
+            }
+        }
         // ======= Save Button =======
         Button(
             onClick = { /* حفظ النوتة */ },
