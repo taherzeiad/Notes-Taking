@@ -1,12 +1,18 @@
 package com.example.notes_taking.Screens.presentations.CreateNote
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Spellcheck
@@ -27,6 +33,8 @@ import com.example.notes_taking.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 
 @Composable
 fun CreateNoteScreen(onBack: () -> Unit) {
@@ -37,10 +45,19 @@ fun CreateNoteScreen(onBack: () -> Unit) {
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
     var date by remember { mutableStateOf(currentDate) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
 
     // Undo / Redo stacks
     val undoStack = remember { mutableStateListOf<String>() }
     val redoStack = remember { mutableStateListOf<String>() }
+
+    // ======= Image Picker =======
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedImageUri = uri
+    }
 
     val context = LocalContext.current
 
@@ -136,12 +153,16 @@ fun CreateNoteScreen(onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(16.dp))
 
             // ======= Content Field =======
-            BasicTextField_Content(
-                value = content, onValueChange = { newValue ->
-                    undoStack.add(content)
-                    redoStack.clear()
-                    content = newValue
-                })
+            // ======= Content + Image =======
+            BasicTextField_Content(value = content, onValueChange = { newValue ->
+                undoStack.add(content)
+                redoStack.clear()
+                content = newValue
+            }, selectedImageUri = selectedImageUri, onImageClick = {
+                imagePickerLauncher.launch("image/*") // ← فتح المعرض
+            }, onRemoveImage = {
+                selectedImageUri = null // ← حذف الصورة
+            })
         }
 
         // ======= Gemini Button =======
@@ -272,49 +293,91 @@ fun BasicTextField_Title(value: String, onValueChange: (String) -> Unit) {
 
 // ======= Content TextField =======
 @Composable
-fun BasicTextField_Content(value: String, onValueChange: (String) -> Unit) {
-    BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        textStyle = TextStyle(
-            fontSize = 15.sp,
-            fontFamily = ManropeFontFamily,
-            color = TextPrimary,
-            lineHeight = 22.sp
-        ),
+fun BasicTextField_Content(
+    value: String,
+    onValueChange: (String) -> Unit,
+    selectedImageUri: Uri?,        // ← استقبال الصورة
+    onImageClick: () -> Unit,      // ← فتح المعرض
+    onRemoveImage: () -> Unit      // ← حذف الصورة
+) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .padding(start = 16.dp, top = 4.dp),
-        decorationBox = { innerTextField ->
-            Box {
-                if (value.isEmpty()) {
-                    Column {
-                        Text(
-                            text = "Note something down or click on image to",
-                            fontSize = 15.sp,
-                            fontFamily = ManropeFontFamily,
-                            color = Color(0xFFCCCCCC)
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+            .padding(start = 16.dp, top = 4.dp)
+    ) {
+        // ======= عرض الصورة إذا موجودة =======
+        if (selectedImageUri != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .padding(bottom = 12.dp)
+            ) {
+                AsyncImage(
+                    model = selectedImageUri,
+                    contentDescription = "Selected Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(12.dp))
+                )
+                // زر حذف الصورة
+                IconButton(
+                    onClick = onRemoveImage,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(4.dp)
+                        .size(28.dp)
+                        .background(Color.Black.copy(alpha = 0.4f), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Remove Image",
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        }
+
+        // ======= حقل النص =======
+        BasicTextField(
+            value = value, onValueChange = onValueChange, textStyle = TextStyle(
+                fontSize = 15.sp,
+                fontFamily = ManropeFontFamily,
+                color = TextPrimary,
+                lineHeight = 22.sp
+            ), modifier = Modifier.fillMaxWidth(), decorationBox = { innerTextField ->
+                Box {
+                    if (value.isEmpty() && selectedImageUri == null) {
+                        Column {
                             Text(
-                                text = "upload image ",
+                                text = "Note something down or click on image to",
                                 fontSize = 15.sp,
                                 fontFamily = ManropeFontFamily,
                                 color = Color(0xFFCCCCCC)
                             )
-                            Icon(
-                                imageVector = Icons.Outlined.Image,
-                                contentDescription = null,
-                                tint = Color(0xFFCCCCCC),
-                                modifier = Modifier.size(18.dp)
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "upload image ",
+                                    fontSize = 15.sp,
+                                    fontFamily = ManropeFontFamily,
+                                    color = Color(0xFFCCCCCC)
+                                )
+                                // ← أيقونة الصورة قابلة للضغط
+                                Icon(
+                                    imageVector = Icons.Outlined.Image,
+                                    contentDescription = null,
+                                    tint = Color(0xFFCCCCCC),
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .clickable { onImageClick() })
+                            }
                         }
                     }
+                    innerTextField()
                 }
-                innerTextField() // ← المؤشر والنص بنفس موقع الـ placeholder تماماً
-            }
-        })
+            })
+    }
 }
