@@ -153,8 +153,7 @@ fun CreateNoteScreen(onBack: () -> Unit) {
                 .padding(start = 16.dp, bottom = 88.dp)
         ) {
             IconButton(
-                onClick = { geminiMenuExpanded = true },
-                modifier = Modifier.size(48.dp)
+                onClick = { geminiMenuExpanded = true }, modifier = Modifier.size(48.dp)
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.gemini_icon),
@@ -171,60 +170,54 @@ fun CreateNoteScreen(onBack: () -> Unit) {
                     .clip(RoundedCornerShape(12.dp))
             ) {
                 // ======= Rephrase =======
-                DropdownMenuItem(
-                    text = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.AutoAwesome,
-                                contentDescription = null,
-                                tint = Color(0xFF4285F4),
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Text(
-                                text = "Rephrase Text",
-                                fontFamily = ManropeFontFamily,
-                                fontSize = 14.sp,
-                                color = TextPrimary
-                            )
-                        }
-                    },
-                    onClick = {
-                        geminiMenuExpanded = false
-                        // TODO: Rephrase
+                DropdownMenuItem(text = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.AutoAwesome,
+                            contentDescription = null,
+                            tint = Color(0xFF4285F4),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = "Rephrase Text",
+                            fontFamily = ManropeFontFamily,
+                            fontSize = 14.sp,
+                            color = TextPrimary
+                        )
                     }
-                )
+                }, onClick = {
+                    geminiMenuExpanded = false
+                    // TODO: Rephrase
+                })
 
                 HorizontalDivider(color = Color(0xFFF0F0F0))
 
                 // ======= Diacritize =======
-                DropdownMenuItem(
-                    text = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Spellcheck,
-                                contentDescription = null,
-                                tint = Color(0xFF4285F4),
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Text(
-                                text = "Diacritize Text",
-                                fontFamily = ManropeFontFamily,
-                                fontSize = 14.sp,
-                                color = TextPrimary
-                            )
-                        }
-                    },
-                    onClick = {
-                        geminiMenuExpanded = false
-                        // TODO: Diacritize
+                DropdownMenuItem(text = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Spellcheck,
+                            contentDescription = null,
+                            tint = Color(0xFF4285F4),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = "Diacritize Text",
+                            fontFamily = ManropeFontFamily,
+                            fontSize = 14.sp,
+                            color = TextPrimary
+                        )
                     }
-                )
+                }, onClick = {
+                    geminiMenuExpanded = false
+                    // TODO: Diacritize
+                })
             }
         }
         // ======= Save Button =======
@@ -296,21 +289,29 @@ fun BasicTextField_Content(value: String, onValueChange: (String) -> Unit) {
         decorationBox = { innerTextField ->
             Box {
                 if (value.isEmpty()) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Column {
                         Text(
-                            text = "Note something down or click on image to upload image ",
+                            text = "Note something down or click on image to",
                             fontSize = 15.sp,
                             fontFamily = ManropeFontFamily,
                             color = Color(0xFFCCCCCC)
                         )
-                        Icon(
-                            imageVector = Icons.Outlined.Image,
-                            contentDescription = null,
-                            tint = Color(0xFFCCCCCC),
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "upload image ",
+                                fontSize = 15.sp,
+                                fontFamily = ManropeFontFamily,
+                                color = Color(0xFFCCCCCC)
+                            )
+                            Icon(
+                                imageVector = Icons.Outlined.Image,
+                                contentDescription = null,
+                                tint = Color(0xFFCCCCCC),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
                 innerTextField() // ← المؤشر والنص بنفس موقع الـ placeholder تماماً
