@@ -35,6 +35,8 @@ import java.util.Date
 import java.util.Locale
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
+import com.example.notes_taking.API.GeminiService
+import kotlinx.coroutines.launch
 
 @Composable
 fun CreateNoteScreen(onBack: () -> Unit) {
@@ -51,6 +53,10 @@ fun CreateNoteScreen(onBack: () -> Unit) {
     // Undo / Redo stacks
     val undoStack = remember { mutableStateListOf<String>() }
     val redoStack = remember { mutableStateListOf<String>() }
+
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
 
     // ======= Image Picker =======
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -152,16 +158,15 @@ fun CreateNoteScreen(onBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ======= Content Field =======
             // ======= Content + Image =======
             BasicTextField_Content(value = content, onValueChange = { newValue ->
                 undoStack.add(content)
                 redoStack.clear()
                 content = newValue
             }, selectedImageUri = selectedImageUri, onImageClick = {
-                imagePickerLauncher.launch("image/*") // ← فتح المعرض
+                imagePickerLauncher.launch("image/*")
             }, onRemoveImage = {
-                selectedImageUri = null // ← حذف الصورة
+                selectedImageUri = null
             })
         }
 
@@ -211,7 +216,32 @@ fun CreateNoteScreen(onBack: () -> Unit) {
                     }
                 }, onClick = {
                     geminiMenuExpanded = false
-                    // TODO: Rephrase
+                    if (content.isBlank()) {
+                        errorMessage = "Please write something first!"
+                    } else {
+                        // داخل الـ onClick الخاص بـ Rephrase أو Diacritize
+                        scope.launch {
+                            isLoading = true
+                            errorMessage = null // تصغير رسالة الخطأ السابقة
+                            try {
+                                content = GeminiService.rephraseText(content)
+                            } catch (e: com.google.ai.client.generativeai.type.ResponseStoppedException) {
+                                errorMessage = "Error: Content was blocked by safety filters."
+                            } catch (e: com.google.ai.client.generativeai.type.ServerException) {
+                                errorMessage =
+                                    "Error: Gemini server is busy or down. Try again later."
+                            } catch (e: java.net.UnknownHostException) {
+                                errorMessage =
+                                    "Error: No internet connection. Please check your network."
+                            } catch (e: Exception) {
+                                // إظهار اسم الخطأ ورسالته بالتفصيل
+                                errorMessage =
+                                    "Detail: ${e.javaClass.simpleName} - ${e.localizedMessage}"
+                            } finally {
+                                isLoading = false
+                            }
+                        }
+                    }
                 })
 
                 HorizontalDivider(color = Color(0xFFF0F0F0))
@@ -237,8 +267,63 @@ fun CreateNoteScreen(onBack: () -> Unit) {
                     }
                 }, onClick = {
                     geminiMenuExpanded = false
-                    // TODO: Diacritize
+                    if (content.isBlank()) {
+                        errorMessage = "Please write something first!"
+                    } else {
+                        scope.launch {
+                            isLoading = true
+                            try {
+                                content = GeminiService.diacritizeText(content)
+                            } catch (e: Exception) {
+                                errorMessage = "Error: ${e.message}"
+                            } finally {
+                                isLoading = false
+                            }
+                        }
+                    }
                 })
+            }
+        }
+        // ======= Loading =======
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.3f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFF4285F4))
+                        Text(
+                            text = "Gemini is thinking...",
+                            fontFamily = ManropeFontFamily,
+                            fontSize = 14.sp,
+                            color = TextPrimary
+                        )
+                    }
+                }
+            }
+        }
+
+        // ======= Error =======
+        errorMessage?.let { msg ->
+            Snackbar(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(16.dp), action = {
+                    TextButton(onClick = { errorMessage = null }) {
+                        Text("OK", color = Color.White)
+                    }
+                }) {
+                Text(text = msg, fontFamily = ManropeFontFamily)
             }
         }
         // ======= Save Button =======
@@ -262,6 +347,7 @@ fun CreateNoteScreen(onBack: () -> Unit) {
                 color = TextSecondary
             )
         }
+
     }
 }
 
