@@ -35,7 +35,7 @@ import java.util.Date
 import java.util.Locale
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
-import com.example.notes_taking.API.GeminiService
+import com.example.notes_taking.API.GroqService
 import kotlinx.coroutines.launch
 
 @Composable
@@ -182,7 +182,7 @@ fun CreateNoteScreen(onBack: () -> Unit) {
                 onClick = { geminiMenuExpanded = true }, modifier = Modifier.size(48.dp)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.gemini_icon),
+                    painter = painterResource(id = R.drawable.grok),
                     contentDescription = "Gemini",
                     modifier = Modifier.size(36.dp)
                 )
@@ -219,24 +219,18 @@ fun CreateNoteScreen(onBack: () -> Unit) {
                     if (content.isBlank()) {
                         errorMessage = "Please write something first!"
                     } else {
-                        // داخل الـ onClick الخاص بـ Rephrase أو Diacritize
                         scope.launch {
                             isLoading = true
-                            errorMessage = null // تصغير رسالة الخطأ السابقة
+                            errorMessage = null
                             try {
-                                content = GeminiService.rephraseText(content)
-                            } catch (e: com.google.ai.client.generativeai.type.ResponseStoppedException) {
-                                errorMessage = "Error: Content was blocked by safety filters."
-                            } catch (e: com.google.ai.client.generativeai.type.ServerException) {
-                                errorMessage =
-                                    "Error: Gemini server is busy or down. Try again later."
-                            } catch (e: java.net.UnknownHostException) {
-                                errorMessage =
-                                    "Error: No internet connection. Please check your network."
+                                content = GroqService.rephraseText(content)
                             } catch (e: Exception) {
-                                // إظهار اسم الخطأ ورسالته بالتفصيل
-                                errorMessage =
-                                    "Detail: ${e.javaClass.simpleName} - ${e.localizedMessage}"
+                                errorMessage = when {
+                                    e.message?.contains("401") == true -> "Error: Invalid API Key. Check Groq Console."
+                                    e.message?.contains("429") == true -> "Error: Rate limit exceeded. Try again in a moment."
+                                    e.message?.contains("Unable to resolve host") == true -> "Error: No internet connection."
+                                    else -> "Something went wrong: ${e.localizedMessage}"
+                                }
                             } finally {
                                 isLoading = false
                             }
@@ -273,7 +267,7 @@ fun CreateNoteScreen(onBack: () -> Unit) {
                         scope.launch {
                             isLoading = true
                             try {
-                                content = GeminiService.diacritizeText(content)
+                                content = GroqService.diacritizeText(content)
                             } catch (e: Exception) {
                                 errorMessage = "Error: ${e.message}"
                             } finally {
@@ -303,7 +297,7 @@ fun CreateNoteScreen(onBack: () -> Unit) {
                     ) {
                         CircularProgressIndicator(color = Color(0xFF4285F4))
                         Text(
-                            text = "Gemini is thinking...",
+                            text = "AI is thinking...",
                             fontFamily = ManropeFontFamily,
                             fontSize = 14.sp,
                             color = TextPrimary
