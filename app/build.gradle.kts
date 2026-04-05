@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    id("kotlin-kapt")
+    kotlin("kapt")
 }
 
 android {
@@ -52,6 +54,8 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.contentpager)
+  //  implementation(libs.androidx.room3.common.jvm)
+  //  implementation(libs.androidx.room3.runtime)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -70,4 +74,11 @@ dependencies {
 
     // OkHttp للتصحيح (Logging) - مهم جداً لمعرفة سبب الرفض من السيرفر
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    val room_version = "2.6.1" // أو النسخة التي تستخدمها
+
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+
+    // هذا هو السطر المفقود الذي سيقوم بإنشاء NoteDatabase_Impl
+    kapt("androidx.room:room-compiler:$room_version")
 }

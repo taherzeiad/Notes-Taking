@@ -39,7 +39,7 @@ import com.example.notes_taking.API.GroqService
 import kotlinx.coroutines.launch
 
 @Composable
-fun CreateNoteScreen(onBack: () -> Unit) {
+fun CreateNoteScreen(onBack: () -> Unit, viewModel: NoteViewModel) {
 
     val sdf = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
     val currentDate = remember { sdf.format(Date()) }
@@ -49,12 +49,12 @@ fun CreateNoteScreen(onBack: () -> Unit) {
     var date by remember { mutableStateOf(currentDate) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
+    val errorMsg by viewModel.errorMessage.collectAsState()
 
     // Undo / Redo stacks
     val undoStack = remember { mutableStateListOf<String>() }
     val redoStack = remember { mutableStateListOf<String>() }
 
-    var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
@@ -170,7 +170,7 @@ fun CreateNoteScreen(onBack: () -> Unit) {
             })
         }
 
-        // ======= Gemini Button =======
+        // ======= Grok Button =======
         var geminiMenuExpanded by remember { mutableStateOf(false) }
 
         Box(
@@ -183,7 +183,7 @@ fun CreateNoteScreen(onBack: () -> Unit) {
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.grok),
-                    contentDescription = "Gemini",
+                    contentDescription = "Grok",
                     modifier = Modifier.size(36.dp)
                 )
             }
@@ -216,24 +216,10 @@ fun CreateNoteScreen(onBack: () -> Unit) {
                     }
                 }, onClick = {
                     geminiMenuExpanded = false
-                    if (content.isBlank()) {
-                        errorMessage = "Please write something first!"
-                    } else {
-                        scope.launch {
-                            isLoading = true
-                            errorMessage = null
-                            try {
-                                content = GroqService.rephraseText(content)
-                            } catch (e: Exception) {
-                                errorMessage = when {
-                                    e.message?.contains("401") == true -> "Error: Invalid API Key. Check Groq Console."
-                                    e.message?.contains("429") == true -> "Error: Rate limit exceeded. Try again in a moment."
-                                    e.message?.contains("Unable to resolve host") == true -> "Error: No internet connection."
-                                    else -> "Something went wrong: ${e.localizedMessage}"
-                                }
-                            } finally {
-                                isLoading = false
-                            }
+                    if (content.isNotBlank()) {
+                        viewModel.rephrase(content) { newText ->
+                            undoStack.add(content)
+                            content = newText
                         }
                     }
                 })
@@ -260,26 +246,19 @@ fun CreateNoteScreen(onBack: () -> Unit) {
                         )
                     }
                 }, onClick = {
-                    geminiMenuExpanded = false
-                    if (content.isBlank()) {
-                        errorMessage = "Please write something first!"
-                    } else {
-                        scope.launch {
-                            isLoading = true
-                            try {
-                                content = GroqService.diacritizeText(content)
-                            } catch (e: Exception) {
-                                errorMessage = "Error: ${e.message}"
-                            } finally {
-                                isLoading = false
-                            }
+                    geminiMenuExpanded = false // أغلق القائمة
+                    if (content.isNotBlank()) {
+                        // نستخدم الـ ViewModel لتوحيد الـ Loading والـ Error
+                        viewModel.diacritize(content) { newText ->
+                            undoStack.add(content)
+                            content = newText
                         }
                     }
                 })
             }
         }
         // ======= Loading =======
-        if (isLoading) {
+        if (viewModel.isLoading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -308,21 +287,32 @@ fun CreateNoteScreen(onBack: () -> Unit) {
         }
 
         // ======= Error =======
-        errorMessage?.let { msg ->
+        errorMsg?.let { msg ->
             Snackbar(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(16.dp), action = {
-                    TextButton(onClick = { errorMessage = null }) {
+                    TextButton(onClick = { viewModel.clearError() }) { // دالة لتصفير الخطأ في الـ ViewModel
                         Text("OK", color = Color.White)
                     }
                 }) {
                 Text(text = msg, fontFamily = ManropeFontFamily)
             }
         }
+        // ======= تحديث زر الحفظ =======
+        val isSaveEnabled = title.isNotBlank() && (content.isNotBlank() || selectedImageUri != null)
         // ======= Save Button =======
         Button(
-            onClick = { /* حفظ النوتة */ },
+            onClick = {
+                viewModel.saveNote(
+                    title = title,
+                    content = content,
+                    imageUri = selectedImageUri?.toString(),
+                    date = date,
+                    onSuccess = onBack
+                )
+            },
+            enabled = isSaveEnabled && !viewModel.isLoading,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
@@ -330,15 +320,16 @@ fun CreateNoteScreen(onBack: () -> Unit) {
                 .height(56.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFF0E6DF)
+                containerColor = FabColor, contentColor = Color(0xFFFFFFFF),
+
+                disabledContainerColor = Color(0x8F4A3728), disabledContentColor = Color(0xFFFFFFFF)
             )
         ) {
             Text(
                 text = "Save Note",
                 fontSize = 16.sp,
                 fontFamily = ManropeFontFamily,
-                fontWeight = FontWeight.Medium,
-                color = TextSecondary
+                fontWeight = FontWeight.Medium
             )
         }
 
