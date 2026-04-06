@@ -9,5 +9,6 @@ data class Note(
     val title: String,
     val content: String,
     val date: String,
-    val imageUri: String? = null
+    val imageUri: String? = null,
+    val isPinned: Boolean = false
 )

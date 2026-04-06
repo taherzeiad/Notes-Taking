@@ -1,6 +1,5 @@
 package com.example.notes_taking.Screens.presentations.Home
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,13 +8,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowDropUp
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,68 +19,45 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.notes_taking.R
-import com.example.notes_taking.ui.theme.BackgroundColor
-import com.example.notes_taking.ui.theme.CardPurple
-import com.example.notes_taking.ui.theme.CardWhite
-import com.example.notes_taking.ui.theme.CardYellow
-import com.example.notes_taking.ui.theme.FabColor
-import com.example.notes_taking.ui.theme.ManropeFontFamily
-import com.example.notes_taking.ui.theme.TextPrimary
-import com.example.notes_taking.ui.theme.TextSecondary
+import com.example.notes_taking.RoomDatabase.Note
+import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModel
+import com.example.notes_taking.ui.theme.*
 
-// ======= Data Class =======
-data class Note(
-    val id: Int,
-    val title: String,
-    val date: String,
-    val preview: String,
-    val isPinned: Boolean = false,
-    val cardColor: Color = CardWhite,
-    val imageRes: Int? = null
-)
-
-// ======= Sample Data =======
-val sampleNotes = listOf(
-    Note(
-        1,
-        "Untitled",
-        "14/09/2023",
-        "Lorem Ipsum is simply dummy text of the prin...",
-        isPinned = true,
-        cardColor = CardYellow
-    ), Note(
-        2,
-        "Travel Plan",
-        "2h Ago",
-        "Lorem Ipsum is simply dummy text of the prin...",
-        isPinned = true,
-        cardColor = CardPurple
-    ), Note(
-        2,
-        "Travel Plan",
-        "2h Ago",
-        "Lorem Ipsum is simply dummy text of the prin...",
-        isPinned = true,
-        cardColor = CardPurple
-    ), Note(3, "Accounts", "Yesterday", "Lorem Ipsum is simply dummy text of the prin..."), Note(
-        4,
-        "Movies List",
-        "14/09/2023",
-        "Lorem Ipsum is simply dummy text of the prin...",
-        imageRes = R.drawable.movies_bg
-    ), Note(5, "Todo's 2023 Plan", "01/01/2023", "Lorem Ipsum is simply dummy text of the prin...")
-)
-
-// ======= Main Screen =======
 @Composable
-fun HomeScreen(onAddNote: () -> Unit) {
-    var searchQuery by remember { mutableStateOf("") }
+fun HomeScreen(
+    onAddNote: () -> Unit, onEditNote: (Int) -> Unit, viewModel: NoteViewModel
+) {
 
-    val pinnedNotes = sampleNotes.filter { it.isPinned }
-    val otherNotes = sampleNotes.filter { !it.isPinned }
+    val notes by viewModel.allNotes.collectAsState(initial = emptyList())
+
+    var searchQuery by remember { mutableStateOf("") }
+    var expanded by remember { mutableStateOf(false) }
+    var selectedFilter by remember { mutableStateOf("All Notes") }
+
+    val filterOptions = listOf("All Notes", "Pinned Notes", "Others")
+
+    // فلترة حسب البحث
+    val searchedNotes = notes.filter {
+        it.title.contains(searchQuery, ignoreCase = true) || it.content.contains(
+            searchQuery, ignoreCase = true
+        )
+    }
+
+    // فلترة حسب الاختيار
+    val pinnedNotes = when (selectedFilter) {
+        "Others" -> emptyList()
+        else -> searchedNotes.filter { it.isPinned }
+    }
+
+    val otherNotes = when (selectedFilter) {
+        "Pinned Notes" -> emptyList()
+        else -> searchedNotes.filter { !it.isPinned }
+    }
 
     Box(
         modifier = Modifier
@@ -97,22 +70,14 @@ fun HomeScreen(onAddNote: () -> Unit) {
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+
             // ======= Header =======
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // State للقائمة
-                var expanded by remember { mutableStateOf(false) }
-                var selectedFilter by remember { mutableStateOf("All Notes") }
-
-                val filterOptions = listOf("All Notes", "Pinned Notes", "Others")
-
                 Box {
-                    // زر الـ Header
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable { expanded = true }
-                    ) {
+                        modifier = Modifier.clickable { expanded = true }) {
                         Text(
                             text = selectedFilter,
                             fontSize = 24.sp,
@@ -120,54 +85,41 @@ fun HomeScreen(onAddNote: () -> Unit) {
                             fontFamily = ManropeFontFamily,
                             color = TextPrimary
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
                         Icon(
-                            imageVector = if (expanded)
-                                Icons.Default.ArrowDropUp
-                            else
-                                Icons.Default.ArrowDropDown,
+                            imageVector = if (expanded) Icons.Default.ArrowDropUp
+                            else Icons.Default.ArrowDropDown,
                             contentDescription = null,
                             tint = TextPrimary
                         )
                     }
 
-                    // القائمة المنسدلة
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
-                        modifier = Modifier
-                            .background(CardWhite)
-                            .clip(RoundedCornerShape(12.dp))
+                        modifier = Modifier.background(CardWhite)
                     ) {
                         filterOptions.forEach { option ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = option,
-                                        fontFamily = ManropeFontFamily,
-                                        fontSize = 15.sp,
-                                        color = if (option == selectedFilter) FabColor else TextPrimary,
-                                        fontWeight = if (option == selectedFilter)
-                                            FontWeight.Bold
-                                        else
-                                            FontWeight.Normal
+                            DropdownMenuItem(text = {
+                                Text(
+                                    text = option,
+                                    fontFamily = ManropeFontFamily,
+                                    fontSize = 15.sp,
+                                    color = if (option == selectedFilter) FabColor else TextPrimary,
+                                    fontWeight = if (option == selectedFilter) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }, onClick = {
+                                selectedFilter = option
+                                expanded = false
+                            }, leadingIcon = {
+                                if (option == selectedFilter) {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = null,
+                                        tint = FabColor,
+                                        modifier = Modifier.size(18.dp)
                                     )
-                                },
-                                onClick = {
-                                    selectedFilter = option
-                                    expanded = false
-                                },
-                                leadingIcon = {
-                                    if (option == selectedFilter) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = null,
-                                            tint = FabColor,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
                                 }
-                            )
+                            })
                         }
                     }
                 }
@@ -185,57 +137,83 @@ fun HomeScreen(onAddNote: () -> Unit) {
                     },
                     leadingIcon = {
                         Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            tint = TextSecondary
+                            Icons.Default.Search, contentDescription = null, tint = TextSecondary
                         )
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = FabColor.copy(alpha = 0.5f),
                         unfocusedContainerColor = CardWhite,
-                        focusedContainerColor = CardWhite
+                        focusedContainerColor = CardWhite,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedBorderColor = FabColor.copy(alpha = 0.5f)
                     ),
                     singleLine = true
                 )
             }
 
             // ======= Pinned Section =======
-            item {
-                Text(
-                    text = "Pinned",
-                    fontSize = 14.sp,
-                    fontFamily = ManropeFontFamily,
-                    color = TextSecondary,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            item {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(pinnedNotes) { note ->
-                        PinnedNoteCard(note = note)
+            if (pinnedNotes.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "Pinned",
+                        fontSize = 14.sp,
+                        fontFamily = ManropeFontFamily,
+                        color = TextSecondary,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+                item {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(pinnedNotes) { note ->
+                            PinnedNoteCard(
+                                note = note,
+                                onClick = { onEditNote(note.id) },
+                                onUnpin = { viewModel.togglePin(note) })
+                        }
                     }
                 }
             }
 
             // ======= Others Section =======
-            item {
-                Text(
-                    text = "Others",
-                    fontSize = 14.sp,
-                    fontFamily = ManropeFontFamily,
-                    color = TextSecondary,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+            if (otherNotes.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "Others",
+                        fontSize = 14.sp,
+                        fontFamily = ManropeFontFamily,
+                        color = TextSecondary,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+                items(otherNotes) { note ->
+                    OtherNoteCard(
+                        note = note,
+                        onDelete = { viewModel.deleteNote(note) },
+                        onClick = { onEditNote(note.id) },
+                        onPin = { viewModel.togglePin(note) })
+                }
             }
 
-            items(otherNotes) { note ->
-                OtherNoteCard(note = note)
+            // ======= Empty State =======
+            if (pinnedNotes.isEmpty() && otherNotes.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 100.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No notes yet!\nTap + to add one",
+                            color = TextSecondary,
+                            fontFamily = ManropeFontFamily,
+                            fontSize = 16.sp
+                        )
+                    }
+                }
             }
 
             item { Spacer(modifier = Modifier.height(80.dp)) }
@@ -243,7 +221,7 @@ fun HomeScreen(onAddNote: () -> Unit) {
 
         // ======= FAB =======
         FloatingActionButton(
-            onClick = { onAddNote() },
+            onClick = onAddNote,
             containerColor = FabColor,
             shape = CircleShape,
             modifier = Modifier
@@ -262,107 +240,30 @@ fun HomeScreen(onAddNote: () -> Unit) {
 
 // ======= Pinned Note Card =======
 @Composable
-fun PinnedNoteCard(note: Note) {
+fun PinnedNoteCard(note: Note, onClick: () -> Unit, onUnpin: () -> Unit) {
     Card(
         modifier = Modifier
             .width(160.dp)
-            .height(160.dp),
+            .height(160.dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = note.cardColor),
+        colors = CardDefaults.cardColors(containerColor = CardYellow),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(14.dp)
-        ) {
-            Text(
-                text = note.title,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                fontFamily = ManropeFontFamily,
-                color = TextPrimary
-            )
-            Text(
-                text = note.date,
-                fontSize = 12.sp,
-                fontFamily = ManropeFontFamily,
-                color = TextSecondary
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = note.preview,
-                fontSize = 13.sp,
-                fontFamily = ManropeFontFamily,
-                color = TextPrimary.copy(alpha = 0.8f),
-                lineHeight = 18.sp
-            )
-        }
-    }
-}
-
-// ======= Other Note Card =======
-@Composable
-fun OtherNoteCard(note: Note) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
-        elevation = CardDefaults.cardElevation(0.dp)
-    ) {
-        // إذا فيه صورة
-        if (note.imageRes != null) {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Image(
-                    painter = painterResource(id = note.imageRes),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp)
-                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                )
-                // overlay داكن فوق الصورة
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp)
-                        .background(
-                            Color.Black.copy(alpha = 0.35f),
-                            RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
-                        )
-                )
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(12.dp)
-                ) {
-                    Text(
-                        text = note.title,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        fontFamily = ManropeFontFamily,
-                        color = Color.White
-                    )
-                    Text(
-                        text = note.date,
-                        fontSize = 12.sp,
-                        fontFamily = ManropeFontFamily,
-                        color = Color.White.copy(alpha = 0.8f)
-                    )
-                }
-            }
-        }
-
-        // النص دائماً موجود
-        Column(modifier = Modifier.padding(14.dp)) {
-            if (note.imageRes == null) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(14.dp)
+            ) {
                 Text(
                     text = note.title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = ManropeFontFamily,
-                    color = TextPrimary
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = note.date,
@@ -371,14 +272,151 @@ fun OtherNoteCard(note: Note) {
                     color = TextSecondary
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = note.content,
+                    fontSize = 13.sp,
+                    fontFamily = ManropeFontFamily,
+                    color = TextPrimary.copy(alpha = 0.8f),
+                    lineHeight = 18.sp,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
-            Text(
-                text = note.preview,
-                fontSize = 13.sp,
-                fontFamily = ManropeFontFamily,
-                color = TextPrimary.copy(alpha = 0.8f),
-                lineHeight = 18.sp
-            )
+
+            // زر إلغاء التثبيت
+            IconButton(
+                onClick = onUnpin, modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(28.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PushPin,
+                    contentDescription = "Unpin",
+                    tint = FabColor,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+    }
+}
+
+// ======= Other Note Card =======
+@Composable
+fun OtherNoteCard(
+    note: Note, onClick: () -> Unit, onDelete: () -> Unit, onPin: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Column {
+            // صورة إن وجدت
+            if (!note.imageUri.isNullOrEmpty()) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    AsyncImage(
+                        model = note.imageUri,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                            .background(
+                                Color.Black.copy(alpha = 0.35f),
+                                RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                            )
+                    )
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(12.dp)
+                    ) {
+                        Text(
+                            text = note.title,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = ManropeFontFamily,
+                            color = Color.White
+                        )
+                        Text(
+                            text = note.date,
+                            fontSize = 12.sp,
+                            fontFamily = ManropeFontFamily,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+            }
+
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        if (note.imageUri.isNullOrEmpty()) {
+                            Text(
+                                text = note.title,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = ManropeFontFamily,
+                                color = TextPrimary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = note.date,
+                                fontSize = 12.sp,
+                                fontFamily = ManropeFontFamily,
+                                color = TextSecondary
+                            )
+                        }
+                    }
+
+                    // أزرار التثبيت والحذف
+                    Row {
+                        IconButton(onClick = onPin, modifier = Modifier.size(36.dp)) {
+                            Icon(
+                                imageVector = Icons.Default.PushPin,
+                                contentDescription = "Pin",
+                                tint = TextSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete",
+                                tint = TextSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+
+                if (note.content.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = note.content,
+                        fontSize = 13.sp,
+                        fontFamily = ManropeFontFamily,
+                        color = TextPrimary.copy(alpha = 0.8f),
+                        lineHeight = 18.sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
         }
     }
 }

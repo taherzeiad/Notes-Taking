@@ -15,6 +15,9 @@ interface NoteDao {
     @Query("SELECT * FROM notes_table ORDER BY id DESC")
     fun getAllNotes(): Flow<List<Note>>
 
+    @Query("SELECT * FROM notes_table WHERE id = :noteId LIMIT 1")
+    suspend fun getNoteById(noteId: Int): Note?
+
     @Delete
     suspend fun deleteNote(note: Note)
 }

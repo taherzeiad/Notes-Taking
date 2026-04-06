@@ -35,11 +35,9 @@ import java.util.Date
 import java.util.Locale
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
-import com.example.notes_taking.API.GroqService
-import kotlinx.coroutines.launch
 
 @Composable
-fun CreateNoteScreen(onBack: () -> Unit, viewModel: NoteViewModel) {
+fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) {
 
     val sdf = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
     val currentDate = remember { sdf.format(Date()) }
@@ -58,12 +56,29 @@ fun CreateNoteScreen(onBack: () -> Unit, viewModel: NoteViewModel) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
+    LaunchedEffect(noteId) {
+        if (noteId > 0) {
+            // جلب البيانات من الـ ViewModel
+            val note = viewModel.getNoteById(noteId)
+
+            // إذا وجدت الملاحظة، نملأ الحقول
+            note?.let {
+                title = it.title
+                content = it.content
+                date = it.date
+                // تحويل الـ String URI المخزن في قاعدة البيانات إلى Uri الخاص بـ Compose
+                selectedImageUri = it.imageUri?.let { uriString -> Uri.parse(uriString) }
+            }
+        }
+    }
+
     // ======= Image Picker =======
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         selectedImageUri = uri
     }
+
 
     val context = LocalContext.current
 
@@ -72,6 +87,7 @@ fun CreateNoteScreen(onBack: () -> Unit, viewModel: NoteViewModel) {
             .fillMaxSize()
             .background(Color.White)
     ) {
+
 
         Column(
             modifier = Modifier
@@ -101,7 +117,7 @@ fun CreateNoteScreen(onBack: () -> Unit, viewModel: NoteViewModel) {
                     Spacer(modifier = Modifier.width(4.dp))
 
                     Text(
-                        text = "Create Note",
+                        text = if (noteId > 0) "Edit Note" else "Create Note",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = ManropeFontFamily,
@@ -246,9 +262,8 @@ fun CreateNoteScreen(onBack: () -> Unit, viewModel: NoteViewModel) {
                         )
                     }
                 }, onClick = {
-                    geminiMenuExpanded = false // أغلق القائمة
+                    geminiMenuExpanded = false
                     if (content.isNotBlank()) {
-                        // نستخدم الـ ViewModel لتوحيد الـ Loading والـ Error
                         viewModel.diacritize(content) { newText ->
                             undoStack.add(content)
                             content = newText
@@ -304,13 +319,24 @@ fun CreateNoteScreen(onBack: () -> Unit, viewModel: NoteViewModel) {
         // ======= Save Button =======
         Button(
             onClick = {
-                viewModel.saveNote(
-                    title = title,
-                    content = content,
-                    imageUri = selectedImageUri?.toString(),
-                    date = date,
-                    onSuccess = onBack
-                )
+                if (noteId > 0) {
+                    viewModel.updateNote(
+                        id = noteId,
+                        title = title,
+                        content = content,
+                        imageUri = selectedImageUri?.toString(),
+                        date = date,
+                        onSuccess = onBack
+                    )
+                } else {
+                    viewModel.saveNote(
+                        title = title,
+                        content = content,
+                        imageUri = selectedImageUri?.toString(),
+                        date = date,
+                        onSuccess = onBack
+                    )
+                }
             },
             enabled = isSaveEnabled && !viewModel.isLoading,
             modifier = Modifier
