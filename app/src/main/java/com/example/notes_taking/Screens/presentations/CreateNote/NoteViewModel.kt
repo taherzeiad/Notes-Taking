@@ -22,20 +22,21 @@ class NoteViewModel(private val noteDao: NoteDao) : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    fun saveNote(
+    fun saveNote(id: Int = 0,
         title: String, content: String, imageUri: String?, date: String, onSuccess: () -> Unit
     ) {
         viewModelScope.launch {
             try {
-                val note = Note(
-                    title = title, content = content, imageUri = imageUri, date = date
-                )
+                val note = Note(id = id, title = title, content = content, imageUri = imageUri, date = date)
                 noteDao.insertNote(note)
-                onSuccess() // العودة للخلف بعد النجاح
+                onSuccess()
             } catch (e: Exception) {
                 _errorMessage.value = "An error occurred"
             }
         }
+    }
+    suspend fun getNoteById(noteId: Int): Note? {
+        return noteDao.getNoteById(noteId)
     }
 
     // دالة إعادة الصياغة عبر Groq
@@ -67,6 +68,27 @@ class NoteViewModel(private val noteDao: NoteDao) : ViewModel() {
     fun togglePin(note: Note) {
         viewModelScope.launch {
             noteDao.insertNote(note.copy(isPinned = !note.isPinned))
+        }
+    }
+
+    fun updateNote(
+        id: Int,
+        title: String,
+        content: String,
+        imageUri: String?,
+        date: String,
+        onSuccess: () -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val note = Note(
+                    id = id, title = title, content = content, imageUri = imageUri, date = date
+                )
+                noteDao.insertNote(note)
+                onSuccess()
+            } catch (e: Exception) {
+                _errorMessage.value = "فشل تحديث الملاحظة"
+            }
         }
     }
 

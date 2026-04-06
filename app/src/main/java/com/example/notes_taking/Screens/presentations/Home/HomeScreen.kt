@@ -29,7 +29,9 @@ import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModel
 import com.example.notes_taking.ui.theme.*
 
 @Composable
-fun HomeScreen(onAddNote: () -> Unit, viewModel: NoteViewModel) {
+fun HomeScreen(
+    onAddNote: () -> Unit, onEditNote: (Int) -> Unit, viewModel: NoteViewModel
+) {
 
     val notes by viewModel.allNotes.collectAsState(initial = emptyList())
 
@@ -41,8 +43,9 @@ fun HomeScreen(onAddNote: () -> Unit, viewModel: NoteViewModel) {
 
     // فلترة حسب البحث
     val searchedNotes = notes.filter {
-        it.title.contains(searchQuery, ignoreCase = true) ||
-                it.content.contains(searchQuery, ignoreCase = true)
+        it.title.contains(searchQuery, ignoreCase = true) || it.content.contains(
+            searchQuery, ignoreCase = true
+        )
     }
 
     // فلترة حسب الاختيار
@@ -74,8 +77,7 @@ fun HomeScreen(onAddNote: () -> Unit, viewModel: NoteViewModel) {
                 Box {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable { expanded = true }
-                    ) {
+                        modifier = Modifier.clickable { expanded = true }) {
                         Text(
                             text = selectedFilter,
                             fontSize = 24.sp,
@@ -97,31 +99,27 @@ fun HomeScreen(onAddNote: () -> Unit, viewModel: NoteViewModel) {
                         modifier = Modifier.background(CardWhite)
                     ) {
                         filterOptions.forEach { option ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = option,
-                                        fontFamily = ManropeFontFamily,
-                                        fontSize = 15.sp,
-                                        color = if (option == selectedFilter) FabColor else TextPrimary,
-                                        fontWeight = if (option == selectedFilter) FontWeight.Bold else FontWeight.Normal
+                            DropdownMenuItem(text = {
+                                Text(
+                                    text = option,
+                                    fontFamily = ManropeFontFamily,
+                                    fontSize = 15.sp,
+                                    color = if (option == selectedFilter) FabColor else TextPrimary,
+                                    fontWeight = if (option == selectedFilter) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }, onClick = {
+                                selectedFilter = option
+                                expanded = false
+                            }, leadingIcon = {
+                                if (option == selectedFilter) {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = null,
+                                        tint = FabColor,
+                                        modifier = Modifier.size(18.dp)
                                     )
-                                },
-                                onClick = {
-                                    selectedFilter = option
-                                    expanded = false
-                                },
-                                leadingIcon = {
-                                    if (option == selectedFilter) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = null,
-                                            tint = FabColor,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
                                 }
-                            )
+                            })
                         }
                     }
                 }
@@ -134,16 +132,12 @@ fun HomeScreen(onAddNote: () -> Unit, viewModel: NoteViewModel) {
                     onValueChange = { searchQuery = it },
                     placeholder = {
                         Text(
-                            "Search...",
-                            color = TextSecondary,
-                            fontFamily = ManropeFontFamily
+                            "Search...", color = TextSecondary, fontFamily = ManropeFontFamily
                         )
                     },
                     leadingIcon = {
                         Icon(
-                            Icons.Default.Search,
-                            contentDescription = null,
-                            tint = TextSecondary
+                            Icons.Default.Search, contentDescription = null, tint = TextSecondary
                         )
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -176,8 +170,8 @@ fun HomeScreen(onAddNote: () -> Unit, viewModel: NoteViewModel) {
                         items(pinnedNotes) { note ->
                             PinnedNoteCard(
                                 note = note,
-                                onUnpin = { viewModel.togglePin(note) }
-                            )
+                                onClick = { onEditNote(note.id) },
+                                onUnpin = { viewModel.togglePin(note) })
                         }
                     }
                 }
@@ -198,8 +192,8 @@ fun HomeScreen(onAddNote: () -> Unit, viewModel: NoteViewModel) {
                     OtherNoteCard(
                         note = note,
                         onDelete = { viewModel.deleteNote(note) },
-                        onPin = { viewModel.togglePin(note) }
-                    )
+                        onClick = { onEditNote(note.id) },
+                        onPin = { viewModel.togglePin(note) })
                 }
             }
 
@@ -246,11 +240,12 @@ fun HomeScreen(onAddNote: () -> Unit, viewModel: NoteViewModel) {
 
 // ======= Pinned Note Card =======
 @Composable
-fun PinnedNoteCard(note: Note, onUnpin: () -> Unit) {
+fun PinnedNoteCard(note: Note, onClick: () -> Unit, onUnpin: () -> Unit) {
     Card(
         modifier = Modifier
             .width(160.dp)
-            .height(160.dp),
+            .height(160.dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardYellow),
         elevation = CardDefaults.cardElevation(0.dp)
@@ -290,8 +285,7 @@ fun PinnedNoteCard(note: Note, onUnpin: () -> Unit) {
 
             // زر إلغاء التثبيت
             IconButton(
-                onClick = onUnpin,
-                modifier = Modifier
+                onClick = onUnpin, modifier = Modifier
                     .align(Alignment.TopEnd)
                     .size(28.dp)
             ) {
@@ -308,9 +302,13 @@ fun PinnedNoteCard(note: Note, onUnpin: () -> Unit) {
 
 // ======= Other Note Card =======
 @Composable
-fun OtherNoteCard(note: Note, onDelete: () -> Unit, onPin: () -> Unit) {
+fun OtherNoteCard(
+    note: Note, onClick: () -> Unit, onDelete: () -> Unit, onPin: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardWhite),
         elevation = CardDefaults.cardElevation(0.dp)
