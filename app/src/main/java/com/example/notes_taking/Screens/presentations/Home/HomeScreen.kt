@@ -83,8 +83,22 @@ val sampleNotes = listOf(
 fun HomeScreen(onAddNote: () -> Unit) {
     var searchQuery by remember { mutableStateOf("") }
 
-    val pinnedNotes = sampleNotes.filter { it.isPinned }
-    val otherNotes = sampleNotes.filter { !it.isPinned }
+    var expanded by remember { mutableStateOf(false) }
+    var selectedFilter by remember { mutableStateOf("All Notes") }
+
+    val filteredPinnedNotes = when (selectedFilter) {
+        "Pinned Notes" -> sampleNotes.filter { it.isPinned }
+        "Others" -> emptyList()
+        else -> sampleNotes.filter { it.isPinned }
+    }
+
+    val filteredOtherNotes = when (selectedFilter) {
+        "Pinned Notes" -> emptyList()
+        "Others" -> sampleNotes.filter { !it.isPinned }
+        else -> sampleNotes.filter { !it.isPinned }
+    }
+
+    val filterOptions = listOf("All Notes", "Pinned Notes", "Others")
 
     Box(
         modifier = Modifier
@@ -100,19 +114,10 @@ fun HomeScreen(onAddNote: () -> Unit) {
             // ======= Header =======
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // State للقائمة
-                var expanded by remember { mutableStateOf(false) }
-                var selectedFilter by remember { mutableStateOf("All Notes") }
-
-                val filterOptions = listOf("All Notes", "Pinned Notes", "Others")
-
                 Box {
-                    // زر الـ Header
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable { expanded = true }
-                    ) {
+                        modifier = Modifier.clickable { expanded = true }) {
                         Text(
                             text = selectedFilter,
                             fontSize = 24.sp,
@@ -122,16 +127,13 @@ fun HomeScreen(onAddNote: () -> Unit) {
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
-                            imageVector = if (expanded)
-                                Icons.Default.ArrowDropUp
-                            else
-                                Icons.Default.ArrowDropDown,
+                            imageVector = if (expanded) Icons.Default.ArrowDropUp
+                            else Icons.Default.ArrowDropDown,
                             contentDescription = null,
                             tint = TextPrimary
                         )
                     }
 
-                    // القائمة المنسدلة
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
@@ -140,34 +142,27 @@ fun HomeScreen(onAddNote: () -> Unit) {
                             .clip(RoundedCornerShape(12.dp))
                     ) {
                         filterOptions.forEach { option ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = option,
-                                        fontFamily = ManropeFontFamily,
-                                        fontSize = 15.sp,
-                                        color = if (option == selectedFilter) FabColor else TextPrimary,
-                                        fontWeight = if (option == selectedFilter)
-                                            FontWeight.Bold
-                                        else
-                                            FontWeight.Normal
+                            DropdownMenuItem(text = {
+                                Text(
+                                    text = option,
+                                    fontFamily = ManropeFontFamily,
+                                    fontSize = 15.sp,
+                                    color = if (option == selectedFilter) FabColor else TextPrimary,
+                                    fontWeight = if (option == selectedFilter) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }, onClick = {
+                                selectedFilter = option
+                                expanded = false
+                            }, leadingIcon = {
+                                if (option == selectedFilter) {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = null,
+                                        tint = FabColor,
+                                        modifier = Modifier.size(18.dp)
                                     )
-                                },
-                                onClick = {
-                                    selectedFilter = option
-                                    expanded = false
-                                },
-                                leadingIcon = {
-                                    if (option == selectedFilter) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = null,
-                                            tint = FabColor,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
                                 }
-                            )
+                            })
                         }
                     }
                 }
@@ -179,9 +174,7 @@ fun HomeScreen(onAddNote: () -> Unit) {
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     placeholder = {
-                        Text(
-                            "Search...", color = TextSecondary, fontFamily = ManropeFontFamily
-                        )
+                        Text("Search...", color = TextSecondary, fontFamily = ManropeFontFamily)
                     },
                     leadingIcon = {
                         Icon(
@@ -203,39 +196,39 @@ fun HomeScreen(onAddNote: () -> Unit) {
             }
 
             // ======= Pinned Section =======
-            item {
-                Text(
-                    text = "Pinned",
-                    fontSize = 14.sp,
-                    fontFamily = ManropeFontFamily,
-                    color = TextSecondary,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            item {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(pinnedNotes) { note ->
-                        PinnedNoteCard(note = note)
+            if (filteredPinnedNotes.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "Pinned",
+                        fontSize = 14.sp,
+                        fontFamily = ManropeFontFamily,
+                        color = TextSecondary,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+                item {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        items(filteredPinnedNotes) { note ->
+                            PinnedNoteCard(note = note)
+                        }
                     }
                 }
             }
 
             // ======= Others Section =======
-            item {
-                Text(
-                    text = "Others",
-                    fontSize = 14.sp,
-                    fontFamily = ManropeFontFamily,
-                    color = TextSecondary,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            items(otherNotes) { note ->
-                OtherNoteCard(note = note)
+            if (filteredOtherNotes.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "Others",
+                        fontSize = 14.sp,
+                        fontFamily = ManropeFontFamily,
+                        color = TextSecondary,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+                items(filteredOtherNotes) { note ->
+                    OtherNoteCard(note = note)
+                }
             }
 
             item { Spacer(modifier = Modifier.height(80.dp)) }
