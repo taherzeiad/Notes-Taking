@@ -9,13 +9,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.notes_taking.API.GroqService
 import com.example.notes_taking.RoomDatabase.Note
 import com.example.notes_taking.RoomDatabase.NoteDao
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class NoteViewModel(private val noteDao: NoteDao) : ViewModel() {
 
-    // حالة التحميل والخطأ
+    val allNotes: Flow<List<Note>> = noteDao.getAllNotes()
+
     var isLoading by mutableStateOf(false)
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
@@ -52,11 +54,26 @@ class NoteViewModel(private val noteDao: NoteDao) : ViewModel() {
         }
     }
 
+    fun deleteNote(note: Note) {
+        viewModelScope.launch {
+            try {
+                noteDao.deleteNote(note)
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to delete note"
+            }
+        }
+    }
+
+    fun togglePin(note: Note) {
+        viewModelScope.launch {
+            noteDao.insertNote(note.copy(isPinned = !note.isPinned))
+        }
+    }
+
     fun clearError() {
         _errorMessage.value = null
     }
 
-    // دالة مساعدة لتجنب تكرار كود التحميل ومعالجة الأخطاء
     private fun executeAiTask(block: suspend () -> Unit) {
         viewModelScope.launch {
             isLoading = true
@@ -71,11 +88,11 @@ class NoteViewModel(private val noteDao: NoteDao) : ViewModel() {
         }
     }
 }
+
 class NoteViewModelFactory(private val noteDao: NoteDao) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(NoteViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return NoteViewModel(noteDao) as T
+            @Suppress("UNCHECKED_CAST") return NoteViewModel(noteDao) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

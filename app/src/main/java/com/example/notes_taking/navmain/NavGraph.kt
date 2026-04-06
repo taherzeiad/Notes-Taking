@@ -28,9 +28,16 @@ fun NavGraph(navController: NavHostController) {
         }
         //Home Screen
         composable(route = Route.Home.route) {
-            HomeScreen(onAddNote = {
-                navController.navigate(Route.CreateNote.route)
-            })
+            val context = LocalContext.current
+            val database = NoteDatabase.getDatabase(context)
+            val homeViewModel: NoteViewModel = viewModel(
+                factory = NoteViewModelFactory(database.noteDao())
+            )
+
+            HomeScreen(
+                viewModel = homeViewModel,
+                onAddNote = { navController.navigate(Route.CreateNote.route) }
+            )
         }
         //Create Note Screen
         composable(route = Route.CreateNote.route) {
