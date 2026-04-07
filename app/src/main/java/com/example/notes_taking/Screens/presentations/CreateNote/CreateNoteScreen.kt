@@ -1,5 +1,6 @@
 package com.example.notes_taking.Screens.presentations.CreateNote
 
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -58,29 +59,34 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
 
     LaunchedEffect(noteId) {
         if (noteId > 0) {
-            // جلب البيانات من الـ ViewModel
             val note = viewModel.getNoteById(noteId)
 
-            // إذا وجدت الملاحظة، نملأ الحقول
             note?.let {
                 title = it.title
                 content = it.content
                 date = it.date
-                // تحويل الـ String URI المخزن في قاعدة البيانات إلى Uri الخاص بـ Compose
                 selectedImageUri = it.imageUri?.let { uriString -> Uri.parse(uriString) }
             }
         }
     }
 
     // ======= Image Picker =======
+    val context = LocalContext.current // تأكد من وجود الـ Context
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        selectedImageUri = uri
+        if (uri != null) {
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+                selectedImageUri = uri
+            } catch (e: Exception) {
+                selectedImageUri = uri
+            }
+        }
     }
-
-
-    val context = LocalContext.current
 
     Box(
         modifier = Modifier
