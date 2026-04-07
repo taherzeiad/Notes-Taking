@@ -31,6 +31,7 @@ import com.example.notes_taking.RoomDatabase.Note
 import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModel
 import com.example.notes_taking.ui.theme.*
 
+
 @Composable
 fun HomeScreen(
     onAddNote: () -> Unit, onEditNote: (Int) -> Unit, viewModel: NoteViewModel
