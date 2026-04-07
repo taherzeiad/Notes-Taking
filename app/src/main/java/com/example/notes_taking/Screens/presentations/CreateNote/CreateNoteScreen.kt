@@ -71,20 +71,13 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
     }
 
     // ======= Image Picker =======
-    val context = LocalContext.current // تأكد من وجود الـ Context
-
+    val context = LocalContext.current
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        if (uri != null) {
-            try {
-                context.contentResolver.takePersistableUriPermission(
-                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-                selectedImageUri = uri
-            } catch (e: Exception) {
-                selectedImageUri = uri
-            }
+        uri?.let {
+            val localUri = saveImageToInternalStorage(context, it)
+            selectedImageUri = localUri
         }
     }
 

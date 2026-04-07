@@ -1,5 +1,7 @@
 package com.example.notes_taking.Screens.presentations.CreateNote
 
+import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -13,6 +15,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
 
 class NoteViewModel(private val noteDao: NoteDao) : ViewModel() {
 
@@ -22,12 +26,19 @@ class NoteViewModel(private val noteDao: NoteDao) : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    fun saveNote(id: Int = 0,
-        title: String, content: String, imageUri: String?, date: String, onSuccess: () -> Unit
+    fun saveNote(
+        id: Int = 0,
+        title: String,
+        content: String,
+        imageUri: String?,
+        date: String,
+        onSuccess: () -> Unit
     ) {
         viewModelScope.launch {
             try {
-                val note = Note(id = id, title = title, content = content, imageUri = imageUri, date = date)
+                val note = Note(
+                    id = id, title = title, content = content, imageUri = imageUri, date = date
+                )
                 noteDao.insertNote(note)
                 onSuccess()
             } catch (e: Exception) {
@@ -35,6 +46,7 @@ class NoteViewModel(private val noteDao: NoteDao) : ViewModel() {
             }
         }
     }
+
     suspend fun getNoteById(noteId: Int): Note? {
         return noteDao.getNoteById(noteId)
     }
@@ -109,6 +121,18 @@ class NoteViewModel(private val noteDao: NoteDao) : ViewModel() {
             }
         }
     }
+}
+
+fun saveImageToInternalStorage(context: Context, uri: Uri): Uri? {
+    val inputStream = context.contentResolver.openInputStream(uri)
+    val file = File(context.filesDir, "note_image_${System.currentTimeMillis()}.jpg")
+    val outputStream = FileOutputStream(file)
+    inputStream?.use { input ->
+        outputStream.use { output ->
+            input.copyTo(output)
+        }
+    }
+    return Uri.fromFile(file)
 }
 
 class NoteViewModelFactory(private val noteDao: NoteDao) : ViewModelProvider.Factory {
