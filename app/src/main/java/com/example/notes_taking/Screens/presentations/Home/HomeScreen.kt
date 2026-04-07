@@ -22,10 +22,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -248,11 +250,9 @@ fun HomeScreen(
 
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
-
-        val context = LocalContext.current
-        val isRtl = context.resources.configuration.locales[0].language == "ar"
-
         // ======= FAB =======
+        val layoutDirection = LocalLayoutDirection.current
+
         Box(modifier = Modifier.fillMaxSize()) {
             FloatingActionButton(
                 onClick = onAddNote,
@@ -260,7 +260,7 @@ fun HomeScreen(
                 shape = CircleShape,
                 modifier = Modifier
                     .align(
-                        if (isRtl) Alignment.BottomEnd
+                        if (layoutDirection == LayoutDirection.Rtl) Alignment.BottomEnd   // عربي → يمين
                         else Alignment.BottomStart
                     )
                     .padding(24.dp)
