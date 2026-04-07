@@ -402,7 +402,6 @@ fun BasicTextField_Content(
             .fillMaxHeight()
             .padding(start = 16.dp, top = 4.dp)
     ) {
-        // 1. حقل النص أصبح الآن في البداية (في الأعلى)
         BasicTextField(
             value = value, onValueChange = onValueChange, textStyle = TextStyle(
                 fontSize = 15.sp,
@@ -440,10 +439,8 @@ fun BasicTextField_Content(
                 }
             })
 
-        // أضفنا مسافة بسيطة بين النص والصورة
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 2. عرض الصورة أصبح الآن تحت النص (في الأسفل)
         if (selectedImageUri != null) {
             Box(
                 modifier = Modifier
@@ -459,7 +456,6 @@ fun BasicTextField_Content(
                         .fillMaxSize()
                         .clip(RoundedCornerShape(12.dp))
                 )
-                // زر حذف الصورة
                 IconButton(
                     onClick = onRemoveImage,
                     modifier = Modifier
