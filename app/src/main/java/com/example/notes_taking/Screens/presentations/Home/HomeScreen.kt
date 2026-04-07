@@ -1,5 +1,6 @@
 package com.example.notes_taking.Screens.presentations.Home
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,7 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -28,6 +31,7 @@ import com.example.notes_taking.RoomDatabase.Note
 import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModel
 import com.example.notes_taking.ui.theme.*
 
+
 @Composable
 fun HomeScreen(
     onAddNote: () -> Unit, onEditNote: (Int) -> Unit, viewModel: NoteViewModel
@@ -37,25 +41,33 @@ fun HomeScreen(
 
     var searchQuery by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
-    var selectedFilter by remember { mutableStateOf("All Notes") }
 
-    val filterOptions = listOf("All Notes", "Pinned Notes", "Others")
+    val filterOptions = listOf(
+        stringResource(R.string.all_notes),
+        stringResource(R.string.pinned_notes),
+        stringResource(R.string.others)
+    )
 
-    // فلترة حسب البحث
+    var selectedFilter by remember { mutableStateOf(filterOptions[0]) }
+
+    LaunchedEffect(filterOptions) {
+        if (!filterOptions.contains(selectedFilter)) {
+            selectedFilter = filterOptions[0]
+        }
+    }
     val searchedNotes = notes.filter {
         it.title.contains(searchQuery, ignoreCase = true) || it.content.contains(
             searchQuery, ignoreCase = true
         )
     }
 
-    // فلترة حسب الاختيار
     val pinnedNotes = when (selectedFilter) {
-        "Others" -> emptyList()
+        stringResource(R.string.others) -> emptyList()
         else -> searchedNotes.filter { it.isPinned }
     }
 
     val otherNotes = when (selectedFilter) {
-        "Pinned Notes" -> emptyList()
+        stringResource(R.string.pinned_notes) -> emptyList()
         else -> searchedNotes.filter { !it.isPinned }
     }
 
@@ -74,54 +86,65 @@ fun HomeScreen(
             // ======= Header =======
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-                Box {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable { expanded = true }) {
-                        Text(
-                            text = selectedFilter,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = ManropeFontFamily,
-                            color = TextPrimary
-                        )
-                        Icon(
-                            imageVector = if (expanded) Icons.Default.ArrowDropUp
-                            else Icons.Default.ArrowDropDown,
-                            contentDescription = null,
-                            tint = TextPrimary
-                        )
-                    }
 
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.background(CardWhite)
-                    ) {
-                        filterOptions.forEach { option ->
-                            DropdownMenuItem(text = {
-                                Text(
-                                    text = option,
-                                    fontFamily = ManropeFontFamily,
-                                    fontSize = 15.sp,
-                                    color = if (option == selectedFilter) FabColor else TextPrimary,
-                                    fontWeight = if (option == selectedFilter) FontWeight.Bold else FontWeight.Normal
-                                )
-                            }, onClick = {
-                                selectedFilter = option
-                                expanded = false
-                            }, leadingIcon = {
-                                if (option == selectedFilter) {
-                                    Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = null,
-                                        tint = FabColor,
-                                        modifier = Modifier.size(18.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    // 1. قسم اختيار نوع الملاحظات (All Notes / Pinned / Others)
+                    Box {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable { expanded = true }) {
+                            Text(
+                                text = selectedFilter,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = ManropeFontFamily,
+                                color = TextPrimary
+                            )
+                            Icon(
+                                imageVector = if (expanded) Icons.Default.ArrowDropUp
+                                else Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                tint = TextPrimary
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.background(CardWhite)
+                        ) {
+                            filterOptions.forEach { option ->
+                                DropdownMenuItem(text = {
+                                    Text(
+                                        text = option,
+                                        fontFamily = ManropeFontFamily,
+                                        fontSize = 15.sp,
+                                        color = if (option == selectedFilter) FabColor else TextPrimary,
+                                        fontWeight = if (option == selectedFilter) FontWeight.Bold else FontWeight.Normal
                                     )
-                                }
-                            })
+                                }, onClick = {
+                                    selectedFilter = option
+                                    expanded = false
+                                }, leadingIcon = {
+                                    if (option == selectedFilter) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = FabColor,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                })
+                            }
                         }
                     }
+
+                    LanguageToggleButton()
                 }
             }
 
@@ -132,7 +155,9 @@ fun HomeScreen(
                     onValueChange = { searchQuery = it },
                     placeholder = {
                         Text(
-                            "Search...", color = TextSecondary, fontFamily = ManropeFontFamily
+                            text = stringResource(R.string.search),
+                            color = TextSecondary,
+                            fontFamily = ManropeFontFamily
                         )
                     },
                     leadingIcon = {
@@ -418,5 +443,43 @@ fun OtherNoteCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun LanguageToggleButton() {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+
+    // يفضل جلب اللغة الحالية من الإعدادات مباشرة
+    var currentLang by remember {
+        mutableStateOf(prefs.getString("language", "en") ?: "en")
+    }
+
+    OutlinedButton(
+        onClick = {
+            val newLang = if (currentLang == "en") "ar" else "en"
+
+            // 1. حفظ اللغة الجديدة في SharedPreferences
+            prefs.edit().putString("language", newLang).apply()
+
+            // 2. تحديث الحالة المحلية للزر
+            currentLang = newLang
+
+            com.example.notes_taking.utils.LocaleUtils.setLocale(context, newLang)
+
+            (context as? android.app.Activity)?.recreate()
+        },
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, FabColor.copy(alpha = 0.5f)),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+        modifier = Modifier.height(36.dp)
+    ) {
+        Text(
+            text = if (currentLang == "en") "عربي" else "English",
+            fontFamily = ManropeFontFamily,
+            fontSize = 13.sp,
+            color = FabColor
+        )
     }
 }

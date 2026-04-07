@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">تدوين الملاحظات</string>
+    <string name="all_notes">كل الملاحظات</string>
+    <string name="pinned_notes">الملاحظات المثبتة</string>
+    <string name="others">الأخرى</string>
+    <string name="search">بحث...</string>
+    <string name="pinned">مثبتة</string>
+    <string name="no_notes">لا توجد ملاحظات!\nاضغط + لإضافة واحدة</string>
+    <string name="create_note">إنشاء ملاحظة</string>
+    <string name="edit_note">تعديل الملاحظة</string>
+    <string name="save_note">حفظ الملاحظة</string>
+    <string name="title_hint">العنوان</string>
+    <string name="content_hint">اكتب شيئاً هنا...</string>
+    <string name="rephrase_text">إعادة صياغة النص</string>
+    <string name="diacritize_text">تشكيل النص</string>
+    <string name="content_hint_part1">دون ملاحظاتك أو اضغط على الأيقونة لـ</string>
+    <string name="content_hint_part2">رفع صورة </string>
+    <string name="ai_thinking">الذكاء الاصطناعي يفكر...</string>
+</resources>

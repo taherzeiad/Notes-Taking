@@ -54,7 +54,7 @@ class NoteViewModel(private val noteDao: NoteDao) : ViewModel() {
     // دالة إعادة الصياغة عبر Groq
     fun rephrase(content: String, onResult: (String) -> Unit) {
         executeAiTask {
-            val result = GroqService.rephraseText(content)
+            val result = GroqService.raseText(content)
             onResult(result)
         }
     }

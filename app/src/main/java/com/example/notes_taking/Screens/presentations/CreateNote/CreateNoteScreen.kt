@@ -35,6 +35,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImage
 
 @Composable
@@ -116,7 +117,9 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
                     Spacer(modifier = Modifier.width(4.dp))
 
                     Text(
-                        text = if (noteId > 0) "Edit Note" else "Create Note",
+                        text = if (noteId > 0) stringResource(R.string.edit_note) else stringResource(
+                            R.string.create_note
+                        ),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = ManropeFontFamily,
@@ -223,7 +226,7 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
                             modifier = Modifier.size(18.dp)
                         )
                         Text(
-                            text = "Rephrase Text",
+                            text = stringResource(R.string.rephrase_text),
                             fontFamily = ManropeFontFamily,
                             fontSize = 14.sp,
                             color = TextPrimary
@@ -232,7 +235,7 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
                 }, onClick = {
                     geminiMenuExpanded = false
                     if (content.isNotBlank()) {
-                        viewModel.rephrase(content) { newText ->
+                        viewModel.rephrase(content) { newText: String ->
                             undoStack.add(content)
                             content = newText
                         }
@@ -254,7 +257,7 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
                             modifier = Modifier.size(18.dp)
                         )
                         Text(
-                            text = "Diacritize Text",
+                            text = stringResource(R.string.diacritize_text),
                             fontFamily = ManropeFontFamily,
                             fontSize = 14.sp,
                             color = TextPrimary
@@ -290,7 +293,7 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
                     ) {
                         CircularProgressIndicator(color = Color(0xFF4285F4))
                         Text(
-                            text = "AI is thinking...",
+                            text = stringResource(R.string.ai_thinking),
                             fontFamily = ManropeFontFamily,
                             fontSize = 14.sp,
                             color = TextPrimary
@@ -351,7 +354,7 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
             )
         ) {
             Text(
-                text = "Save Note",
+                text = stringResource(R.string.save_note),
                 fontSize = 16.sp,
                 fontFamily = ManropeFontFamily,
                 fontWeight = FontWeight.Medium
@@ -367,7 +370,7 @@ fun BasicTextField_Title(value: String, onValueChange: (String) -> Unit) {
     TextField(
         value = value, onValueChange = onValueChange, placeholder = {
             Text(
-                text = "Title",
+                text = stringResource(R.string.title_hint),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = ManropeFontFamily,
@@ -402,7 +405,6 @@ fun BasicTextField_Content(
             .fillMaxHeight()
             .padding(start = 16.dp, top = 4.dp)
     ) {
-        // 1. حقل النص أصبح الآن في البداية (في الأعلى)
         BasicTextField(
             value = value, onValueChange = onValueChange, textStyle = TextStyle(
                 fontSize = 15.sp,
@@ -414,14 +416,14 @@ fun BasicTextField_Content(
                     if (value.isEmpty() && selectedImageUri == null) {
                         Column {
                             Text(
-                                text = "Note something down or click on image to",
+                                text = stringResource(R.string.content_hint_part1),
                                 fontSize = 15.sp,
                                 fontFamily = ManropeFontFamily,
                                 color = Color(0xFFCCCCCC)
                             )
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "upload image ",
+                                    text = stringResource(R.string.content_hint_part2),
                                     fontSize = 15.sp,
                                     fontFamily = ManropeFontFamily,
                                     color = Color(0xFFCCCCCC)
@@ -440,10 +442,8 @@ fun BasicTextField_Content(
                 }
             })
 
-        // أضفنا مسافة بسيطة بين النص والصورة
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 2. عرض الصورة أصبح الآن تحت النص (في الأسفل)
         if (selectedImageUri != null) {
             Box(
                 modifier = Modifier
@@ -459,7 +459,6 @@ fun BasicTextField_Content(
                         .fillMaxSize()
                         .clip(RoundedCornerShape(12.dp))
                 )
-                // زر حذف الصورة
                 IconButton(
                     onClick = onRemoveImage,
                     modifier = Modifier
