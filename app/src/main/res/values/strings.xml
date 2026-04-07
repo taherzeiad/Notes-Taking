@@ -1,3 +1,19 @@
 <resources>
-    <string name="app_name">Notes-Taking</string>
+    <string name="app_name">Notes Taking</string>
+    <string name="all_notes">All Notes</string>
+    <string name="pinned_notes">Pinned Notes</string>
+    <string name="others">Others</string>
+    <string name="search">Search...</string>
+    <string name="pinned">Pinned</string>
+    <string name="no_notes">No notes yet!\nTap + to add one</string>
+    <string name="create_note">Create Note</string>
+    <string name="edit_note">Edit Note</string>
+    <string name="save_note">Save Note</string>
+    <string name="title_hint">Title</string>
+    <string name="content_hint">Note something down...</string>
+    <string name="rephrase_text">Rephrase Text</string>
+    <string name="diacritize_text">Diacritize Text</string>
+    <string name="content_hint_part1">Note something down or click on image to</string>
+    <string name="content_hint_part2">upload image </string>
+    <string name="ai_thinking">AI is thinking...</string>
 </resources>
