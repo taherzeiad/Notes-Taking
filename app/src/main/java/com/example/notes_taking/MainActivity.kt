@@ -31,8 +31,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
 
             CompositionLocalProvider(
-                LocalLayoutDirection provides
-                        if (lang == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr
+                LocalLayoutDirection provides if (lang == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr
             ) {
                 NavGraph(navController = navController)
             }

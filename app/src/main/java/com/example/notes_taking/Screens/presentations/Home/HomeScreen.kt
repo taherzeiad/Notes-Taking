@@ -1,5 +1,6 @@
 package com.example.notes_taking.Screens.presentations.Home
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -181,7 +182,7 @@ fun HomeScreen(
             if (pinnedNotes.isNotEmpty()) {
                 item {
                     Text(
-                        text = "Pinned",
+                        text = stringResource(R.string.pinned),
                         fontSize = 14.sp,
                         fontFamily = ManropeFontFamily,
                         color = TextSecondary,
@@ -206,7 +207,7 @@ fun HomeScreen(
             if (otherNotes.isNotEmpty()) {
                 item {
                     Text(
-                        text = "Others",
+                        text = stringResource(R.string.others),
                         fontSize = 14.sp,
                         fontFamily = ManropeFontFamily,
                         color = TextSecondary,
@@ -232,7 +233,7 @@ fun HomeScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No notes yet!\nTap + to add one",
+                            text = stringResource(R.string.no_notes),
                             color = TextSecondary,
                             fontFamily = ManropeFontFamily,
                             fontSize = 16.sp
@@ -446,6 +447,7 @@ fun OtherNoteCard(
     }
 }
 
+@SuppressLint("UseKtx")
 @Composable
 fun LanguageToggleButton() {
     val context = LocalContext.current
