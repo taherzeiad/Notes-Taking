@@ -1,5 +1,6 @@
 package com.example.notes_taking.Screens.presentations.CreateNote
 
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -58,29 +59,27 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
 
     LaunchedEffect(noteId) {
         if (noteId > 0) {
-            // جلب البيانات من الـ ViewModel
             val note = viewModel.getNoteById(noteId)
 
-            // إذا وجدت الملاحظة، نملأ الحقول
             note?.let {
                 title = it.title
                 content = it.content
                 date = it.date
-                // تحويل الـ String URI المخزن في قاعدة البيانات إلى Uri الخاص بـ Compose
                 selectedImageUri = it.imageUri?.let { uriString -> Uri.parse(uriString) }
             }
         }
     }
 
     // ======= Image Picker =======
+    val context = LocalContext.current
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        selectedImageUri = uri
+        uri?.let {
+            val localUri = saveImageToInternalStorage(context, it)
+            selectedImageUri = localUri
+        }
     }
-
-
-    val context = LocalContext.current
 
     Box(
         modifier = Modifier
@@ -393,9 +392,9 @@ fun BasicTextField_Title(value: String, onValueChange: (String) -> Unit) {
 fun BasicTextField_Content(
     value: String,
     onValueChange: (String) -> Unit,
-    selectedImageUri: Uri?,        // ← استقبال الصورة
-    onImageClick: () -> Unit,      // ← فتح المعرض
-    onRemoveImage: () -> Unit      // ← حذف الصورة
+    selectedImageUri: Uri?,
+    onImageClick: () -> Unit,
+    onRemoveImage: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -403,7 +402,48 @@ fun BasicTextField_Content(
             .fillMaxHeight()
             .padding(start = 16.dp, top = 4.dp)
     ) {
-        // ======= عرض الصورة إذا موجودة =======
+        // 1. حقل النص أصبح الآن في البداية (في الأعلى)
+        BasicTextField(
+            value = value, onValueChange = onValueChange, textStyle = TextStyle(
+                fontSize = 15.sp,
+                fontFamily = ManropeFontFamily,
+                color = TextPrimary,
+                lineHeight = 22.sp
+            ), modifier = Modifier.fillMaxWidth(), decorationBox = { innerTextField ->
+                Box {
+                    if (value.isEmpty() && selectedImageUri == null) {
+                        Column {
+                            Text(
+                                text = "Note something down or click on image to",
+                                fontSize = 15.sp,
+                                fontFamily = ManropeFontFamily,
+                                color = Color(0xFFCCCCCC)
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "upload image ",
+                                    fontSize = 15.sp,
+                                    fontFamily = ManropeFontFamily,
+                                    color = Color(0xFFCCCCCC)
+                                )
+                                Icon(
+                                    imageVector = Icons.Outlined.Image,
+                                    contentDescription = null,
+                                    tint = Color(0xFFCCCCCC),
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .clickable { onImageClick() })
+                            }
+                        }
+                    }
+                    innerTextField()
+                }
+            })
+
+        // أضفنا مسافة بسيطة بين النص والصورة
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 2. عرض الصورة أصبح الآن تحت النص (في الأسفل)
         if (selectedImageUri != null) {
             Box(
                 modifier = Modifier
@@ -437,44 +477,5 @@ fun BasicTextField_Content(
                 }
             }
         }
-
-        // ======= حقل النص =======
-        BasicTextField(
-            value = value, onValueChange = onValueChange, textStyle = TextStyle(
-                fontSize = 15.sp,
-                fontFamily = ManropeFontFamily,
-                color = TextPrimary,
-                lineHeight = 22.sp
-            ), modifier = Modifier.fillMaxWidth(), decorationBox = { innerTextField ->
-                Box {
-                    if (value.isEmpty() && selectedImageUri == null) {
-                        Column {
-                            Text(
-                                text = "Note something down or click on image to",
-                                fontSize = 15.sp,
-                                fontFamily = ManropeFontFamily,
-                                color = Color(0xFFCCCCCC)
-                            )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = "upload image ",
-                                    fontSize = 15.sp,
-                                    fontFamily = ManropeFontFamily,
-                                    color = Color(0xFFCCCCCC)
-                                )
-                                // ← أيقونة الصورة قابلة للضغط
-                                Icon(
-                                    imageVector = Icons.Outlined.Image,
-                                    contentDescription = null,
-                                    tint = Color(0xFFCCCCCC),
-                                    modifier = Modifier
-                                        .size(18.dp)
-                                        .clickable { onImageClick() })
-                            }
-                        }
-                    }
-                    innerTextField()
-                }
-            })
     }
 }

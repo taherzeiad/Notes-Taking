@@ -47,7 +47,8 @@ fun NavGraph(navController: NavHostController) {
         // 3. Create/Edit Note Screen
         composable(
             route = Route.CreateNote.route, arguments = listOf(
-            navArgument("noteId") { type = NavType.IntType })) { backStackEntry ->
+                navArgument("noteId") { type = NavType.IntType })
+        ) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getInt("noteId") ?: 0
 
             val context = LocalContext.current
@@ -63,5 +64,5 @@ fun NavGraph(navController: NavHostController) {
             )
         }
     }
-    
+
 }
