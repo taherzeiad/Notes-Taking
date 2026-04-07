@@ -1,6 +1,5 @@
 package com.example.notes_taking.Screens.presentations.CreateNote
 
-import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,7 +11,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Redo
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Image
@@ -108,7 +109,7 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
                 ) {
                     IconButton(onClick = onBack) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = TextPrimary
                         )
@@ -134,9 +135,10 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
                                 redoStack.add(content)
                                 content = undoStack.removeAt(undoStack.size - 1)
                             }
-                        }) {
+                        }
+                    ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.undo),
+                            imageVector = Icons.AutoMirrored.Filled.Undo,
                             contentDescription = "Undo",
                             tint = if (undoStack.isNotEmpty()) TextPrimary else TextSecondary
                         )
@@ -147,9 +149,10 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
                                 undoStack.add(content)
                                 content = redoStack.removeAt(redoStack.size - 1)
                             }
-                        }) {
+                        }
+                    ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.redo),
+                            imageVector = Icons.AutoMirrored.Filled.Redo,
                             contentDescription = "Redo",
                             tint = if (redoStack.isNotEmpty()) TextPrimary else TextSecondary
                         )

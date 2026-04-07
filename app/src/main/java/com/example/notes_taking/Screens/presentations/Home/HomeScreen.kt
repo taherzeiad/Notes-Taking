@@ -2,6 +2,8 @@ package com.example.notes_taking.Screens.presentations.Home
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -33,6 +35,8 @@ import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModel
 import com.example.notes_taking.ui.theme.*
 
 
+@RequiresApi(Build.VERSION_CODES.N)
+@SuppressLint("LocalContextConfigurationRead")
 @Composable
 fun HomeScreen(
     onAddNote: () -> Unit, onEditNote: (Int) -> Unit, viewModel: NoteViewModel
@@ -245,21 +249,29 @@ fun HomeScreen(
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
 
+        val context = LocalContext.current
+        val isRtl = context.resources.configuration.locales[0].language == "ar"
+
         // ======= FAB =======
-        FloatingActionButton(
-            onClick = onAddNote,
-            containerColor = FabColor,
-            shape = CircleShape,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(24.dp)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.material_symbols),
-                contentDescription = "Add Note",
-                tint = Color.White,
-                modifier = Modifier.size(28.dp)
-            )
+        Box(modifier = Modifier.fillMaxSize()) {
+            FloatingActionButton(
+                onClick = onAddNote,
+                containerColor = FabColor,
+                shape = CircleShape,
+                modifier = Modifier
+                    .align(
+                        if (isRtl) Alignment.BottomEnd
+                        else Alignment.BottomStart
+                    )
+                    .padding(24.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.material_symbols),
+                    contentDescription = "Add Note",
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
         }
     }
 }
