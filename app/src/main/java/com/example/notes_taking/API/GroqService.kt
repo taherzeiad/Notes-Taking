@@ -5,7 +5,6 @@ import com.example.notes_taking.BuildConfig
 
 object GroqService {
     private const val API_KEY = BuildConfig.GROQ_API_KEY
-
     suspend fun raseText(text: String): String {
         val request = ChatRequest(
             model = "llama-3.3-70b-versatile", messages = listOf(
@@ -30,7 +29,9 @@ object GroqService {
     }
 
     private suspend fun makeRequest(request: ChatRequest): String {
-        val response = RetrofitClient.instance.generateChatCompletion(API_KEY, request)
+        val authHeader = "Bearer $API_KEY"
+        val response = RetrofitClient.instance.generateChatCompletion(authHeader, request)
+
         return if (response.isSuccessful) {
             response.body()?.choices?.firstOrNull()?.message?.content ?: "No response"
         } else {

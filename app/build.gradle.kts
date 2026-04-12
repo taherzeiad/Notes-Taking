@@ -42,7 +42,9 @@ android {
         buildConfig = true
     }
 }
-
+secrets {
+    defaultPropertiesFileName = "local.properties"
+}
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
