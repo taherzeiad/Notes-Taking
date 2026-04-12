@@ -2,7 +2,7 @@ package com.example.notes_taking.API
 
 // طلب OpenAI يتوقع موديل ورائمة رسائل
 data class ChatRequest(
-    val model: String = "gpt-3.5-turbo", // أو gpt-4o حسب اشتراكك
+    val model: String = "gpt-3.5-turbo",
     val messages: List<ChatMessage>
 )
 

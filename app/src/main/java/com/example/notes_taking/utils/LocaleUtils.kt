@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.notes_taking.utils
 
 import android.content.Context

@@ -1,6 +1,9 @@
 package com.example.notes_taking.Screens.presentations.Home
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,10 +22,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -32,6 +37,8 @@ import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModel
 import com.example.notes_taking.ui.theme.*
 
 
+@RequiresApi(Build.VERSION_CODES.N)
+@SuppressLint("LocalContextConfigurationRead")
 @Composable
 fun HomeScreen(
     onAddNote: () -> Unit, onEditNote: (Int) -> Unit, viewModel: NoteViewModel
@@ -181,7 +188,7 @@ fun HomeScreen(
             if (pinnedNotes.isNotEmpty()) {
                 item {
                     Text(
-                        text = "Pinned",
+                        text = stringResource(R.string.pinned),
                         fontSize = 14.sp,
                         fontFamily = ManropeFontFamily,
                         color = TextSecondary,
@@ -206,7 +213,7 @@ fun HomeScreen(
             if (otherNotes.isNotEmpty()) {
                 item {
                     Text(
-                        text = "Others",
+                        text = stringResource(R.string.others),
                         fontSize = 14.sp,
                         fontFamily = ManropeFontFamily,
                         color = TextSecondary,
@@ -232,7 +239,7 @@ fun HomeScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No notes yet!\nTap + to add one",
+                            text = stringResource(R.string.no_notes),
                             color = TextSecondary,
                             fontFamily = ManropeFontFamily,
                             fontSize = 16.sp
@@ -243,22 +250,28 @@ fun HomeScreen(
 
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
-
         // ======= FAB =======
-        FloatingActionButton(
-            onClick = onAddNote,
-            containerColor = FabColor,
-            shape = CircleShape,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(24.dp)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.material_symbols),
-                contentDescription = "Add Note",
-                tint = Color.White,
-                modifier = Modifier.size(28.dp)
-            )
+        val layoutDirection = LocalLayoutDirection.current
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            FloatingActionButton(
+                onClick = onAddNote,
+                containerColor = FabColor,
+                shape = CircleShape,
+                modifier = Modifier
+                    .align(
+                        if (layoutDirection == LayoutDirection.Rtl) Alignment.BottomEnd   // عربي → يمين
+                        else Alignment.BottomStart
+                    )
+                    .padding(24.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.material_symbols),
+                    contentDescription = "Add Note",
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
         }
     }
 }
@@ -446,6 +459,7 @@ fun OtherNoteCard(
     }
 }
 
+@SuppressLint("UseKtx")
 @Composable
 fun LanguageToggleButton() {
     val context = LocalContext.current
