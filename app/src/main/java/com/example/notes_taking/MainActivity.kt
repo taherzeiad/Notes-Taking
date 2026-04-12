@@ -4,7 +4,11 @@ import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.navigation.compose.rememberNavController
@@ -28,13 +32,20 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
-            val navController = rememberNavController()
-
-            CompositionLocalProvider(
-                LocalLayoutDirection provides if (lang == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
             ) {
-                NavGraph(navController = navController)
+                val navController = rememberNavController()
+
+                CompositionLocalProvider(
+                    LocalLayoutDirection provides if (lang == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr
+                ) {
+                    NavGraph(navController = navController)
+                }
             }
         }
+
+
     }
 }
