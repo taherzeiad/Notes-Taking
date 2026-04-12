@@ -32,17 +32,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = MaterialTheme.colorScheme.background
-            ) {
-                val navController = rememberNavController()
 
-                CompositionLocalProvider(
-                    LocalLayoutDirection provides if (lang == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr
-                ) {
-                    NavGraph(navController = navController)
-                }
+            val navController = rememberNavController()
+
+            CompositionLocalProvider(
+                LocalLayoutDirection provides if (lang == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr
+            ) {
+                NavGraph(navController = navController)
             }
         }
 
