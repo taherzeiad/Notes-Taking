@@ -20,6 +20,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
 import androidx.compose.ui.res.stringResource
 import com.example.notes_taking.R
 import com.example.notes_taking.ui.theme.ManropeFontFamily
@@ -168,10 +171,11 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                         fontFamily = MansalvaFontFamily,
                         color = Color.White
                     )
-                    Text(
-                        text = "←",
-                        fontSize = 18.sp,
-                        color = Color.White
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
