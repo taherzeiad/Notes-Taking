@@ -16,4 +16,20 @@
     <string name="content_hint_part1">Note something down or click on image to</string>
     <string name="content_hint_part2">upload image </string>
     <string name="ai_thinking">AI is thinking...</string>
+
+    <string name="intellectual_sanctuary">Intellectual Sanctuary</string>
+    <string name="next">Next</string>
+    <string name="get_started">Get Started</string>
+    <string name="skip">Skip</string>
+
+    <string name="ob_title_1">Record your ideas smartly</string>
+    <string name="ob_desc_1">Let AI organize your thoughts and turn them into structured notes with a creative touch.</string>
+
+    <string name="ob_title_2">Organize your notes</string>
+    <string name="ob_desc_2">Arrange your thoughts and notes easily and find them at any time.</string>
+
+    <string name="ob_title_3">Automatic task extraction</string>
+    <string name="ob_desc_3">Simply write your thoughts, and our AI will turn your notes into an organized, actionable task list.</string>
+
 </resources>
+
