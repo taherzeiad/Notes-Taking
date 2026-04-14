@@ -50,7 +50,7 @@ val onboardingPages = listOf(
         title = "استخراج المهام تلقائياً",
         description = "ببساطة، اكتب أفكارك. وسيقوم ذكاؤنا الاصطناعي بتحويل\n" +
                 "ملاحظاتك إلى قائمة مهام منظمة وقابلة للتنفيذ.",
-        imageRes = R.drawable.onboarding1
+        imageRes = R.drawable.onboarding2
     )
 )
 
