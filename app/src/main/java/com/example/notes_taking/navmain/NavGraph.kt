@@ -1,5 +1,7 @@
 package com.example.notes_taking.navmain
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -13,8 +15,10 @@ import com.example.notes_taking.Screens.presentations.CreateNote.CreateNoteScree
 import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModel
 import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModelFactory
 import com.example.notes_taking.Screens.presentations.Home.HomeScreen
+import com.example.notes_taking.Screens.presentations.Onboarding.OnboardingScreen
 import com.example.notes_taking.Screens.presentations.Splash.SplashScreen
 
+@RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun NavGraph(navController: NavHostController) {
     NavHost(
@@ -23,8 +27,16 @@ fun NavGraph(navController: NavHostController) {
         // 1. Splash Screen
         composable(route = Route.Splash.route) {
             SplashScreen(onSplashFinished = {
-                navController.navigate(Route.Home.route) {
+                navController.navigate(Route.Onboarding.route) { // ← غيّر للـ Onboarding
                     popUpTo(Route.Splash.route) { inclusive = true }
+                }
+            })
+        }
+
+        composable(route = Route.Onboarding.route) {
+            OnboardingScreen(onFinish = {
+                navController.navigate(Route.Home.route) {
+                    popUpTo(Route.Onboarding.route) { inclusive = true }
                 }
             })
         }
@@ -62,6 +74,13 @@ fun NavGraph(navController: NavHostController) {
                 onBack = { navController.popBackStack() },
                 viewModel = createNoteViewModel
             )
+        }
+        composable(route = Route.Onboarding.route) {
+            OnboardingScreen(onFinish = {
+                navController.navigate(Route.Home.route) {
+                    popUpTo(Route.Onboarding.route) { inclusive = true }
+                }
+            })
         }
     }
 

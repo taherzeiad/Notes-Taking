@@ -2,6 +2,10 @@ package com.example.notes_taking.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+// ======= ألوان الشاشة onboarding =======
+val OnboardingBackground = Color(0xFFFAF0E6)
+val OnboardingBrown = Color(0xFF6B3A2A)
+val OnboardingDot = Color(0xFFD4B8A8)
 
 val SplashBackground = Color(0xFFF5DEB3).copy(alpha = 0.6f) // بيج فاتح
 val BrownColor = Color(0xFF6B2D0E) // بني غامق

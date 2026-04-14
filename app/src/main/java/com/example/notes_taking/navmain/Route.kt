@@ -5,4 +5,9 @@ sealed class Route(val route: String) {
     object Home : Route("home_screen")
     object CreateNote : Route("create_note_screen/{noteId}") {
         fun passId(id: Int) = "create_note_screen/$id"
-    }}
+    }
+
+    object Onboarding : Route("onboarding_screen"){
+
+    }
+}
