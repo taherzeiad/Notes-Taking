@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
+import androidx.compose.ui.res.stringResource
 import com.example.notes_taking.R
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
@@ -27,31 +28,17 @@ import com.example.notes_taking.ui.theme.OnboardingBackground
 import com.example.notes_taking.ui.theme.OnboardingBrown
 import com.example.notes_taking.ui.theme.OnboardingDot
 
-
 // ======= Data =======
 data class OnboardingPage(
-    val title: String,
-    val description: String,
+    val titleRes: Int,
+    val descRes: Int,
     val imageRes: Int
 )
 
 val onboardingPages = listOf(
-    OnboardingPage(
-        title = "سجّل أفكارك بذكاء",
-        description = "دع الذكاء الاصطناعي ينظم خواطرك ويحولها إلى\nملاحظات منظمة بلمسة إبداعية.",
-        imageRes = R.drawable.onboarding1
-    ),
-    OnboardingPage(
-        title = "نظّم ملاحظاتك",
-        description = "رتّب أفكارك وملاحظاتك بسهولة\nوابحث عنها في أي وقت.",
-        imageRes = R.drawable.onboarding1
-    ),
-    OnboardingPage(
-        title = "استخراج المهام تلقائياً",
-        description = "ببساطة، اكتب أفكارك. وسيقوم ذكاؤنا الاصطناعي بتحويل\n" +
-                "ملاحظاتك إلى قائمة مهام منظمة وقابلة للتنفيذ.",
-        imageRes = R.drawable.onboarding2
-    )
+    OnboardingPage(R.string.ob_title_1, R.string.ob_desc_1, R.drawable.onboarding1),
+    OnboardingPage(R.string.ob_title_2, R.string.ob_desc_2, R.drawable.onboarding1),
+    OnboardingPage(R.string.ob_title_3, R.string.ob_desc_3, R.drawable.onboarding2)
 )
 
 @Composable
@@ -71,7 +58,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
 
             // ======= العنوان العلوي =======
             Text(
-                text = "Intellectual Sanctuary",
+                text = stringResource(id = R.string.intellectual_sanctuary),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = ManropeFontFamily,
@@ -128,7 +115,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
 
             // ======= النص الرئيسي =======
             Text(
-                text = page.title,
+                text = stringResource(id = page.titleRes),
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = MansalvaFontFamily,
@@ -141,7 +128,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
 
             // ======= النص الفرعي =======
             Text(
-                text = page.description,
+                text = stringResource(id = page.descRes),
                 fontSize = 15.sp,
                 fontFamily = ManropeFontFamily,
                 color = OnboardingBrown.copy(alpha = 0.7f),
@@ -175,7 +162,8 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = if (currentPage < onboardingPages.size - 1) "التالي" else "ابدأ الآن",
+                        text = if (currentPage < onboardingPages.size - 1)
+                            stringResource(id = R.string.next) else stringResource(id = R.string.get_started),
                         fontSize = 18.sp,
                         fontFamily = MansalvaFontFamily,
                         color = Color.White
@@ -194,7 +182,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
             if (currentPage < onboardingPages.size - 1) {
                 TextButton(onClick = onFinish) {
                     Text(
-                        text = "تخطي",
+                        text = stringResource(id = R.string.skip),
                         fontSize = 15.sp,
                         fontFamily = ManropeFontFamily,
                         color = OnboardingBrown.copy(alpha = 0.6f)

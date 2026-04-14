@@ -16,4 +16,19 @@
     <string name="content_hint_part1">دون ملاحظاتك أو اضغط على الأيقونة لـ</string>
     <string name="content_hint_part2">رفع صورة </string>
     <string name="ai_thinking">الذكاء الاصطناعي يفكر...</string>
+
+    <string name="intellectual_sanctuary">ملاذ الأفكار</string>
+    <string name="next">التالي</string>
+    <string name="get_started">ابدأ الآن</string>
+    <string name="skip">تخطي</string>
+
+    <string name="ob_title_1">سجّل أفكارك بذكاء</string>
+    <string name="ob_desc_1">دع الذكاء الاصطناعي ينظم خواطرك ويحولها إلى ملاحظات منظمة بلمسة إبداعية.</string>
+
+    <string name="ob_title_2">نظّم ملاحظاتك</string>
+    <string name="ob_desc_2">رتّب أفكارك وملاحظاتك بسهولة وابحث عنها في أي وقت.</string>
+
+    <string name="ob_title_3">استخراج المهام تلقائياً</string>
+    <string name="ob_desc_3">ببساطة، اكتب أفكارك. وسيقوم ذكاؤنا الاصطناعي بتحويل ملاحظاتك إلى قائمة مهام منظمة وقابلة للتنفيذ.</string>
+
 </resources>
