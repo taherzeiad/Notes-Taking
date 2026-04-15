@@ -35,9 +35,7 @@ import com.example.notes_taking.ui.theme.OnboardingDot
 
 // ======= Data =======
 data class OnboardingPage(
-    val titleRes: Int,
-    val descRes: Int,
-    val imageRes: Int
+    val titleRes: Int, val descRes: Int, val imageRes: Int
 )
 
 val onboardingPages = listOf(
@@ -103,8 +101,7 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                     onboardingPages.forEachIndexed { index, _ ->
                         val isSelected = index == currentPage
                         val width by animateDpAsState(
-                            targetValue = if (isSelected) 32.dp else 8.dp,
-                            label = "dot_width"
+                            targetValue = if (isSelected) 32.dp else 8.dp, label = "dot_width"
                         )
                         Box(
                             modifier = Modifier
@@ -170,8 +167,9 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = if (currentPage < onboardingPages.size - 1)
-                                stringResource(id = R.string.next) else stringResource(id = R.string.get_started),
+                            text = if (currentPage < onboardingPages.size - 1) stringResource(id = R.string.next) else stringResource(
+                                id = R.string.get_started
+                            ),
                             fontSize = 18.sp,
                             fontFamily = MansalvaFontFamily,
                             color = Color.White

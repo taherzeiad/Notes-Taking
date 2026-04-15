@@ -42,7 +42,7 @@ import coil.compose.AsyncImage
 @Composable
 fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) {
 
-    val sdf = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
+    val sdf = remember { SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH) }
     val currentDate = remember { sdf.format(Date()) }
 
     var title by remember { mutableStateOf("") }

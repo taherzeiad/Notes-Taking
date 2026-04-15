@@ -7,13 +7,14 @@ val OnboardingBackground = Color(0xFFFAF0E6)
 val OnboardingBrown = Color(0xFF6B3A2A)
 val OnboardingDot = Color(0xFFD4B8A8)
 
+// ======= ألوان الشاشة Splash =======
+
 val SplashBackground = Color(0xFFF5DEB3).copy(alpha = 0.6f) // بيج فاتح
 val BrownColor = Color(0xFF6B2D0E) // بني غامق
 
-// ======= Home Colors =======
+// ======= ألوان الشاشة Home =======
 val BackgroundColor = Color(0xFFF5F5F5)
 val CardYellow = Color(0xFFFFF8E7)
-val CardPurple = Color(0xFFEEEBF8)
 val CardWhite = Color(0xFFFFFFFF)
 val TextPrimary = Color(0xFF1A1A1A)
 val TextSecondary = Color(0xFF9E9E9E)
