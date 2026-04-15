@@ -353,7 +353,7 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
             colors = ButtonDefaults.buttonColors(
                 containerColor = FabColor, contentColor = Color(0xFFFFFFFF),
 
-                disabledContainerColor = Color(0x8F4A3728), disabledContentColor = Color(0xFFFFFFFF)
+                disabledContainerColor = reFabColor, disabledContentColor = Color(0xFFFFFFFF)
             )
         ) {
             Text(

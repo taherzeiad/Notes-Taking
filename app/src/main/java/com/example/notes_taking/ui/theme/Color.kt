@@ -19,6 +19,7 @@ val CardWhite = Color(0xFFFFFFFF)
 val TextPrimary = Color(0xFF1A1A1A)
 val TextSecondary = Color(0xFF9E9E9E)
 val FabColor = Color(0xFF4A3728)
+ val reFabColor = Color(0xFFD9C8BD)
 
 ///////////////////////////////////////////////////
 val Purple80 = Color(0xFFD0BCFF)
