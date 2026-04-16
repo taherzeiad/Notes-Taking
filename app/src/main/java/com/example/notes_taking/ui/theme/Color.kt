@@ -13,9 +13,12 @@ val SplashBackground = Color(0xFFF5DEB3).copy(alpha = 0.6f) // بيج فاتح
 val BrownColor = Color(0xFF6B2D0E) // بني غامق
 
 // ======= ألوان الشاشة Home =======
-val BackgroundColor = Color(0xFFF5F5F5)
-val CardYellow = Color(0xFFFFF8E7)
-val CardWhite = Color(0xFFFFFFFF)
+val PageBackground = Color(0xFFF5F0EB)
+val BrownCard = Color(0xFF6B3A2A)
+val TagBg = Color(0xFFEDE0D6)
+val TagText = Color(0xFF8B6355)
+val WaveColor = Color(0xFFB8D4D0).copy(alpha = 0.6f)
+val QuickBtnBg = Color(0xFFEDE8E3)
 val TextPrimary = Color(0xFF1A1A1A)
 val TextSecondary = Color(0xFF9E9E9E)
 val FabColor = Color(0xFF4A3728)

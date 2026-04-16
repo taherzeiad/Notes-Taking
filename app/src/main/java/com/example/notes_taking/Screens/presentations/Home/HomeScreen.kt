@@ -1,499 +1,571 @@
 package com.example.notes_taking.Screens.presentations.Home
 
-import android.annotation.SuppressLint
-import android.content.Context
-import android.os.Build
-import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.example.notes_taking.R
 import com.example.notes_taking.RoomDatabase.Note
 import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModel
 import com.example.notes_taking.ui.theme.*
 
-
-@RequiresApi(Build.VERSION_CODES.N)
-@SuppressLint("LocalContextConfigurationRead")
 @Composable
 fun HomeScreen(
-    onAddNote: () -> Unit, onEditNote: (Int) -> Unit, viewModel: NoteViewModel
+    onAddNote: () -> Unit,
+    onEditNote: (Int) -> Unit,
+    viewModel: NoteViewModel
 ) {
-
     val notes by viewModel.allNotes.collectAsState(initial = emptyList())
+    val lastNote = notes.firstOrNull()
 
-    var searchQuery by remember { mutableStateOf("") }
-    var expanded by remember { mutableStateOf(false) }
-
-    val filterOptions = listOf(
-        stringResource(R.string.all_notes),
-        stringResource(R.string.pinned_notes),
-        stringResource(R.string.others)
-    )
-
-    var selectedFilter by remember { mutableStateOf(filterOptions[0]) }
-
-    LaunchedEffect(filterOptions) {
-        if (!filterOptions.contains(selectedFilter)) {
-            selectedFilter = filterOptions[0]
-        }
-    }
-    val searchedNotes = notes.filter {
-        it.title.contains(searchQuery, ignoreCase = true) || it.content.contains(
-            searchQuery, ignoreCase = true
-        )
-    }
-
-    val pinnedNotes = when (selectedFilter) {
-        stringResource(R.string.others) -> emptyList()
-        else -> searchedNotes.filter { it.isPinned }
-    }
-
-    val otherNotes = when (selectedFilter) {
-        stringResource(R.string.pinned_notes) -> emptyList()
-        else -> searchedNotes.filter { !it.isPinned }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundColor)
-    ) {
+    Scaffold(
+        containerColor = PageBackground,
+        bottomBar = { BottomNavBar() }
+    ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(padding)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-
-            // ======= Header =======
+            // ======= Top Bar =======
             item {
-                Spacer(modifier = Modifier.height(16.dp))
-
+                Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Avatar
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(BrownCard),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
 
-                    // 1. قسم اختيار نوع الملاحظات (All Notes / Pinned / Others)
-                    Box {
+                    }
+
+                    // العنوان
+                    Text(
+                        text = "Intellectual\nSanctuary",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = ManropeFontFamily,
+                        color = TextPrimary,
+                        textAlign = TextAlign.Center
+                    )
+
+                    // أيقونة الكتاب
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                        contentDescription = null,
+                        tint = TextPrimary,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+            }
+
+            // ======= Welcome =======
+            item {
+                Column {
+                    Text(
+                        text = "أهلاً بك، سارة",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = MansalvaFontFamily,
+                        color = TextPrimary,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "نظرة سريعة على واحتك الفكرية اليوم.",
+                        fontSize = 14.sp,
+                        fontFamily = ManropeFontFamily,
+                        color = TextSecondary,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            // ======= AI Card =======
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = BrownCard)
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        // AI Badge
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { expanded = true }) {
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "اقتراح ذكي من الـ AI",
+                                    fontSize = 12.sp,
+                                    fontFamily = ManropeFontFamily,
+                                    color = Color.White.copy(alpha = 0.7f)
+                                )
+                                Icon(
+                                    imageVector = Icons.Outlined.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = Color.White.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = "هل تريد تلخيص ملاحظات الأمس؟ لقد رصدنا ٤ أفكار مترابطة تستحق التدوين.",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = MansalvaFontFamily,
+                            color = Color.White,
+                            textAlign = TextAlign.End,
+                            lineHeight = 26.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // زر التلخيص
+                        Button(
+                            onClick = { },
+                            modifier = Modifier.align(Alignment.End),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.White
+                            )
+                        ) {
                             Text(
-                                text = selectedFilter,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
+                                text = "ابدأ التلخيص الآن",
+                                fontSize = 14.sp,
+                                fontFamily = ManropeFontFamily,
+                                color = BrownCard,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ======= Upcoming Task =======
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(0.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        // Header
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.CalendarMonth,
+                                contentDescription = null,
+                                tint = TextSecondary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = "أهم مهمة قادمة",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
                                 fontFamily = ManropeFontFamily,
                                 color = TextPrimary
                             )
-                            Icon(
-                                imageVector = if (expanded) Icons.Default.ArrowDropUp
-                                else Icons.Default.ArrowDropDown,
-                                contentDescription = null,
-                                tint = TextPrimary
-                            )
                         }
 
-                        DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                            modifier = Modifier.background(CardWhite)
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Time Badge
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
                         ) {
-                            filterOptions.forEach { option ->
-                                DropdownMenuItem(text = {
-                                    Text(
-                                        text = option,
-                                        fontFamily = ManropeFontFamily,
-                                        fontSize = 15.sp,
-                                        color = if (option == selectedFilter) FabColor else TextPrimary,
-                                        fontWeight = if (option == selectedFilter) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                }, onClick = {
-                                    selectedFilter = option
-                                    expanded = false
-                                }, leadingIcon = {
-                                    if (option == selectedFilter) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = null,
-                                            tint = FabColor,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                })
+                            Box(
+                                modifier = Modifier
+                                    .background(TagBg, RoundedCornerShape(20.dp))
+                                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "في غضون ساعتين",
+                                    fontSize = 12.sp,
+                                    fontFamily = ManropeFontFamily,
+                                    color = TagText
+                                )
                             }
                         }
-                    }
 
-                    LanguageToggleButton()
-                }
-            }
+                        Spacer(modifier = Modifier.height(8.dp))
 
-            // ======= Search Bar =======
-            item {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = {
+                        // Task Title
                         Text(
-                            text = stringResource(R.string.search),
-                            color = TextSecondary,
-                            fontFamily = ManropeFontFamily
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            Icons.Default.Search, contentDescription = null, tint = TextSecondary
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = CardWhite,
-                        focusedContainerColor = CardWhite,
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = FabColor.copy(alpha = 0.5f)
-                    ),
-                    singleLine = true
-                )
-            }
-
-            // ======= Pinned Section =======
-            if (pinnedNotes.isNotEmpty()) {
-                item {
-                    Text(
-                        text = stringResource(R.string.pinned),
-                        fontSize = 14.sp,
-                        fontFamily = ManropeFontFamily,
-                        color = TextSecondary,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-                item {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(pinnedNotes) { note ->
-                            PinnedNoteCard(
-                                note = note,
-                                onClick = { onEditNote(note.id) },
-                                onUnpin = { viewModel.togglePin(note) })
-                        }
-                    }
-                }
-            }
-
-            // ======= Others Section =======
-            if (otherNotes.isNotEmpty()) {
-                item {
-                    Text(
-                        text = stringResource(R.string.others),
-                        fontSize = 14.sp,
-                        fontFamily = ManropeFontFamily,
-                        color = TextSecondary,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-                items(otherNotes) { note ->
-                    OtherNoteCard(
-                        note = note,
-                        onDelete = { viewModel.deleteNote(note) },
-                        onClick = { onEditNote(note.id) },
-                        onPin = { viewModel.togglePin(note) })
-                }
-            }
-
-            // ======= Empty State =======
-            if (pinnedNotes.isEmpty() && otherNotes.isEmpty()) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 100.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.no_notes),
-                            color = TextSecondary,
+                            text = "مراجعة مسودة كتاب \"عصر الذكاء\"",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
                             fontFamily = ManropeFontFamily,
-                            fontSize = 16.sp
+                            color = TextPrimary,
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.fillMaxWidth()
                         )
-                    }
-                }
-            }
 
-            item { Spacer(modifier = Modifier.height(80.dp)) }
-        }
-        // ======= FAB =======
-        val layoutDirection = LocalLayoutDirection.current
+                        Spacer(modifier = Modifier.height(6.dp))
 
-        Box(modifier = Modifier.fillMaxSize()) {
-            FloatingActionButton(
-                onClick = onAddNote,
-                containerColor = FabColor,
-                shape = CircleShape,
-                modifier = Modifier
-                    .align(
-                        if (layoutDirection == LayoutDirection.Rtl) Alignment.BottomEnd   // عربي → يمين
-                        else Alignment.BottomStart
-                    )
-                    .padding(24.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.material_symbols),
-                    contentDescription = "Add Note",
-                    tint = Color.White,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-        }
-    }
-}
-
-// ======= Pinned Note Card =======
-@Composable
-fun PinnedNoteCard(note: Note, onClick: () -> Unit, onUnpin: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .width(160.dp)
-            .height(160.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardYellow),
-        elevation = CardDefaults.cardElevation(0.dp)
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(14.dp)
-            ) {
-                Text(
-                    text = note.title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = ManropeFontFamily,
-                    color = TextPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = note.date,
-                    fontSize = 12.sp,
-                    fontFamily = ManropeFontFamily,
-                    color = TextSecondary
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = note.content,
-                    fontSize = 13.sp,
-                    fontFamily = ManropeFontFamily,
-                    color = TextPrimary.copy(alpha = 0.8f),
-                    lineHeight = 18.sp,
-                    maxLines = 4,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            // زر إلغاء التثبيت
-            IconButton(
-                onClick = onUnpin, modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(28.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PushPin,
-                    contentDescription = "Unpin",
-                    tint = FabColor,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-        }
-    }
-}
-
-// ======= Other Note Card =======
-@Composable
-fun OtherNoteCard(
-    note: Note, onClick: () -> Unit, onDelete: () -> Unit, onPin: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
-        elevation = CardDefaults.cardElevation(0.dp)
-    ) {
-        Column {
-            // صورة إن وجدت
-            if (!note.imageUri.isNullOrEmpty()) {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    AsyncImage(
-                        model = note.imageUri,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(120.dp)
-                            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                    )
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(120.dp)
-                            .background(
-                                Color.Black.copy(alpha = 0.35f),
-                                RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
-                            )
-                    )
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(12.dp)
-                    ) {
-                        Text(
-                            text = note.title,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            fontFamily = ManropeFontFamily,
-                            color = Color.White
-                        )
-                        Text(
-                            text = note.date,
-                            fontSize = 12.sp,
-                            fontFamily = ManropeFontFamily,
-                            color = Color.White.copy(alpha = 0.8f)
-                        )
-                    }
-                }
-            }
-
-            Column(modifier = Modifier.padding(14.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        if (note.imageUri.isNullOrEmpty()) {
+                        // Location
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                text = note.title,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                fontFamily = ManropeFontFamily,
-                                color = TextPrimary,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = note.date,
-                                fontSize = 12.sp,
+                                text = "المكتبة المركزية",
+                                fontSize = 13.sp,
                                 fontFamily = ManropeFontFamily,
                                 color = TextSecondary
                             )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Outlined.LocationOn,
+                                contentDescription = null,
+                                tint = TextSecondary,
+                                modifier = Modifier.size(14.dp)
+                            )
                         }
-                    }
 
-                    // أزرار التثبيت والحذف
-                    Row {
-                        IconButton(onClick = onPin, modifier = Modifier.size(36.dp)) {
-                            Icon(
-                                imageVector = Icons.Default.PushPin,
-                                contentDescription = "Pin",
-                                tint = TextSecondary,
-                                modifier = Modifier.size(18.dp)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(color = Color(0xFFF0EBE6))
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // عرض كل المهام
+                        Text(
+                            text = "عرض كل المهام",
+                            fontSize = 14.sp,
+                            fontFamily = ManropeFontFamily,
+                            color = BrownCard,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { }
+                        )
+                    }
+                }
+            }
+
+            // ======= Last Edited Note =======
+            item {
+                Column {
+                    Text(
+                        text = "آخر ملاحظة تم تعديلها",
+                        fontSize = 15.sp,
+                        fontFamily = ManropeFontFamily,
+                        color = TextSecondary,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { lastNote?.let { onEditNote(it.id) } },
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(0.dp)
+                    ) {
+                        Column {
+                            // Wave Chart
+                            WaveChart(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(100.dp)
                             )
-                        }
-                        IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete",
-                                tint = TextSecondary,
-                                modifier = Modifier.size(18.dp)
-                            )
+
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                // Tags
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                                ) {
+                                    listOf("فلسفة", "قراءات").forEach { tag ->
+                                        Box(
+                                            modifier = Modifier
+                                                .background(TagBg, RoundedCornerShape(20.dp))
+                                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = tag,
+                                                fontSize = 12.sp,
+                                                fontFamily = ManropeFontFamily,
+                                                color = TagText
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                // Note Title
+                                Text(
+                                    text = lastNote?.title ?: "تأملات في الوعي الرقمي وتأثير الخوارزميات",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = MansalvaFontFamily,
+                                    color = TextPrimary,
+                                    textAlign = TextAlign.End,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // Note Content
+                                Text(
+                                    text = lastNote?.content ?: "هناك فجوة متزايدة بين ما ندركه كواقع وبين ما تقدمه لنا الأنظمة الرقمية.",
+                                    fontSize = 14.sp,
+                                    fontFamily = ManropeFontFamily,
+                                    color = TextPrimary.copy(alpha = 0.7f),
+                                    textAlign = TextAlign.End,
+                                    maxLines = 3,
+                                    overflow = TextOverflow.Ellipsis,
+                                    lineHeight = 22.sp,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+                                HorizontalDivider(color = Color(0xFFF0EBE6))
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                // Footer
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // أكمل الكتابة
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        modifier = Modifier.clickable {
+                                            lastNote?.let { onEditNote(it.id) }
+                                        }
+                                    ) {
+                                        Text(
+                                            text = "←",
+                                            fontSize = 14.sp,
+                                            color = BrownCard
+                                        )
+                                        Text(
+                                            text = "أكمل الكتابة",
+                                            fontSize = 14.sp,
+                                            fontFamily = ManropeFontFamily,
+                                            color = BrownCard,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+
+                                    // الوقت
+                                    Text(
+                                        text = "تم التعديل منذ ١٥ دقيقة",
+                                        fontSize = 12.sp,
+                                        fontFamily = ManropeFontFamily,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
                         }
                     }
                 }
+            }
 
-                if (note.content.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = note.content,
-                        fontSize = 13.sp,
-                        fontFamily = ManropeFontFamily,
-                        color = TextPrimary.copy(alpha = 0.8f),
-                        lineHeight = 18.sp,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+            // ======= Quick Actions =======
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // صف أول
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // تسجيل صوتي
+                        QuickActionButton(
+                            label = "تسجيل صوتي",
+                            icon = Icons.Outlined.Mic,
+                            modifier = Modifier.weight(1f),
+                            onClick = { }
+                        )
+                        // فكرة سريعة
+                        QuickActionButton(
+                            label = "فكرة سريعة",
+                            icon = Icons.Outlined.Lightbulb,
+                            modifier = Modifier.weight(1f),
+                            onClick = onAddNote
+                        )
+                    }
+
+                    // صف ثاني
+                    QuickActionButton(
+                        label = "إضافة وثيقة",
+                        icon = Icons.Outlined.Image,
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { }
                     )
                 }
             }
+
+            item { Spacer(modifier = Modifier.height(8.dp)) }
         }
     }
 }
 
-@SuppressLint("UseKtx")
+// ======= Wave Chart =======
 @Composable
-fun LanguageToggleButton() {
-    val context = LocalContext.current
-    val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+fun WaveChart(modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val width = size.width
+        val height = size.height
 
-    // يفضل جلب اللغة الحالية من الإعدادات مباشرة
-    var currentLang by remember {
-        mutableStateOf(prefs.getString("language", "en") ?: "en")
+        val path = Path().apply {
+            moveTo(0f, height * 0.7f)
+            cubicTo(width * 0.15f, height * 0.8f, width * 0.25f, height * 0.5f, width * 0.4f, height * 0.55f)
+            cubicTo(width * 0.55f, height * 0.6f, width * 0.65f, height * 0.3f, width * 0.8f, height * 0.35f)
+            cubicTo(width * 0.9f, height * 0.38f, width * 0.95f, height * 0.45f, width, height * 0.4f)
+            lineTo(width, height)
+            lineTo(0f, height)
+            close()
+        }
+        drawPath(path = path, color = WaveColor, style = Fill)
     }
+}
 
-    OutlinedButton(
-        onClick = {
-            val newLang = if (currentLang == "en") "ar" else "en"
-
-            // 1. حفظ اللغة الجديدة في SharedPreferences
-            prefs.edit().putString("language", newLang).apply()
-
-            // 2. تحديث الحالة المحلية للزر
-            currentLang = newLang
-
-            com.example.notes_taking.utils.LocaleUtils.setLocale(context, newLang)
-
-            (context as? android.app.Activity)?.recreate()
-        },
-        shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, FabColor.copy(alpha = 0.5f)),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-        modifier = Modifier.height(36.dp)
+// ======= Quick Action Button =======
+@Composable
+fun QuickActionButton(
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = modifier
+            .height(52.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = QuickBtnBg),
+        elevation = CardDefaults.cardElevation(0.dp)
     ) {
-        Text(
-            text = if (currentLang == "en") "عربي" else "English",
-            fontFamily = ManropeFontFamily,
-            fontSize = 13.sp,
-            color = FabColor
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End
+        ) {
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                fontFamily = ManropeFontFamily,
+                color = TextPrimary,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = BrownCard,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+// ======= Bottom Navigation =======
+@Composable
+fun BottomNavBar() {
+    var selectedTab by remember { mutableStateOf(3) }
+
+    NavigationBar(
+        containerColor = Color.White,
+        tonalElevation = 0.dp
+    ) {
+        val tabs = listOf(
+            Pair("SETTINGS", Icons.Outlined.Settings),
+            Pair("TASKS", Icons.Outlined.CheckCircle),
+            Pair("NOTES", Icons.Outlined.NoteAlt),
+            Pair("HOME", Icons.Filled.Home)
         )
+
+        tabs.forEachIndexed { index, (label, icon) ->
+            NavigationBarItem(
+                selected = selectedTab == index,
+                onClick = { selectedTab = index },
+                icon = {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = label,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                label = {
+                    Text(
+                        text = label,
+                        fontSize = 10.sp,
+                        fontFamily = ManropeFontFamily
+                    )
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = BrownCard,
+                    selectedTextColor = BrownCard,
+                    unselectedIconColor = TextSecondary,
+                    unselectedTextColor = TextSecondary,
+                    indicatorColor = Color.Transparent
+                )
+            )
+        }
     }
 }
