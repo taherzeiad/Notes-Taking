@@ -1,5 +1,6 @@
 package com.example.notes_taking.Screens.presentations.Home
 
+import com.example.notes_taking.R
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,18 +17,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.notes_taking.R
-import com.example.notes_taking.RoomDatabase.Note
 import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModel
 import com.example.notes_taking.ui.theme.*
 
@@ -78,7 +76,7 @@ fun HomeScreen(
 
                     // العنوان
                     Text(
-                        text = "Intellectual\nSanctuary",
+                        text = stringResource(R.string.app_name_styled),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = ManropeFontFamily,
@@ -100,7 +98,7 @@ fun HomeScreen(
             item {
                 Column {
                     Text(
-                        text = "أهلاً بك، سارة",
+                        text = stringResource(R.string.welcome_user, "سارة"),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = MansalvaFontFamily,
@@ -110,7 +108,7 @@ fun HomeScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "نظرة سريعة على واحتك الفكرية اليوم.",
+                        text = stringResource(R.string.welcome_subtitle),
                         fontSize = 14.sp,
                         fontFamily = ManropeFontFamily,
                         color = TextSecondary,
@@ -138,8 +136,7 @@ fun HomeScreen(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Text(
-                                    text = "اقتراح ذكي من الـ AI",
-                                    fontSize = 12.sp,
+                                    text = stringResource(R.string.ai_suggestion), fontSize = 12.sp,
                                     fontFamily = ManropeFontFamily,
                                     color = Color.White.copy(alpha = 0.7f)
                                 )
@@ -155,7 +152,7 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = "هل تريد تلخيص ملاحظات الأمس؟ لقد رصدنا ٤ أفكار مترابطة تستحق التدوين.",
+                            text = stringResource(R.string.ai_prompt_text),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = MansalvaFontFamily,
@@ -176,7 +173,7 @@ fun HomeScreen(
                             )
                         ) {
                             Text(
-                                text = "ابدأ التلخيص الآن",
+                                text = stringResource(R.string.start_summary),
                                 fontSize = 14.sp,
                                 fontFamily = ManropeFontFamily,
                                 color = BrownCard,
@@ -209,7 +206,7 @@ fun HomeScreen(
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
-                                text = "أهم مهمة قادمة",
+                                text = stringResource(R.string.important_task),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 fontFamily = ManropeFontFamily,
@@ -230,7 +227,7 @@ fun HomeScreen(
                                     .padding(horizontal = 12.dp, vertical = 4.dp)
                             ) {
                                 Text(
-                                    text = "في غضون ساعتين",
+                                    text = stringResource(R.string.task_due_time),
                                     fontSize = 12.sp,
                                     fontFamily = ManropeFontFamily,
                                     color = TagText
@@ -242,12 +239,12 @@ fun HomeScreen(
 
                         // Task Title
                         Text(
-                            text = "مراجعة مسودة كتاب \"عصر الذكاء\"",
+                            text = stringResource(R.string.task_book_review),
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = ManropeFontFamily,
                             color = TextPrimary,
-                            textAlign = TextAlign.End,
+                            textAlign = TextAlign.Start,
                             modifier = Modifier.fillMaxWidth()
                         )
 
@@ -260,7 +257,7 @@ fun HomeScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "المكتبة المركزية",
+                                text = stringResource(R.string.location_library),
                                 fontSize = 13.sp,
                                 fontFamily = ManropeFontFamily,
                                 color = TextSecondary
@@ -280,7 +277,7 @@ fun HomeScreen(
 
                         // عرض كل المهام
                         Text(
-                            text = "عرض كل المهام",
+                            text = stringResource(R.string.view_all_tasks),
                             fontSize = 14.sp,
                             fontFamily = ManropeFontFamily,
                             color = BrownCard,
@@ -298,7 +295,7 @@ fun HomeScreen(
             item {
                 Column {
                     Text(
-                        text = "آخر ملاحظة تم تعديلها",
+                        text = stringResource(R.string.last_edited_note),
                         fontSize = 15.sp,
                         fontFamily = ManropeFontFamily,
                         color = TextSecondary,
@@ -328,9 +325,15 @@ fun HomeScreen(
                                 // Tags
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                                    horizontalArrangement = Arrangement.spacedBy(
+                                        8.dp,
+                                        Alignment.End
+                                    )
                                 ) {
-                                    listOf("فلسفة", "قراءات").forEach { tag ->
+                                    listOf(
+                                        stringResource(R.string.tag_philosophy),
+                                        stringResource(R.string.tag_readings)
+                                    ).forEach { tag ->
                                         Box(
                                             modifier = Modifier
                                                 .background(TagBg, RoundedCornerShape(20.dp))
@@ -350,7 +353,8 @@ fun HomeScreen(
 
                                 // Note Title
                                 Text(
-                                    text = lastNote?.title ?: "تأملات في الوعي الرقمي وتأثير الخوارزميات",
+                                    text = lastNote?.title
+                                        ?: stringResource(R.string.default_note_title),
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = MansalvaFontFamily,
@@ -363,7 +367,8 @@ fun HomeScreen(
 
                                 // Note Content
                                 Text(
-                                    text = lastNote?.content ?: "هناك فجوة متزايدة بين ما ندركه كواقع وبين ما تقدمه لنا الأنظمة الرقمية.",
+                                    text = lastNote?.content
+                                        ?: stringResource(R.string.default_note_content),
                                     fontSize = 14.sp,
                                     fontFamily = ManropeFontFamily,
                                     color = TextPrimary.copy(alpha = 0.7f),
@@ -398,7 +403,7 @@ fun HomeScreen(
                                             color = BrownCard
                                         )
                                         Text(
-                                            text = "أكمل الكتابة",
+                                            text = stringResource(R.string.continue_writing),
                                             fontSize = 14.sp,
                                             fontFamily = ManropeFontFamily,
                                             color = BrownCard,
@@ -408,7 +413,7 @@ fun HomeScreen(
 
                                     // الوقت
                                     Text(
-                                        text = "تم التعديل منذ ١٥ دقيقة",
+                                        text = stringResource(R.string.edited_time_ago, "١٥"),
                                         fontSize = 12.sp,
                                         fontFamily = ManropeFontFamily,
                                         color = TextSecondary
@@ -434,14 +439,14 @@ fun HomeScreen(
                     ) {
                         // تسجيل صوتي
                         QuickActionButton(
-                            label = "تسجيل صوتي",
+                            label = stringResource(R.string.voice_record),
                             icon = Icons.Outlined.Mic,
                             modifier = Modifier.weight(1f),
                             onClick = { }
                         )
                         // فكرة سريعة
                         QuickActionButton(
-                            label = "فكرة سريعة",
+                            label = stringResource(R.string.quick_idea),
                             icon = Icons.Outlined.Lightbulb,
                             modifier = Modifier.weight(1f),
                             onClick = onAddNote
@@ -450,7 +455,7 @@ fun HomeScreen(
 
                     // صف ثاني
                     QuickActionButton(
-                        label = "إضافة وثيقة",
+                        label = stringResource(R.string.add_document),
                         icon = Icons.Outlined.Image,
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { }
@@ -472,9 +477,30 @@ fun WaveChart(modifier: Modifier = Modifier) {
 
         val path = Path().apply {
             moveTo(0f, height * 0.7f)
-            cubicTo(width * 0.15f, height * 0.8f, width * 0.25f, height * 0.5f, width * 0.4f, height * 0.55f)
-            cubicTo(width * 0.55f, height * 0.6f, width * 0.65f, height * 0.3f, width * 0.8f, height * 0.35f)
-            cubicTo(width * 0.9f, height * 0.38f, width * 0.95f, height * 0.45f, width, height * 0.4f)
+            cubicTo(
+                width * 0.15f,
+                height * 0.8f,
+                width * 0.25f,
+                height * 0.5f,
+                width * 0.4f,
+                height * 0.55f
+            )
+            cubicTo(
+                width * 0.55f,
+                height * 0.6f,
+                width * 0.65f,
+                height * 0.3f,
+                width * 0.8f,
+                height * 0.35f
+            )
+            cubicTo(
+                width * 0.9f,
+                height * 0.38f,
+                width * 0.95f,
+                height * 0.45f,
+                width,
+                height * 0.4f
+            )
             lineTo(width, height)
             lineTo(0f, height)
             close()
@@ -534,10 +560,10 @@ fun BottomNavBar() {
         tonalElevation = 0.dp
     ) {
         val tabs = listOf(
-            Pair("SETTINGS", Icons.Outlined.Settings),
-            Pair("TASKS", Icons.Outlined.CheckCircle),
-            Pair("NOTES", Icons.Outlined.NoteAlt),
-            Pair("HOME", Icons.Filled.Home)
+            Triple(stringResource(R.string.nav_settings), Icons.Outlined.Settings, 0),
+            Triple(stringResource(R.string.nav_tasks), Icons.Outlined.CheckCircle, 1),
+            Triple(stringResource(R.string.nav_notes), Icons.Outlined.NoteAlt, 2),
+            Triple(stringResource(R.string.nav_home), Icons.Filled.Home, 3)
         )
 
         tabs.forEachIndexed { index, (label, icon) ->
