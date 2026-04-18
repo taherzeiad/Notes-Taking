@@ -78,7 +78,7 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(320.dp)
+                        .height(300.dp)
                         .padding(horizontal = 24.dp)
                         .clip(RoundedCornerShape(32.dp))
                         .background(Color(0xFFF5E6D8)),
@@ -116,12 +116,12 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                     }
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(25.dp))
 
                 // ======= النص الرئيسي =======
                 Text(
                     text = stringResource(id = page.titleRes),
-                    fontSize = 30.sp,
+                    fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = MansalvaFontFamily,
                     color = OnboardingBrown,
@@ -138,11 +138,11 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                     fontFamily = ManropeFontFamily,
                     color = OnboardingBrown.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,
-                    lineHeight = 24.sp,
+                    lineHeight = 29.3.sp,
                     modifier = Modifier.padding(horizontal = 40.dp)
                 )
 
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.weight(1.2f))
 
                 // ======= زر التالي =======
                 Button(
@@ -189,7 +189,7 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                 TextButton(onClick = onFinish) {
                     Text(
                         text = stringResource(id = R.string.skip),
-                        fontSize = 15.sp,
+                        fontSize = 18.sp,
                         fontFamily = ManropeFontFamily,
                         color = OnboardingBrown.copy(alpha = 0.6f)
                     )

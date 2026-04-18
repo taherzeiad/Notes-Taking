@@ -98,7 +98,7 @@ fun HomeScreen(
             item {
                 Column {
                     Text(
-                        text = stringResource(R.string.welcome_user, "سارة"),
+                        text = stringResource(R.string.welcome_user, "Sara"),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = MansalvaFontFamily,
