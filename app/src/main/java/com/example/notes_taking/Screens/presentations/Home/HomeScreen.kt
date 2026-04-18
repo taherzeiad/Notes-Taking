@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModel
 import com.example.notes_taking.ui.theme.*
 
@@ -35,7 +36,8 @@ fun HomeScreen(
     onEditNote: (Int) -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToTasks: () -> Unit,
-    viewModel: NoteViewModel
+    viewModel: NoteViewModel,
+    navController: NavHostController // إضافة navController هنا لاستخدامه في البار السفلي
 ) {
     val notes by viewModel.allNotes.collectAsState(initial = emptyList())
     val lastNote = notes.firstOrNull()
@@ -44,14 +46,8 @@ fun HomeScreen(
         containerColor = PageBackground,
         bottomBar = {
             BottomNavBar(
-                selectedTab = 3,
-                onNavigate = { index ->
-                    when (index) {
-                        0 -> onNavigateToSettings()
-                        1 -> onNavigateToTasks()
-                        3 -> {}
-                    }
-                }
+                navController = navController,
+                selectedTab = 3 // الـ Home هو التبويب الرابع (index 3)
             )
         }
     ) { padding ->
@@ -71,7 +67,6 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Avatar
                     Box(
                         modifier = Modifier
                             .size(40.dp)
@@ -85,10 +80,8 @@ fun HomeScreen(
                             tint = Color.White,
                             modifier = Modifier.size(24.dp)
                         )
-
                     }
 
-                    // العنوان
                     Text(
                         text = stringResource(R.string.app_name_styled),
                         fontSize = 16.sp,
@@ -98,7 +91,6 @@ fun HomeScreen(
                         textAlign = TextAlign.Center
                     )
 
-                    // أيقونة الكتاب
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.MenuBook,
                         contentDescription = null,
@@ -140,7 +132,6 @@ fun HomeScreen(
                     colors = CardDefaults.cardColors(containerColor = BrownCard)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
-                        // AI Badge
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End
@@ -177,14 +168,11 @@ fun HomeScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // زر التلخيص
                         Button(
                             onClick = { },
                             modifier = Modifier.align(Alignment.End),
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.White
-                            )
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White)
                         ) {
                             Text(
                                 text = stringResource(R.string.start_summary),
@@ -207,7 +195,6 @@ fun HomeScreen(
                     elevation = CardDefaults.cardElevation(0.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        // Header
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -230,7 +217,6 @@ fun HomeScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Time Badge
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End
@@ -251,7 +237,6 @@ fun HomeScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Task Title
                         Text(
                             text = stringResource(R.string.task_book_review),
                             fontSize = 17.sp,
@@ -264,7 +249,6 @@ fun HomeScreen(
 
                         Spacer(modifier = Modifier.height(6.dp))
 
-                        // Location
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End,
@@ -289,7 +273,6 @@ fun HomeScreen(
                         HorizontalDivider(color = Color(0xFFF0EBE6))
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // عرض كل المهام
                         Text(
                             text = stringResource(R.string.view_all_tasks),
                             fontSize = 14.sp,
@@ -299,7 +282,7 @@ fun HomeScreen(
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { }
+                                .clickable { onNavigateToTasks() } // ربط الانتقال للمهام
                         )
                     }
                 }
@@ -328,21 +311,12 @@ fun HomeScreen(
                         elevation = CardDefaults.cardElevation(0.dp)
                     ) {
                         Column {
-                            // Wave Chart
-                            WaveChart(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(100.dp)
-                            )
+                            WaveChart(modifier = Modifier.fillMaxWidth().height(100.dp))
 
                             Column(modifier = Modifier.padding(16.dp)) {
-                                // Tags
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(
-                                        8.dp,
-                                        Alignment.End
-                                    )
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                                 ) {
                                     listOf(
                                         stringResource(R.string.tag_philosophy),
@@ -353,22 +327,15 @@ fun HomeScreen(
                                                 .background(TagBg, RoundedCornerShape(20.dp))
                                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                                         ) {
-                                            Text(
-                                                text = tag,
-                                                fontSize = 12.sp,
-                                                fontFamily = ManropeFontFamily,
-                                                color = TagText
-                                            )
+                                            Text(text = tag, fontSize = 12.sp, fontFamily = ManropeFontFamily, color = TagText)
                                         }
                                     }
                                 }
 
                                 Spacer(modifier = Modifier.height(10.dp))
 
-                                // Note Title
                                 Text(
-                                    text = lastNote?.title
-                                        ?: stringResource(R.string.default_note_title),
+                                    text = lastNote?.title ?: stringResource(R.string.default_note_title),
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = MansalvaFontFamily,
@@ -379,10 +346,8 @@ fun HomeScreen(
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                // Note Content
                                 Text(
-                                    text = lastNote?.content
-                                        ?: stringResource(R.string.default_note_content),
+                                    text = lastNote?.content ?: stringResource(R.string.default_note_content),
                                     fontSize = 14.sp,
                                     fontFamily = ManropeFontFamily,
                                     color = TextPrimary.copy(alpha = 0.7f),
@@ -397,35 +362,20 @@ fun HomeScreen(
                                 HorizontalDivider(color = Color(0xFFF0EBE6))
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                // Footer
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // أكمل الكتابة
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        modifier = Modifier.clickable {
-                                            lastNote?.let { onEditNote(it.id) }
-                                        }
+                                        modifier = Modifier.clickable { lastNote?.let { onEditNote(it.id) } }
                                     ) {
-                                        Text(
-                                            text = "←",
-                                            fontSize = 14.sp,
-                                            color = BrownCard
-                                        )
-                                        Text(
-                                            text = stringResource(R.string.continue_writing),
-                                            fontSize = 14.sp,
-                                            fontFamily = ManropeFontFamily,
-                                            color = BrownCard,
-                                            fontWeight = FontWeight.Medium
-                                        )
+                                        Text(text = "←", fontSize = 14.sp, color = BrownCard)
+                                        Text(text = stringResource(R.string.continue_writing), fontSize = 14.sp, fontFamily = ManropeFontFamily, color = BrownCard, fontWeight = FontWeight.Medium)
                                     }
 
-                                    // الوقت
                                     Text(
                                         text = stringResource(R.string.edited_time_ago, "١٥"),
                                         fontSize = 12.sp,
@@ -446,19 +396,16 @@ fun HomeScreen(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // صف أول
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // تسجيل صوتي
                         QuickActionButton(
                             label = stringResource(R.string.voice_record),
                             icon = Icons.Outlined.Mic,
                             modifier = Modifier.weight(1f),
                             onClick = { }
                         )
-                        // فكرة سريعة
                         QuickActionButton(
                             label = stringResource(R.string.quick_idea),
                             icon = Icons.Outlined.Lightbulb,
@@ -467,7 +414,6 @@ fun HomeScreen(
                         )
                     }
 
-                    // صف ثاني
                     QuickActionButton(
                         label = stringResource(R.string.add_document),
                         icon = Icons.Outlined.Image,
@@ -491,30 +437,9 @@ fun WaveChart(modifier: Modifier = Modifier) {
 
         val path = Path().apply {
             moveTo(0f, height * 0.7f)
-            cubicTo(
-                width * 0.15f,
-                height * 0.8f,
-                width * 0.25f,
-                height * 0.5f,
-                width * 0.4f,
-                height * 0.55f
-            )
-            cubicTo(
-                width * 0.55f,
-                height * 0.6f,
-                width * 0.65f,
-                height * 0.3f,
-                width * 0.8f,
-                height * 0.35f
-            )
-            cubicTo(
-                width * 0.9f,
-                height * 0.38f,
-                width * 0.95f,
-                height * 0.45f,
-                width,
-                height * 0.4f
-            )
+            cubicTo(width * 0.15f, height * 0.8f, width * 0.25f, height * 0.5f, width * 0.4f, height * 0.55f)
+            cubicTo(width * 0.55f, height * 0.6f, width * 0.65f, height * 0.3f, width * 0.8f, height * 0.35f)
+            cubicTo(width * 0.9f, height * 0.38f, width * 0.95f, height * 0.45f, width, height * 0.4f)
             lineTo(width, height)
             lineTo(0f, height)
             close()
@@ -532,59 +457,53 @@ fun QuickActionButton(
     onClick: () -> Unit
 ) {
     Card(
-        modifier = modifier
-            .height(52.dp)
-            .clickable { onClick() },
+        modifier = modifier.height(52.dp).clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = QuickBtnBg),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.End
         ) {
-            Text(
-                text = label,
-                fontSize = 14.sp,
-                fontFamily = ManropeFontFamily,
-                color = TextPrimary,
-                fontWeight = FontWeight.Medium
-            )
+            Text(text = label, fontSize = 14.sp, fontFamily = ManropeFontFamily, color = TextPrimary, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.width(8.dp))
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = BrownCard,
-                modifier = Modifier.size(20.dp)
-            )
+            Icon(imageVector = icon, contentDescription = null, tint = BrownCard, modifier = Modifier.size(20.dp))
         }
     }
 }
 
-// ======= Bottom Navigation =======
+// ======= Bottom Navigation (تم حل المشاكل هنا) =======
 @Composable
 fun BottomNavBar(
-    selectedTab: Int = 3,
-    onNavigate: (Int) -> Unit = {}
+    navController: NavHostController,
+    selectedTab: Int
 ) {
     NavigationBar(
         containerColor = Color.White,
         tonalElevation = 0.dp
     ) {
         val tabs = listOf(
-            Pair("SETTINGS", Icons.Outlined.Settings),
-            Pair("TASKS", Icons.Outlined.CheckCircle),
-            Pair("NOTES", Icons.Outlined.NoteAlt),
-            Pair("HOME", Icons.Filled.Home)
+            Triple(stringResource(R.string.nav_settings), Icons.Outlined.Settings, "settings_screen"),
+            Triple(stringResource(R.string.nav_tasks), Icons.Outlined.CheckCircle, "tasks_screen"),
+            Triple(stringResource(R.string.nav_notes), Icons.Outlined.NoteAlt, "home_screen"), // أو مسار قائمة الملاحظات
+            Triple(stringResource(R.string.nav_home), Icons.Filled.Home, "home_screen")
         )
 
-        tabs.forEachIndexed { index, (label, icon) ->
+        tabs.forEachIndexed { index, (label, icon, route) ->
             NavigationBarItem(
                 selected = selectedTab == index,
-                onClick = { onNavigate(index) },
+                onClick = {
+                    if (selectedTab != index) {
+                        navController.navigate(route) {
+                            // للحفاظ على نظافة الـ BackStack وتجنب تكرار الصفحات
+                            popUpTo("home_screen") { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                },
                 icon = {
                     Icon(
                         imageVector = icon,
