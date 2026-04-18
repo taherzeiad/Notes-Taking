@@ -75,4 +75,34 @@
     <string name="item_privacy_center">مركز الخصوصية</string>
     <string name="item_about">حول التطبيق</string>
     <string name="btn_logout">تسجيل الخروج</string>
+
+    <!-- Tasks -->
+    <string name="tasks_title">قائمة المهام</string>
+    <string name="tasks_subtitle">نظّم أفكارك وحوّلها إلى أفعال. تم استخراج هذه المهام بذكاء من ملاحظاتك الأخيرة.</string>
+    <string name="tab_in_progress">قيد التنفيذ</string>
+    <string name="tab_completed">مكتملة</string>
+    <string name="tab_scheduled">المجدولة</string>
+    <string name="tag_urgent">عاجل</string>
+    <string name="ai_insights_title">رؤى ذكية</string>
+    <string name="ai_insights_body">لقد أكملت 70% من مهام \"الملاحظات الفلسفية\" هذا الأسبوع. أنت في طريقك لإنهاء المشروع قبل الموعد!</string>
+    <string name="source_categories">تصنيفات المصادر</string>
+    <string name="cat_research">الأبحاث العلمية</string>
+    <string name="cat_personal">يوميات شخصية</string>
+    <string name="cat_meetings">اجتماعات العمل</string>
+    <string name="tasks_unit">مهام</string>
+    <!-- Tasks Content -->
+    <string name="task_1_title">مراجعة المسودة النهائية لكتاب \"الذكاء الوجداني\"</string>
+    <string name="task_1_source">المصدر: ملاحظات التأليف الأدبي</string>
+    <string name="task_1_time">منذ ساعتين</string>
+    <string name="task_2_title">إعداد قائمة المراجع لبحث فلسفة العقل</string>
+    <string name="task_2_source">المصدر: بحث الوعي والذكاء الصناعي</string>
+    <string name="task_2_time">اليوم</string>
+    <string name="task_3_title">تنسيق لقاء مع الفريق التقني لمناقشة التحديثات</string>
+    <string name="task_3_source">المصدر: اجتماع الإدارة الأسبوعي</string>
+    <string name="task_3_time">غداً</string>
+    <string name="task_4_title">شراء معدات تسجيل البودكاست الجديدة</string>
+    <string name="task_4_source">المصدر: قائمة المشتريات واللوازم</string>
+    <string name="task_5_title">The Almanack of Naval Ravikant</string>
+    <string name="task_5_source">المصدر: مكتبة القراءة الذكية</string>
+    <string name="task_empty_time"></string>
 </resources>

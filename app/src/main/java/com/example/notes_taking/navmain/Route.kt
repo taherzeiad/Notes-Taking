@@ -12,5 +12,7 @@ sealed class Route(val route: String) {
 
     object Settings : Route("settings_screen")
 
+    object Tasks : Route("tasks_screen")
+
 
 }

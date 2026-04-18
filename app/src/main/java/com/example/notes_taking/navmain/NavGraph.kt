@@ -21,6 +21,7 @@ import com.example.notes_taking.Screens.presentations.Onboarding.OnboardingScree
 import com.example.notes_taking.Screens.presentations.Splash.SplashScreen
 import androidx.compose.ui.platform.LocalLayoutDirection
 import com.example.notes_taking.Screens.presentations.Settings.SettingsScreen
+import com.example.notes_taking.Screens.presentations.Tasks.TasksScreen
 
 @SuppressLint("LocalContextConfigurationRead")
 @RequiresApi(Build.VERSION_CODES.N)
@@ -65,8 +66,11 @@ fun NavGraph(navController: NavHostController) {
                 onEditNote = { noteId ->
                     navController.navigate(Route.EditNote.createRoute(noteId))
                 },
-                onNavigateToSettings = { // ← أضف
+                onNavigateToSettings = {
                     navController.navigate(Route.Settings.route)
+                },
+                onNavigateToTasks = {
+                    navController.navigate(Route.Tasks.route)
                 }
             )
         }
@@ -92,6 +96,17 @@ fun NavGraph(navController: NavHostController) {
         composable(route = Route.Settings.route) {
             SettingsScreen(
                 onBack = { navController.popBackStack() }
+            )
+        }
+        composable(route = Route.Tasks.route) {
+            TasksScreen(
+                onNavigate = { index ->
+                    when (index) {
+                        0 -> navController.navigate(Route.Settings.route)
+                        2 -> navController.navigate(Route.Home.route)
+                        3 -> navController.navigate(Route.Home.route)
+                    }
+                }
             )
         }
     }

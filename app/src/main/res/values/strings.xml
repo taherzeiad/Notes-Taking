@@ -74,5 +74,35 @@
     <string name="item_privacy_center">Privacy Center</string>
     <string name="item_about">About App</string>
     <string name="btn_logout">Logout</string>
+
+    <!-- Tasks -->
+    <string name="tasks_title">Task List</string>
+    <string name="tasks_subtitle">Organize your thoughts into actions. Tasks extracted from your recent notes.</string>
+    <string name="tab_in_progress">In Progress</string>
+    <string name="tab_completed">Completed</string>
+    <string name="tab_scheduled">Scheduled</string>
+    <string name="tag_urgent">Urgent</string>
+    <string name="ai_insights_title">Smart Insights</string>
+    <string name="ai_insights_body">You\'ve completed 70% of your \"Philosophical Notes\" tasks this week. You\'re on track to finish before the deadline!</string>
+    <string name="source_categories">Source Categories</string>
+    <string name="cat_research">Scientific Research</string>
+    <string name="cat_personal">Personal Journals</string>
+    <string name="cat_meetings">Work Meetings</string>
+    <string name="tasks_unit">tasks</string>
+    <!-- Tasks Content -->
+    <string name="task_1_title">Review the final draft of the book "Emotional Intelligence"</string>
+    <string name="task_1_source">Source: Literary Writing Notes</string>
+    <string name="task_1_time">2 hours ago</string>
+    <string name="task_2_title">Prepare reference list for Philosophy of Mind research</string>
+    <string name="task_2_source">Source: AI &amp; Consciousness Research</string>
+    <string name="task_2_time">Today</string>
+    <string name="task_3_title">Coordinate meeting with tech team to discuss updates</string>
+    <string name="task_3_source">Source: Weekly Management Meeting</string>
+    <string name="task_3_time">Tomorrow</string>
+    <string name="task_4_title">Buy new podcast recording equipment</string>
+    <string name="task_4_source">Source: Shopping &amp; Supplies List</string>
+    <string name="task_5_title">The Almanack of Naval Ravikant</string>
+    <string name="task_5_source">Source: Smart Reading Library</string>
+    <string name="task_empty_time"></string>
 </resources>
 

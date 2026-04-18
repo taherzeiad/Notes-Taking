@@ -34,6 +34,7 @@ fun HomeScreen(
     onAddNote: () -> Unit,
     onEditNote: (Int) -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToTasks: () -> Unit,
     viewModel: NoteViewModel
 ) {
     val notes by viewModel.allNotes.collectAsState(initial = emptyList())
@@ -47,6 +48,7 @@ fun HomeScreen(
                 onNavigate = { index ->
                     when (index) {
                         0 -> onNavigateToSettings()
+                        1 -> onNavigateToTasks()
                         3 -> {}
                     }
                 }
@@ -584,7 +586,11 @@ fun BottomNavBar(
                 selected = selectedTab == index,
                 onClick = { onNavigate(index) },
                 icon = {
-                    Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(24.dp))
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = label,
+                        modifier = Modifier.size(24.dp)
+                    )
                 },
                 label = {
                     Text(text = label, fontSize = 10.sp, fontFamily = ManropeFontFamily)

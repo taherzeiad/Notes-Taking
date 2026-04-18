@@ -33,11 +33,9 @@ import com.example.notes_taking.ui.theme.*
 fun SettingsScreen(onBack: () -> Unit = {}) {
     var darkModeEnabled by remember { mutableStateOf(false) }
 
-    // ← جلب اتجاه اللغة الحالية
     val layoutDirection = LocalLayoutDirection.current
     val isRtl = layoutDirection == LayoutDirection.Rtl
 
-    // ← تحديد المحاذاة حسب الاتجاه
     val textAlign = if (isRtl) TextAlign.End else TextAlign.Start
     val horizontalAlignment = if (isRtl) Alignment.End else Alignment.Start
     val horizontalArrangement = if (isRtl) Arrangement.End else Arrangement.Start
@@ -71,7 +69,6 @@ fun SettingsScreen(onBack: () -> Unit = {}) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // ← الأيقونة تتبدل حسب الاتجاه
                     if (isRtl) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.MenuBook,
