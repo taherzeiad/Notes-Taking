@@ -25,12 +25,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.notes_taking.R
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.*
 
 @Composable
-fun SettingsScreen(onBack: () -> Unit = {}) {
+fun SettingsScreen(navController: NavHostController) {
     var darkModeEnabled by remember { mutableStateOf(false) }
 
     val layoutDirection = LocalLayoutDirection.current
@@ -38,18 +39,14 @@ fun SettingsScreen(onBack: () -> Unit = {}) {
 
     val textAlign = if (isRtl) TextAlign.End else TextAlign.Start
     val horizontalAlignment = if (isRtl) Alignment.End else Alignment.Start
-    val horizontalArrangement = if (isRtl) Arrangement.End else Arrangement.Start
 
     Scaffold(
         containerColor = PageBackground,
         bottomBar = {
+            // التعديل هنا: تمرير الـ navController والتبويب الصحيح (0 للإعدادات)
             BottomNavBar(
-                selectedTab = 0,
-                onNavigate = { index ->
-                    when (index) {
-                        3 -> onBack()
-                    }
-                }
+                navController = navController,
+                selectedTab = 0
             )
         }
     ) { padding ->
@@ -70,31 +67,13 @@ fun SettingsScreen(onBack: () -> Unit = {}) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (isRtl) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.MenuBook,
-                            contentDescription = null,
-                            tint = TextPrimary,
-                            modifier = Modifier.size(26.dp)
-                        )
+                        Icon(imageVector = Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(26.dp))
                     } else {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(BrownCard),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Person,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
+                        ProfileAvatar()
                     }
 
                     Text(
-                        text = "Intellectual Sanctuary",
+                        text = stringResource(R.string.app_name_styled),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = ManropeFontFamily,
@@ -102,27 +81,9 @@ fun SettingsScreen(onBack: () -> Unit = {}) {
                     )
 
                     if (isRtl) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(BrownCard),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Person,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
+                        ProfileAvatar()
                     } else {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.MenuBook,
-                            contentDescription = null,
-                            tint = TextPrimary,
-                            modifier = Modifier.size(26.dp)
-                        )
+                        Icon(imageVector = Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(26.dp))
                     }
                 }
             }
@@ -131,7 +92,7 @@ fun SettingsScreen(onBack: () -> Unit = {}) {
             item {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = horizontalAlignment // ← ديناميكي
+                    horizontalAlignment = horizontalAlignment
                 ) {
                     Text(
                         text = stringResource(R.string.settings_title),
@@ -161,117 +122,24 @@ fun SettingsScreen(onBack: () -> Unit = {}) {
                     elevation = CardDefaults.cardElevation(0.dp)
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // ← ترتيب العناصر حسب الاتجاه
                         if (isRtl) {
-                            // زر تعديل على اليسار
-                            Box(
-                                modifier = Modifier
-                                    .border(1.dp, CardBorder, RoundedCornerShape(20.dp))
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .clickable { }
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.btn_edit),
-                                    fontSize = 14.sp,
-                                    fontFamily = ManropeFontFamily,
-                                    color = TextPrimary
-                                )
-                            }
-
-                            // المعلومات في الوسط
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(
-                                    text = "Taher Qudeih",
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = MansalvaFontFamily,
-                                    color = TextPrimary
-                                )
-                                Text(
-                                    text = "ahmed@sanctuary.io",
-                                    fontSize = 13.sp,
-                                    fontFamily = ManropeFontFamily,
-                                    color = TextSecondary
-                                )
-                            }
-
-                            // الصورة على اليمين
-                            Box(
-                                modifier = Modifier
-                                    .size(64.dp)
-                                    .clip(CircleShape)
-                                    .background(BrownCard),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Person,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(36.dp)
-                                )
-                            }
+                            EditButton()
+                            ProfileInfo(name = "Taher Qudeih", email = "taher@sanctuary.io", isRtl = true)
+                            ProfileAvatar(size = 64.dp, iconSize = 36.dp)
                         } else {
-                            // الصورة على اليسار
-                            Box(
-                                modifier = Modifier
-                                    .size(64.dp)
-                                    .clip(CircleShape)
-                                    .background(BrownCard),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Person,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(36.dp)
-                                )
-                            }
-
-                            // المعلومات في الوسط
-                            Column(horizontalAlignment = Alignment.Start) {
-                                Text(
-                                    text = "Taher Qudeih",
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = MansalvaFontFamily,
-                                    color = TextPrimary
-                                )
-                                Text(
-                                    text = "ahmed@sanctuary.io",
-                                    fontSize = 13.sp,
-                                    fontFamily = ManropeFontFamily,
-                                    color = TextSecondary
-                                )
-                            }
-
-                            // زر تعديل على اليمين
-                            Box(
-                                modifier = Modifier
-                                    .border(1.dp, CardBorder, RoundedCornerShape(20.dp))
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .clickable { }
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.btn_edit),
-                                    fontSize = 14.sp,
-                                    fontFamily = ManropeFontFamily,
-                                    color = TextPrimary
-                                )
-                            }
+                            ProfileAvatar(size = 64.dp, iconSize = 36.dp)
+                            ProfileInfo(name = "Taher Qudeih", email = "taher@sanctuary.io", isRtl = false)
+                            EditButton()
                         }
                     }
                 }
             }
 
-            // ======= الحساب والأمان =======
+            // ======= Sections =======
             item {
                 SettingsSection(title = stringResource(R.string.section_account), isRtl = isRtl) {
                     SettingsItem(label = stringResource(R.string.item_account_info), icon = Icons.Outlined.Person, isRtl = isRtl, onClick = {})
@@ -280,7 +148,6 @@ fun SettingsScreen(onBack: () -> Unit = {}) {
                 }
             }
 
-            // ======= التخصيص =======
             item {
                 SettingsSection(title = stringResource(R.string.section_customization), isRtl = isRtl) {
                     SettingsItemWithToggle(
@@ -296,7 +163,6 @@ fun SettingsScreen(onBack: () -> Unit = {}) {
                 }
             }
 
-            // ======= الخصوصية والمعلومات =======
             item {
                 SettingsSection(title = stringResource(R.string.section_privacy), isRtl = isRtl) {
                     SettingsItem(label = stringResource(R.string.item_privacy_center), icon = Icons.Outlined.Shield, isRtl = isRtl, onClick = {})
@@ -305,7 +171,7 @@ fun SettingsScreen(onBack: () -> Unit = {}) {
                 }
             }
 
-            // ======= زر تسجيل الخروج =======
+            // ======= Logout =======
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth().clickable { },
@@ -337,13 +203,37 @@ fun SettingsScreen(onBack: () -> Unit = {}) {
     }
 }
 
-// ======= Settings Section =======
+// ======= Helper UI Components =======
+
 @Composable
-fun SettingsSection(
-    title: String,
-    isRtl: Boolean,
-    content: @Composable ColumnScope.() -> Unit
-) {
+fun ProfileAvatar(size: androidx.compose.ui.unit.Dp = 40.dp, iconSize: androidx.compose.ui.unit.Dp = 24.dp) {
+    Box(
+        modifier = Modifier.size(size).clip(CircleShape).background(BrownCard),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(imageVector = Icons.Outlined.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(iconSize))
+    }
+}
+
+@Composable
+fun ProfileInfo(name: String, email: String, isRtl: Boolean) {
+    Column(horizontalAlignment = if (isRtl) Alignment.End else Alignment.Start) {
+        Text(text = name, fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = MansalvaFontFamily, color = TextPrimary)
+        Text(text = email, fontSize = 13.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
+    }
+}
+
+@Composable
+fun EditButton() {
+    Box(
+        modifier = Modifier.border(1.dp, CardBorder, RoundedCornerShape(20.dp)).clip(RoundedCornerShape(20.dp)).clickable { }.padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(text = stringResource(R.string.btn_edit), fontSize = 14.sp, fontFamily = ManropeFontFamily, color = TextPrimary)
+    }
+}
+
+@Composable
+fun SettingsSection(title: String, isRtl: Boolean, content: @Composable ColumnScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = title,
@@ -364,95 +254,61 @@ fun SettingsSection(
     }
 }
 
-// ======= Settings Item =======
 @Composable
-fun SettingsItem(
-    label: String,
-    icon: ImageVector,
-    isRtl: Boolean,
-    onClick: () -> Unit
-) {
+fun SettingsItem(label: String, icon: ImageVector, isRtl: Boolean, onClick: () -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (isRtl) {
-            // ← سهم يسار | نص | أيقونة يمين
             Icon(imageVector = Icons.Outlined.ChevronLeft, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(20.dp))
             Text(text = label, fontSize = 15.sp, fontFamily = ManropeFontFamily, color = TextPrimary, fontWeight = FontWeight.Medium)
-            Box(modifier = Modifier.size(36.dp).background(IconBg, CircleShape), contentAlignment = Alignment.Center) {
-                Icon(imageVector = icon, contentDescription = null, tint = BrownCard, modifier = Modifier.size(18.dp))
-            }
+            SettingsIconBox(icon)
         } else {
-            // ← أيقونة يسار | نص | سهم يمين
-            Box(modifier = Modifier.size(36.dp).background(IconBg, CircleShape), contentAlignment = Alignment.Center) {
-                Icon(imageVector = icon, contentDescription = null, tint = BrownCard, modifier = Modifier.size(18.dp))
-            }
-            Text(text = label, fontSize = 15.sp, fontFamily = ManropeFontFamily, color = TextPrimary, fontWeight = FontWeight.Medium)
+            SettingsIconBox(icon)
+            Text(text = label, modifier = Modifier.weight(1f).padding(horizontal = 12.dp), fontSize = 15.sp, fontFamily = ManropeFontFamily, color = TextPrimary, fontWeight = FontWeight.Medium)
             Icon(imageVector = Icons.Outlined.ChevronRight, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(20.dp))
         }
     }
 }
 
-// ======= Settings Item With Toggle =======
 @Composable
-fun SettingsItemWithToggle(
-    label: String,
-    subLabel: String,
-    icon: ImageVector,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    isRtl: Boolean
-) {
+fun SettingsIconBox(icon: ImageVector) {
+    Box(modifier = Modifier.size(36.dp).background(IconBg, CircleShape), contentAlignment = Alignment.Center) {
+        Icon(imageVector = icon, contentDescription = null, tint = BrownCard, modifier = Modifier.size(18.dp))
+    }
+}
+
+@Composable
+fun SettingsItemWithToggle(label: String, subLabel: String, icon: ImageVector, checked: Boolean, onCheckedChange: (Boolean) -> Unit, isRtl: Boolean) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (isRtl) {
-            // Toggle يسار | نص | أيقونة يمين
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = BrownCard,
-                    uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = Color(0xFFD0C8C0)
-                )
-            )
-            Column(horizontalAlignment = Alignment.End) {
+            Switch(checked = checked, onCheckedChange = onCheckedChange, colors = switchColors())
+            Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
                 Text(text = label, fontSize = 15.sp, fontFamily = ManropeFontFamily, color = TextPrimary, fontWeight = FontWeight.Medium)
                 Text(text = subLabel, fontSize = 12.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
             }
-            Box(modifier = Modifier.size(36.dp).background(IconBg, CircleShape), contentAlignment = Alignment.Center) {
-                Icon(imageVector = icon, contentDescription = null, tint = BrownCard, modifier = Modifier.size(18.dp))
-            }
+            SettingsIconBox(icon)
         } else {
-            // أيقونة يسار | نص | Toggle يمين
-            Box(modifier = Modifier.size(36.dp).background(IconBg, CircleShape), contentAlignment = Alignment.Center) {
-                Icon(imageVector = icon, contentDescription = null, tint = BrownCard, modifier = Modifier.size(18.dp))
-            }
+            SettingsIconBox(icon)
             Column(horizontalAlignment = Alignment.Start, modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
                 Text(text = label, fontSize = 15.sp, fontFamily = ManropeFontFamily, color = TextPrimary, fontWeight = FontWeight.Medium)
                 Text(text = subLabel, fontSize = 12.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
             }
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = BrownCard,
-                    uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = Color(0xFFD0C8C0)
-                )
-            )
+            Switch(checked = checked, onCheckedChange = onCheckedChange, colors = switchColors())
         }
     }
 }
+
+@Composable
+fun switchColors() = SwitchDefaults.colors(
+    checkedThumbColor = Color.White,
+    checkedTrackColor = BrownCard,
+    uncheckedThumbColor = Color.White,
+    uncheckedTrackColor = Color(0xFFD0C8C0)
+)

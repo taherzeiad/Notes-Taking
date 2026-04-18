@@ -29,12 +29,15 @@ import com.example.notes_taking.Screens.presentations.Tasks.TasksScreen
 fun NavGraph(navController: NavHostController) {
     val context = LocalContext.current
     val dao = NoteDatabase.getDatabase(context).noteDao()
+
+    // تعريف الـ ViewModel هنا ليكون متاحاً لكل الشاشات في الـ NavGraph
     val viewModel: NoteViewModel = viewModel(factory = NoteViewModelFactory(dao))
+
     NavHost(
         navController = navController,
         startDestination = Route.Splash.route
     ) {
-        // 1. Splash Screen
+        // 1. شاشة البداية (Splash)
         composable(route = Route.Splash.route) {
             SplashScreen(onSplashFinished = {
                 navController.navigate(Route.Onboarding.route) {
@@ -43,11 +46,9 @@ fun NavGraph(navController: NavHostController) {
             })
         }
 
-        // 2. Onboarding Screen
+        // 2. شاشة التعريف (Onboarding)
         composable(route = Route.Onboarding.route) {
-            val currentLayoutDirection = LocalLayoutDirection.current
-            val isRtl = currentLayoutDirection == LayoutDirection.Rtl
-
+            val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
             OnboardingScreen(
                 onFinish = {
                     navController.navigate(Route.Home.route) {
@@ -58,11 +59,15 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        // 3. Home Screen
+        // 3. الشاشة الرئيسية (Home)
         composable(route = Route.Home.route) {
             HomeScreen(
                 viewModel = viewModel,
-                onAddNote = { navController.navigate(Route.CreateNote.route) },
+                navController = navController, // نمرر الـ navController ليتم استخدامه في BottomNavBar
+                onAddNote = {
+                    // نمرر 0 لإنشاء ملاحظة جديدة
+                    navController.navigate(Route.EditNote.createRoute(0))
+                },
                 onEditNote = { noteId ->
                     navController.navigate(Route.EditNote.createRoute(noteId))
                 },
@@ -75,7 +80,7 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        // 4. Create/Edit Note Screen
+        // 4. شاشة إنشاء/تعديل الملاحظة
         composable(
             route = Route.EditNote.route,
             arguments = listOf(navArgument("noteId") {
@@ -84,7 +89,6 @@ fun NavGraph(navController: NavHostController) {
             })
         ) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getInt("noteId") ?: 0
-
             CreateNoteScreen(
                 noteId = noteId,
                 onBack = { navController.popBackStack() },
@@ -92,22 +96,14 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        // 5. Settings Screen
+        // 5. شاشة الإعدادات
         composable(route = Route.Settings.route) {
-            SettingsScreen(
-                onBack = { navController.popBackStack() }
-            )
+            SettingsScreen(navController = navController)
         }
+
+        // 6. شاشة المهام
         composable(route = Route.Tasks.route) {
-            TasksScreen(
-                onNavigate = { index ->
-                    when (index) {
-                        0 -> navController.navigate(Route.Settings.route)
-                        2 -> navController.navigate(Route.Home.route)
-                        3 -> navController.navigate(Route.Home.route)
-                    }
-                }
-            )
+            TasksScreen(navController = navController)
         }
     }
 }

@@ -22,11 +22,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.notes_taking.R
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.*
 
-// ======= Data =======
+// ======= Data Models =======
 data class Task(
     val id: Int,
     val titleRes: Int,
@@ -40,6 +41,7 @@ enum class TaskStatus { IN_PROGRESS, COMPLETED, SCHEDULED }
 
 data class SourceCategory(val nameRes: Int, val count: Int, val unitRes: Int)
 
+// ======= Sample Data =======
 val sampleTasks = listOf(
     Task(1, R.string.task_1_title, R.string.task_1_source, R.string.task_1_time, isUrgent = true),
     Task(2, R.string.task_2_title, R.string.task_2_source, R.string.task_2_time),
@@ -48,15 +50,8 @@ val sampleTasks = listOf(
     Task(5, R.string.task_5_title, R.string.task_5_source, R.string.task_empty_time)
 )
 
-val sampleCategories = listOf(
-    SourceCategory(R.string.cat_research, 12, R.string.tasks_unit),
-    SourceCategory(R.string.cat_personal, 4, R.string.tasks_unit),
-    SourceCategory(R.string.cat_meetings, 8, R.string.tasks_unit)
-)
-
 @Composable
-fun TasksScreen(onNavigate: (Int) -> Unit = {}) {
-
+fun TasksScreen(navController: NavHostController) {
     val layoutDirection = LocalLayoutDirection.current
     val isRtl = layoutDirection == LayoutDirection.Rtl
     val textAlign = if (isRtl) TextAlign.End else TextAlign.Start
@@ -80,7 +75,11 @@ fun TasksScreen(onNavigate: (Int) -> Unit = {}) {
     Scaffold(
         containerColor = PageBackground,
         bottomBar = {
-            BottomNavBar(selectedTab = 1, onNavigate = onNavigate)
+            // تصحيح: تمرير الـ navController والتبويب الصحيح (index 1 للمهام)
+            BottomNavBar(
+                navController = navController,
+                selectedTab = 1
+            )
         }
     ) { padding ->
         LazyColumn(
@@ -157,7 +156,7 @@ fun TasksScreen(onNavigate: (Int) -> Unit = {}) {
                 }
             }
 
-            // ======= Tasks List (first 3) =======
+            // ======= Tasks List (First 3) =======
             items(sampleTasks.take(3)) { task ->
                 TaskCard(task = task, isRtl = isRtl)
             }
@@ -261,7 +260,7 @@ fun TasksScreen(onNavigate: (Int) -> Unit = {}) {
                 }
             }
 
-            // ======= باقي المهام =======
+            // ======= Remaining Tasks =======
             items(sampleTasks.drop(3)) { task ->
                 TaskCard(task = task, isRtl = isRtl)
             }
@@ -271,7 +270,8 @@ fun TasksScreen(onNavigate: (Int) -> Unit = {}) {
     }
 }
 
-// ======= Task Tab =======
+// ======= Helper UI Components =======
+
 @Composable
 fun TaskTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
@@ -291,7 +291,6 @@ fun TaskTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
     }
 }
 
-// ======= Task Card =======
 @Composable
 fun TaskCard(task: Task, isRtl: Boolean) {
     val textAlign = if (isRtl) TextAlign.End else TextAlign.Start
@@ -305,71 +304,39 @@ fun TaskCard(task: Task, isRtl: Boolean) {
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-
-            // ======= Header Row =======
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                if (isRtl) {
-                    // Checkbox يسار
-                    RadioButton(
-                        selected = false,
-                        onClick = {},
-                        colors = RadioButtonDefaults.colors(unselectedColor = Color(0xFFD0C8C0))
-                    )
+                // Checkbox
+                RadioButton(
+                    selected = false,
+                    onClick = {},
+                    colors = RadioButtonDefaults.colors(unselectedColor = Color(0xFFD0C8C0))
+                )
 
-                    // النص يمين
-                    Column(
-                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
-                        horizontalAlignment = contentAlignment
-                    ) {
-                        if (task.isUrgent) {
-                            UrgentBadge(isRtl = true)
-                            Spacer(modifier = Modifier.height(6.dp))
-                        }
-                        Text(
-                            text = stringResource(task.titleRes),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = ManropeFontFamily,
-                            color = TextPrimary,
-                            textAlign = textAlign
-                        )
+                Column(
+                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                    horizontalAlignment = contentAlignment
+                ) {
+                    if (task.isUrgent) {
+                        UrgentBadge()
+                        Spacer(modifier = Modifier.height(6.dp))
                     }
-                } else {
-                    // Checkbox يسار
-                    RadioButton(
-                        selected = false,
-                        onClick = {},
-                        colors = RadioButtonDefaults.colors(unselectedColor = Color(0xFFD0C8C0))
+                    Text(
+                        text = stringResource(task.titleRes),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = ManropeFontFamily,
+                        color = TextPrimary,
+                        textAlign = textAlign
                     )
-
-                    // النص يسار
-                    Column(
-                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
-                        horizontalAlignment = contentAlignment
-                    ) {
-                        if (task.isUrgent) {
-                            UrgentBadge(isRtl = false)
-                            Spacer(modifier = Modifier.height(6.dp))
-                        }
-                        Text(
-                            text = stringResource(task.titleRes),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = ManropeFontFamily,
-                            color = TextPrimary,
-                            textAlign = textAlign
-                        )
-                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // ======= Source + Time =======
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -378,11 +345,9 @@ fun TaskCard(task: Task, isRtl: Boolean) {
                 if (isRtl) {
                     if (timeText.isNotEmpty()) {
                         Text(text = timeText, fontSize = 12.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
-                    } else {
-                        Spacer(modifier = Modifier.width(1.dp))
-                    }
+                    } else { Spacer(modifier = Modifier.width(1.dp)) }
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(text = stringResource(task.sourceRes), fontSize = 12.sp, fontFamily = ManropeFontFamily, color = TextSecondary, textAlign = TextAlign.End)
+                        Text(text = stringResource(task.sourceRes), fontSize = 12.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
                         Icon(imageVector = Icons.Outlined.Description, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(14.dp))
                     }
                 } else {
@@ -399,9 +364,8 @@ fun TaskCard(task: Task, isRtl: Boolean) {
     }
 }
 
-// ======= Urgent Badge =======
 @Composable
-fun UrgentBadge(isRtl: Boolean) {
+fun UrgentBadge() {
     Box(
         modifier = Modifier
             .background(Color(0xFFFFEBEB), RoundedCornerShape(20.dp))
