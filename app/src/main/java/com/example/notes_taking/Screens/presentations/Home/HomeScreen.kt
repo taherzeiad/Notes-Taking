@@ -33,6 +33,7 @@ import com.example.notes_taking.ui.theme.*
 fun HomeScreen(
     onAddNote: () -> Unit,
     onEditNote: (Int) -> Unit,
+    onNavigateToSettings: () -> Unit,
     viewModel: NoteViewModel
 ) {
     val notes by viewModel.allNotes.collectAsState(initial = emptyList())
@@ -40,8 +41,19 @@ fun HomeScreen(
 
     Scaffold(
         containerColor = PageBackground,
-        bottomBar = { BottomNavBar() }
+        bottomBar = {
+            BottomNavBar(
+                selectedTab = 3,
+                onNavigate = { index ->
+                    when (index) {
+                        0 -> onNavigateToSettings()
+                        3 -> {}
+                    }
+                }
+            )
+        }
     ) { padding ->
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -552,37 +564,30 @@ fun QuickActionButton(
 
 // ======= Bottom Navigation =======
 @Composable
-fun BottomNavBar() {
-    var selectedTab by remember { mutableStateOf(3) }
-
+fun BottomNavBar(
+    selectedTab: Int = 3,
+    onNavigate: (Int) -> Unit = {}
+) {
     NavigationBar(
         containerColor = Color.White,
         tonalElevation = 0.dp
     ) {
         val tabs = listOf(
-            Triple(stringResource(R.string.nav_settings), Icons.Outlined.Settings, 0),
-            Triple(stringResource(R.string.nav_tasks), Icons.Outlined.CheckCircle, 1),
-            Triple(stringResource(R.string.nav_notes), Icons.Outlined.NoteAlt, 2),
-            Triple(stringResource(R.string.nav_home), Icons.Filled.Home, 3)
+            Pair("SETTINGS", Icons.Outlined.Settings),
+            Pair("TASKS", Icons.Outlined.CheckCircle),
+            Pair("NOTES", Icons.Outlined.NoteAlt),
+            Pair("HOME", Icons.Filled.Home)
         )
 
         tabs.forEachIndexed { index, (label, icon) ->
             NavigationBarItem(
                 selected = selectedTab == index,
-                onClick = { selectedTab = index },
+                onClick = { onNavigate(index) },
                 icon = {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = label,
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(24.dp))
                 },
                 label = {
-                    Text(
-                        text = label,
-                        fontSize = 10.sp,
-                        fontFamily = ManropeFontFamily
-                    )
+                    Text(text = label, fontSize = 10.sp, fontFamily = ManropeFontFamily)
                 },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = BrownCard,

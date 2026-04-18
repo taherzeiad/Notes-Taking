@@ -24,6 +24,12 @@ val TextSecondary = Color(0xFF9E9E9E)
 val FabColor = Color(0xFF4A3728)
  val reFabColor = Color(0xFFD9C8BD)
 
+// ======= ألوان شاشة Settings =======
+val IconBg = Color(0xFFF5EDE8)
+val SectionTitle = Color(0xFF9E8A80)
+val DangerRed = Color(0xFFD94F3D)
+val CardBorder = Color(0xFFEDE8E3)
+
 ///////////////////////////////////////////////////
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)

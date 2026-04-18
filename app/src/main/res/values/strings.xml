@@ -58,5 +58,21 @@
     <string name="tag_readings">Readings</string>
     <string name="default_note_title">Reflections on Digital Consciousness</string>
     <string name="default_note_content">There is a growing gap between our perception of reality and digital systems.</string>
+
+    //settings screen
+    <string name="settings_title">Settings</string>
+    <string name="settings_subtitle">Customize your private intellectual space</string>
+    <string name="btn_edit">Edit</string>
+    <string name="section_account">Account &amp; Security</string>
+    <string name="item_account_info">Account Information</string>
+    <string name="item_security">Password &amp; Security</string>
+    <string name="section_customization">Customization</string>
+    <string name="item_dark_mode">Dark Mode</string>
+    <string name="sub_dark_mode">Switch to a comfortable night interface</string>
+    <string name="item_notifications">Notifications</string>
+    <string name="section_privacy">Privacy &amp; Info</string>
+    <string name="item_privacy_center">Privacy Center</string>
+    <string name="item_about">About App</string>
+    <string name="btn_logout">Logout</string>
 </resources>
 

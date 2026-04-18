@@ -59,4 +59,20 @@
     <string name="tag_readings">قراءات</string>
     <string name="default_note_title">تأملات في الوعي الرقمي وتأثير الخوارزميات</string>
     <string name="default_note_content">هناك فجوة متزايدة بين ما ندركه كواقع وبين ما تقدمه لنا الأنظمة الرقمية.</string>
+
+    //settings screen
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_subtitle">قم بتخصيص مساحتك الفكرية الخاصة</string>
+    <string name="btn_edit">تعديل</string>
+    <string name="section_account">الحساب والأمان</string>
+    <string name="item_account_info">معلومات الحساب</string>
+    <string name="item_security">كلمة المرور والأمان</string>
+    <string name="section_customization">التخصيص</string>
+    <string name="item_dark_mode">المظهر الداكن</string>
+    <string name="sub_dark_mode">تحويل الواجهة إلى الوضع الليلي المريح</string>
+    <string name="item_notifications">التنبيهات والإشعارات</string>
+    <string name="section_privacy">الخصوصية والمعلومات</string>
+    <string name="item_privacy_center">مركز الخصوصية</string>
+    <string name="item_about">حول التطبيق</string>
+    <string name="btn_logout">تسجيل الخروج</string>
 </resources>
