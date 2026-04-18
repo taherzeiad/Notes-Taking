@@ -31,4 +31,78 @@
     <string name="ob_title_3">استخراج المهام تلقائياً</string>
     <string name="ob_desc_3">ببساطة، اكتب أفكارك. وسيقوم ذكاؤنا الاصطناعي بتحويل ملاحظاتك إلى قائمة مهام منظمة وقابلة للتنفيذ.</string>
 
+
+    //////////////////////////////////////////////
+
+    <string name="app_name_styled">واحتك\nالفكرية</string>
+    <string name="welcome_user">أهلاً بك، %1$s</string>
+    <string name="welcome_subtitle">نظرة سريعة على واحتك الفكرية اليوم.</string>
+    <string name="ai_suggestion">اقتراح ذكي من الـ AI</string>
+    <string name="ai_prompt_text">هل تريد تلخيص ملاحظات الأمس؟ لقد رصدنا ٤ أفكار مترابطة.</string>
+    <string name="start_summary">ابدأ التلخيص الآن</string>
+    <string name="voice_record">تسجيل صوتي</string>
+    <string name="quick_idea">فكرة سريعة</string>
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_notes">الملاحظات</string>
+    <string name="nav_tasks">المهام</string>
+    <string name="nav_settings">الإعدادات</string>
+    <string name="important_task">أهم مهمة قادمة</string>
+    <string name="task_due_time">في غضون ساعتين</string>
+    <string name="view_all_tasks">عرض كل المهام</string>
+    <string name="last_edited_note">آخر ملاحظة تم تعديلها</string>
+    <string name="continue_writing">أكمل الكتابة</string>
+    <string name="edited_time_ago">تم التعديل منذ %1$s دقيقة</string>
+    <string name="add_document">إضافة وثيقة</string>
+    <string name="task_book_review">مراجعة مسودة كتاب \"عصر الذكاء\"</string>
+    <string name="location_library">المكتبة المركزية</string>
+    <string name="tag_philosophy">فلسفة</string>
+    <string name="tag_readings">قراءات</string>
+    <string name="default_note_title">تأملات في الوعي الرقمي وتأثير الخوارزميات</string>
+    <string name="default_note_content">هناك فجوة متزايدة بين ما ندركه كواقع وبين ما تقدمه لنا الأنظمة الرقمية.</string>
+
+    //settings screen
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_subtitle">قم بتخصيص مساحتك الفكرية الخاصة</string>
+    <string name="btn_edit">تعديل</string>
+    <string name="section_account">الحساب والأمان</string>
+    <string name="item_account_info">معلومات الحساب</string>
+    <string name="item_security">كلمة المرور والأمان</string>
+    <string name="section_customization">التخصيص</string>
+    <string name="item_dark_mode">المظهر الداكن</string>
+    <string name="sub_dark_mode">تحويل الواجهة إلى الوضع الليلي المريح</string>
+    <string name="item_notifications">التنبيهات والإشعارات</string>
+    <string name="section_privacy">الخصوصية والمعلومات</string>
+    <string name="item_privacy_center">مركز الخصوصية</string>
+    <string name="item_about">حول التطبيق</string>
+    <string name="btn_logout">تسجيل الخروج</string>
+
+    <!-- Tasks -->
+    <string name="tasks_title">قائمة المهام</string>
+    <string name="tasks_subtitle">نظّم أفكارك وحوّلها إلى أفعال. تم استخراج هذه المهام بذكاء من ملاحظاتك الأخيرة.</string>
+    <string name="tab_in_progress">قيد التنفيذ</string>
+    <string name="tab_completed">مكتملة</string>
+    <string name="tab_scheduled">المجدولة</string>
+    <string name="tag_urgent">عاجل</string>
+    <string name="ai_insights_title">رؤى ذكية</string>
+    <string name="ai_insights_body">لقد أكملت 70% من مهام \"الملاحظات الفلسفية\" هذا الأسبوع. أنت في طريقك لإنهاء المشروع قبل الموعد!</string>
+    <string name="source_categories">تصنيفات المصادر</string>
+    <string name="cat_research">الأبحاث العلمية</string>
+    <string name="cat_personal">يوميات شخصية</string>
+    <string name="cat_meetings">اجتماعات العمل</string>
+    <string name="tasks_unit">مهام</string>
+    <!-- Tasks Content -->
+    <string name="task_1_title">مراجعة المسودة النهائية لكتاب \"الذكاء الوجداني\"</string>
+    <string name="task_1_source">المصدر: ملاحظات التأليف الأدبي</string>
+    <string name="task_1_time">منذ ساعتين</string>
+    <string name="task_2_title">إعداد قائمة المراجع لبحث فلسفة العقل</string>
+    <string name="task_2_source">المصدر: بحث الوعي والذكاء الصناعي</string>
+    <string name="task_2_time">اليوم</string>
+    <string name="task_3_title">تنسيق لقاء مع الفريق التقني لمناقشة التحديثات</string>
+    <string name="task_3_source">المصدر: اجتماع الإدارة الأسبوعي</string>
+    <string name="task_3_time">غداً</string>
+    <string name="task_4_title">شراء معدات تسجيل البودكاست الجديدة</string>
+    <string name="task_4_source">المصدر: قائمة المشتريات واللوازم</string>
+    <string name="task_5_title">The Almanack of Naval Ravikant</string>
+    <string name="task_5_source">المصدر: مكتبة القراءة الذكية</string>
+    <string name="task_empty_time"></string>
 </resources>

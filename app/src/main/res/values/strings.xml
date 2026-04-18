@@ -31,5 +31,78 @@
     <string name="ob_title_3">Automatic task extraction</string>
     <string name="ob_desc_3">Simply write your thoughts, and our AI will turn your notes into an organized, actionable task list.</string>
 
+
+    /////////////////////////////
+    <string name="app_name_styled">Intellectual\nSanctuary</string>
+    <string name="welcome_user">Welcome, %1$s</string>
+    <string name="welcome_subtitle">A quick look at your sanctuary today.</string>
+    <string name="ai_suggestion">Smart AI Suggestion</string>
+    <string name="ai_prompt_text">Want to summarize yesterday\'s notes? We found 4 related ideas.</string>
+    <string name="start_summary">Start Summary Now</string>
+    <string name="voice_record">Voice Record</string>
+    <string name="quick_idea">Quick Idea</string>
+    <string name="nav_home">HOME</string>
+    <string name="nav_notes">NOTES</string>
+    <string name="nav_tasks">TASKS</string>
+    <string name="nav_settings">SETTINGS</string>
+    <string name="important_task">Main Upcoming Task</string>
+    <string name="task_due_time">In 2 hours</string>
+    <string name="view_all_tasks">View all tasks</string>
+    <string name="last_edited_note">Last edited note</string>
+    <string name="continue_writing">Continue writing</string>
+    <string name="edited_time_ago">Edited %1$s mins ago</string>
+    <string name="add_document">Add Document</string>
+    <string name="task_book_review">Review \"Age of Intelligence\" draft</string>
+    <string name="location_library">Central Library</string>
+    <string name="tag_philosophy">Philosophy</string>
+    <string name="tag_readings">Readings</string>
+    <string name="default_note_title">Reflections on Digital Consciousness</string>
+    <string name="default_note_content">There is a growing gap between our perception of reality and digital systems.</string>
+
+    //settings screen
+    <string name="settings_title">Settings</string>
+    <string name="settings_subtitle">Customize your private intellectual space</string>
+    <string name="btn_edit">Edit</string>
+    <string name="section_account">Account &amp; Security</string>
+    <string name="item_account_info">Account Information</string>
+    <string name="item_security">Password &amp; Security</string>
+    <string name="section_customization">Customization</string>
+    <string name="item_dark_mode">Dark Mode</string>
+    <string name="sub_dark_mode">Switch to a comfortable night interface</string>
+    <string name="item_notifications">Notifications</string>
+    <string name="section_privacy">Privacy &amp; Info</string>
+    <string name="item_privacy_center">Privacy Center</string>
+    <string name="item_about">About App</string>
+    <string name="btn_logout">Logout</string>
+
+    <!-- Tasks -->
+    <string name="tasks_title">Task List</string>
+    <string name="tasks_subtitle">Organize your thoughts into actions. Tasks extracted from your recent notes.</string>
+    <string name="tab_in_progress">In Progress</string>
+    <string name="tab_completed">Completed</string>
+    <string name="tab_scheduled">Scheduled</string>
+    <string name="tag_urgent">Urgent</string>
+    <string name="ai_insights_title">Smart Insights</string>
+    <string name="ai_insights_body">You\'ve completed 70% of your \"Philosophical Notes\" tasks this week. You\'re on track to finish before the deadline!</string>
+    <string name="source_categories">Source Categories</string>
+    <string name="cat_research">Scientific Research</string>
+    <string name="cat_personal">Personal Journals</string>
+    <string name="cat_meetings">Work Meetings</string>
+    <string name="tasks_unit">tasks</string>
+    <!-- Tasks Content -->
+    <string name="task_1_title">Review the final draft of the book "Emotional Intelligence"</string>
+    <string name="task_1_source">Source: Literary Writing Notes</string>
+    <string name="task_1_time">2 hours ago</string>
+    <string name="task_2_title">Prepare reference list for Philosophy of Mind research</string>
+    <string name="task_2_source">Source: AI &amp; Consciousness Research</string>
+    <string name="task_2_time">Today</string>
+    <string name="task_3_title">Coordinate meeting with tech team to discuss updates</string>
+    <string name="task_3_source">Source: Weekly Management Meeting</string>
+    <string name="task_3_time">Tomorrow</string>
+    <string name="task_4_title">Buy new podcast recording equipment</string>
+    <string name="task_4_source">Source: Shopping &amp; Supplies List</string>
+    <string name="task_5_title">The Almanack of Naval Ravikant</string>
+    <string name="task_5_source">Source: Smart Reading Library</string>
+    <string name="task_empty_time"></string>
 </resources>
 
