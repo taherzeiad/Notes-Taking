@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Close
@@ -24,20 +25,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.notes_taking.R
 import com.example.notes_taking.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.stringResource
-import coil.compose.AsyncImage
 
 @Composable
 fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) {
@@ -51,28 +55,27 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     val errorMsg by viewModel.errorMessage.collectAsState()
-
-    // Undo / Redo stacks
     val undoStack = remember { mutableStateListOf<String>() }
     val redoStack = remember { mutableStateListOf<String>() }
 
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
+    // ← اتجاه اللغة
+    val layoutDirection = LocalLayoutDirection.current
+    val isRtl = layoutDirection == LayoutDirection.Rtl
+    val textAlign = if (isRtl) TextAlign.End else TextAlign.Start
+    val horizontalAlignment = if (isRtl) Alignment.End else Alignment.Start
 
     LaunchedEffect(noteId) {
         if (noteId > 0) {
             val note = viewModel.getNoteById(noteId)
-
             note?.let {
                 title = it.title
                 content = it.content
                 date = it.date
-                selectedImageUri = it.imageUri?.let { uriString -> Uri.parse(uriString) }
+                selectedImageUri = it.imageUri?.let { uri -> Uri.parse(uri) }
             }
         }
     }
 
-    // ======= Image Picker =======
     val context = LocalContext.current
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -88,14 +91,11 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
             .fillMaxSize()
             .background(Color.White)
     ) {
-
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
         ) {
-
             Spacer(modifier = Modifier.height(16.dp))
 
             // ======= Top Bar =======
@@ -104,23 +104,31 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
+                // ← الجانب الأيسر: زر رجوع + العنوان
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isRtl) {
+                        // عربي: سهم يشير لليمين
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "Back",
+                                tint = TextPrimary
+                            )
+                        }
+                    } else {
+                        // إنجليزي: سهم يشير لليسار
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = TextPrimary
+                            )
+                        }
                     }
-
                     Spacer(modifier = Modifier.width(4.dp))
-
                     Text(
-                        text = if (noteId > 0) stringResource(R.string.edit_note) else stringResource(
-                            R.string.create_note
-                        ),
+                        text = if (noteId > 0) stringResource(R.string.edit_note)
+                        else stringResource(R.string.create_note),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = ManropeFontFamily,
@@ -128,29 +136,26 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
                     )
                 }
 
+                // ← الجانب الأيمن: Undo & Redo
                 Row {
-                    IconButton(
-                        onClick = {
-                            if (undoStack.isNotEmpty()) {
-                                redoStack.add(content)
-                                content = undoStack.removeAt(undoStack.size - 1)
-                            }
+                    IconButton(onClick = {
+                        if (undoStack.isNotEmpty()) {
+                            redoStack.add(content)
+                            content = undoStack.removeAt(undoStack.size - 1)
                         }
-                    ) {
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Undo,
                             contentDescription = "Undo",
                             tint = if (undoStack.isNotEmpty()) TextPrimary else TextSecondary
                         )
                     }
-                    IconButton(
-                        onClick = {
-                            if (redoStack.isNotEmpty()) {
-                                undoStack.add(content)
-                                content = redoStack.removeAt(redoStack.size - 1)
-                            }
+                    IconButton(onClick = {
+                        if (redoStack.isNotEmpty()) {
+                            undoStack.add(content)
+                            content = redoStack.removeAt(redoStack.size - 1)
                         }
-                    ) {
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Redo,
                             contentDescription = "Redo",
@@ -164,7 +169,10 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
 
             // ======= Title Field =======
             BasicTextField_Title(
-                value = title, onValueChange = { title = it })
+                value = title,
+                onValueChange = { title = it },
+                isRtl = isRtl
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -174,37 +182,48 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
                 fontSize = 13.sp,
                 fontFamily = ManropeFontFamily,
                 color = TextSecondary,
-                modifier = Modifier.padding(start = 15.dp)
+                textAlign = textAlign,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 15.dp)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // ======= Content + Image =======
-            BasicTextField_Content(value = content, onValueChange = { newValue ->
-                undoStack.add(content)
-                redoStack.clear()
-                content = newValue
-            }, selectedImageUri = selectedImageUri, onImageClick = {
-                imagePickerLauncher.launch("image/*")
-            }, onRemoveImage = {
-                selectedImageUri = null
-            })
+            BasicTextField_Content(
+                value = content,
+                onValueChange = { newValue ->
+                    undoStack.add(content)
+                    redoStack.clear()
+                    content = newValue
+                },
+                selectedImageUri = selectedImageUri,
+                onImageClick = { imagePickerLauncher.launch("image/*") },
+                onRemoveImage = { selectedImageUri = null },
+                isRtl = isRtl
+            )
         }
 
-        // ======= Grok Button =======
+        // ======= AI Button =======
         var geminiMenuExpanded by remember { mutableStateOf(false) }
 
         Box(
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 16.dp, bottom = 88.dp)
+                .align(if (isRtl) Alignment.BottomStart else Alignment.BottomEnd)
+                .padding(
+                    start = if (isRtl) 16.dp else 0.dp,
+                    end = if (isRtl) 0.dp else 16.dp,
+                    bottom = 88.dp
+                )
         ) {
             IconButton(
-                onClick = { geminiMenuExpanded = true }, modifier = Modifier.size(48.dp)
+                onClick = { geminiMenuExpanded = true },
+                modifier = Modifier.size(48.dp)
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.grok),
-                    contentDescription = "Grok",
+                    contentDescription = "AI",
                     modifier = Modifier.size(36.dp)
                 )
             }
@@ -217,66 +236,109 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
                     .clip(RoundedCornerShape(12.dp))
             ) {
                 // ======= Rephrase =======
-                DropdownMenuItem(text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.AutoAwesome,
-                            contentDescription = null,
-                            tint = Color(0xFF4285F4),
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = stringResource(R.string.rephrase_text),
-                            fontFamily = ManropeFontFamily,
-                            fontSize = 14.sp,
-                            color = TextPrimary
-                        )
-                    }
-                }, onClick = {
-                    geminiMenuExpanded = false
-                    if (content.isNotBlank()) {
-                        viewModel.rephrase(content) { newText: String ->
-                            undoStack.add(content)
-                            content = newText
+                DropdownMenuItem(
+                    text = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = if (isRtl) Arrangement.End else Arrangement.Start,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            if (isRtl) {
+                                Text(
+                                    text = stringResource(R.string.rephrase_text),
+                                    fontFamily = ManropeFontFamily,
+                                    fontSize = 14.sp,
+                                    color = TextPrimary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Icon(
+                                    imageVector = Icons.Outlined.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = Color(0xFF4285F4),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Outlined.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = Color(0xFF4285F4),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = stringResource(R.string.rephrase_text),
+                                    fontFamily = ManropeFontFamily,
+                                    fontSize = 14.sp,
+                                    color = TextPrimary
+                                )
+                            }
+                        }
+                    },
+                    onClick = {
+                        geminiMenuExpanded = false
+                        if (content.isNotBlank()) {
+                            viewModel.rephrase(content) { newText ->
+                                undoStack.add(content)
+                                content = newText
+                            }
                         }
                     }
-                })
+                )
 
                 HorizontalDivider(color = Color(0xFFF0F0F0))
 
                 // ======= Diacritize =======
-                DropdownMenuItem(text = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Spellcheck,
-                            contentDescription = null,
-                            tint = Color(0xFF4285F4),
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = stringResource(R.string.diacritize_text),
-                            fontFamily = ManropeFontFamily,
-                            fontSize = 14.sp,
-                            color = TextPrimary
-                        )
-                    }
-                }, onClick = {
-                    geminiMenuExpanded = false
-                    if (content.isNotBlank()) {
-                        viewModel.diacritize(content) { newText ->
-                            undoStack.add(content)
-                            content = newText
+                DropdownMenuItem(
+                    text = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = if (isRtl) Arrangement.End else Arrangement.Start,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            if (isRtl) {
+                                Text(
+                                    text = stringResource(R.string.diacritize_text),
+                                    fontFamily = ManropeFontFamily,
+                                    fontSize = 14.sp,
+                                    color = TextPrimary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Icon(
+                                    imageVector = Icons.Outlined.Spellcheck,
+                                    contentDescription = null,
+                                    tint = Color(0xFF4285F4),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Outlined.Spellcheck,
+                                    contentDescription = null,
+                                    tint = Color(0xFF4285F4),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = stringResource(R.string.diacritize_text),
+                                    fontFamily = ManropeFontFamily,
+                                    fontSize = 14.sp,
+                                    color = TextPrimary
+                                )
+                            }
+                        }
+                    },
+                    onClick = {
+                        geminiMenuExpanded = false
+                        if (content.isNotBlank()) {
+                            viewModel.diacritize(content) { newText ->
+                                undoStack.add(content)
+                                content = newText
+                            }
                         }
                     }
-                })
+                )
             }
         }
+
         // ======= Loading =======
         if (viewModel.isLoading) {
             Box(
@@ -311,33 +373,36 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
             Snackbar(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(16.dp), action = {
-                    TextButton(onClick = { viewModel.clearError() }) { // دالة لتصفير الخطأ في الـ ViewModel
+                    .padding(16.dp),
+                action = {
+                    TextButton(onClick = { viewModel.clearError() }) {
                         Text("OK", color = Color.White)
                     }
-                }) {
+                }
+            ) {
                 Text(text = msg, fontFamily = ManropeFontFamily)
             }
         }
-        // ======= تحديث زر الحفظ =======
-        val isSaveEnabled = title.isNotBlank() && (content.isNotBlank() || selectedImageUri != null)
+
         // ======= Save Button =======
+        val isSaveEnabled = title.isNotBlank() && (content.isNotBlank() || selectedImageUri != null)
         Button(
             onClick = {
+                val imagePath = selectedImageUri?.toString() ?: ""
                 if (noteId > 0) {
                     viewModel.updateNote(
-                        id = noteId,
-                        title = title,
-                        content = content,
-                        imageUri = selectedImageUri?.toString(),
-                        date = date,
-                        onSuccess = onBack
+                        noteId,
+                        title,
+                        content,
+                        selectedImageUri?.toString(),
+                        date,
+                        onBack
                     )
                 } else {
                     viewModel.saveNote(
                         title = title,
                         content = content,
-                        imageUri = selectedImageUri?.toString(),
+                        imageUri = imagePath,
                         date = date,
                         onSuccess = onBack
                     )
@@ -351,9 +416,10 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
                 .height(56.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = FabColor, contentColor = Color(0xFFFFFFFF),
-
-                disabledContainerColor = reFabColor, disabledContentColor = Color(0xFFFFFFFF)
+                containerColor = FabColor,
+                contentColor = Color.White,
+                disabledContainerColor = reFabColor,
+                disabledContentColor = Color.White
             )
         ) {
             Text(
@@ -363,33 +429,42 @@ fun CreateNoteScreen(noteId: Int, onBack: () -> Unit, viewModel: NoteViewModel) 
                 fontWeight = FontWeight.Medium
             )
         }
-
     }
 }
 
 // ======= Title TextField =======
 @Composable
-fun BasicTextField_Title(value: String, onValueChange: (String) -> Unit) {
+fun BasicTextField_Title(value: String, onValueChange: (String) -> Unit, isRtl: Boolean) {
+    val textAlign = if (isRtl) TextAlign.End else TextAlign.Start
+
     TextField(
-        value = value, onValueChange = onValueChange, placeholder = {
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = {
             Text(
                 text = stringResource(R.string.title_hint),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = ManropeFontFamily,
-                color = Color(0xFFCCCCCC)
+                color = Color(0xFFCCCCCC),
+                textAlign = textAlign,
+                modifier = Modifier.fillMaxWidth()
             )
-        }, textStyle = TextStyle(
+        },
+        textStyle = TextStyle(
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = ManropeFontFamily,
-            color = TextPrimary
-        ), colors = TextFieldDefaults.colors(
+            color = TextPrimary,
+            textAlign = textAlign
+        ),
+        colors = TextFieldDefaults.colors(
             unfocusedContainerColor = Color.Transparent,
             focusedContainerColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
             focusedIndicatorColor = Color.Transparent
-        ), modifier = Modifier.fillMaxWidth()
+        ),
+        modifier = Modifier.fillMaxWidth()
     )
 }
 
@@ -400,50 +475,91 @@ fun BasicTextField_Content(
     onValueChange: (String) -> Unit,
     selectedImageUri: Uri?,
     onImageClick: () -> Unit,
-    onRemoveImage: () -> Unit
+    onRemoveImage: () -> Unit,
+    isRtl: Boolean
 ) {
+    val textAlign = if (isRtl) TextAlign.End else TextAlign.Start
+    val contentAlignment = if (isRtl) Alignment.End else Alignment.Start
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .padding(start = 16.dp, top = 4.dp)
+            .padding(
+                start = if (isRtl) 0.dp else 16.dp,
+                end = if (isRtl) 16.dp else 0.dp,
+                top = 4.dp
+            )
     ) {
         BasicTextField(
-            value = value, onValueChange = onValueChange, textStyle = TextStyle(
+            value = value,
+            onValueChange = onValueChange,
+            textStyle = TextStyle(
                 fontSize = 15.sp,
                 fontFamily = ManropeFontFamily,
                 color = TextPrimary,
-                lineHeight = 22.sp
-            ), modifier = Modifier.fillMaxWidth(), decorationBox = { innerTextField ->
+                lineHeight = 22.sp,
+                textAlign = textAlign
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            decorationBox = { innerTextField ->
                 Box {
                     if (value.isEmpty() && selectedImageUri == null) {
-                        Column {
+                        Column(
+                            horizontalAlignment = contentAlignment,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             Text(
                                 text = stringResource(R.string.content_hint_part1),
                                 fontSize = 15.sp,
                                 fontFamily = ManropeFontFamily,
-                                color = Color(0xFFCCCCCC)
+                                color = Color(0xFFCCCCCC),
+                                textAlign = textAlign,
+                                modifier = Modifier.fillMaxWidth()
                             )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = stringResource(R.string.content_hint_part2),
-                                    fontSize = 15.sp,
-                                    fontFamily = ManropeFontFamily,
-                                    color = Color(0xFFCCCCCC)
-                                )
-                                Icon(
-                                    imageVector = Icons.Outlined.Image,
-                                    contentDescription = null,
-                                    tint = Color(0xFFCCCCCC),
-                                    modifier = Modifier
-                                        .size(18.dp)
-                                        .clickable { onImageClick() })
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = if (isRtl) Arrangement.End else Arrangement.Start,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                if (isRtl) {
+                                    Text(
+                                        text = stringResource(R.string.content_hint_part2),
+                                        fontSize = 15.sp,
+                                        fontFamily = ManropeFontFamily,
+                                        color = Color(0xFFCCCCCC)
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Outlined.Image,
+                                        contentDescription = null,
+                                        tint = Color(0xFFCCCCCC),
+                                        modifier = Modifier
+                                            .size(18.dp)
+                                            .clickable { onImageClick() }
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Image,
+                                        contentDescription = null,
+                                        tint = Color(0xFFCCCCCC),
+                                        modifier = Modifier
+                                            .size(18.dp)
+                                            .clickable { onImageClick() }
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.content_hint_part2),
+                                        fontSize = 15.sp,
+                                        fontFamily = ManropeFontFamily,
+                                        color = Color(0xFFCCCCCC)
+                                    )
+                                }
                             }
                         }
                     }
                     innerTextField()
                 }
-            })
+            }
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 

@@ -10,25 +10,29 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.notes_taking.ui.theme.ManropeFontFamily
-import com.example.notes_taking.ui.theme.MansalvaFontFamily
-import kotlinx.coroutines.delay
 import com.example.notes_taking.R
-import com.example.notes_taking.ui.theme.BrownColor
-import com.example.notes_taking.ui.theme.SplashBackground
+import com.example.notes_taking.ui.theme.*
+import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(onSplashFinished: () -> Unit) {
 
     val scale = remember { Animatable(0f) }
+    val layoutDirection = LocalLayoutDirection.current
+    val isRtl = layoutDirection == LayoutDirection.Rtl
 
     LaunchedEffect(Unit) {
         scale.animateTo(
-            targetValue = 1f, animationSpec = tween(durationMillis = 800)
+            targetValue = 1f,
+            animationSpec = tween(durationMillis = 800)
         )
         delay(1000)
         onSplashFinished()
@@ -40,47 +44,46 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             .background(SplashBackground),
         contentAlignment = Alignment.Center
     ) {
-
-        // المحتوى الرئيسي
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.scale(scale.value)
         ) {
-
-            // أيقونة الـ Notepad
+            // أيقونة التطبيق
             Image(
                 painter = painterResource(id = R.drawable.sticky_notes),
-                contentDescription = "NotePad Icon",
+                contentDescription = null,
                 modifier = Modifier.size(120.dp)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // اسم التطبيق بخط Mansalva
+            // اسم التطبيق
             Text(
-                text = "NotePad",
+                text = stringResource(R.string.splash_app_name),
                 fontSize = 42.sp,
                 fontFamily = MansalvaFontFamily,
                 fontWeight = FontWeight.Normal,
-                color = BrownColor
+                color = BrownColor,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // الوصف بخط Manrope
+            // وصف التطبيق
             Text(
-                text = "Take Quick Notes",
+                text = stringResource(R.string.splash_subtitle),
                 fontSize = 16.sp,
                 fontFamily = ManropeFontFamily,
                 fontWeight = FontWeight.Normal,
-                color = BrownColor.copy(alpha = 0.7f)
+                color = BrownColor.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center
             )
         }
 
-        // النص السفلي بخط Manrope
+        // النص السفلي
         Text(
-            text = "designed by srkdesignwala",
+            text = stringResource(R.string.splash_designed_by),
             fontSize = 12.sp,
             fontFamily = ManropeFontFamily,
             color = BrownColor.copy(alpha = 0.5f),

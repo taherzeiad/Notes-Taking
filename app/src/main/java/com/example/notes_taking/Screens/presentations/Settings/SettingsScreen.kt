@@ -67,7 +67,12 @@ fun SettingsScreen(navController: NavHostController) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (isRtl) {
-                        Icon(imageVector = Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(26.dp))
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                            contentDescription = null,
+                            tint = TextPrimary,
+                            modifier = Modifier.size(26.dp)
+                        )
                     } else {
                         ProfileAvatar()
                     }
@@ -83,7 +88,12 @@ fun SettingsScreen(navController: NavHostController) {
                     if (isRtl) {
                         ProfileAvatar()
                     } else {
-                        Icon(imageVector = Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(26.dp))
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                            contentDescription = null,
+                            tint = TextPrimary,
+                            modifier = Modifier.size(26.dp)
+                        )
                     }
                 }
             }
@@ -122,17 +132,27 @@ fun SettingsScreen(navController: NavHostController) {
                     elevation = CardDefaults.cardElevation(0.dp)
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (isRtl) {
                             EditButton()
-                            ProfileInfo(name = "Taher Qudeih", email = "taher@sanctuary.io", isRtl = true)
+                            ProfileInfo(
+                                name = "Taher Qudeih",
+                                email = "taher@sanctuary.io",
+                                isRtl = true
+                            )
                             ProfileAvatar(size = 64.dp, iconSize = 36.dp)
                         } else {
                             ProfileAvatar(size = 64.dp, iconSize = 36.dp)
-                            ProfileInfo(name = "Taher Qudeih", email = "taher@sanctuary.io", isRtl = false)
+                            ProfileInfo(
+                                name = "Taher Qudeih",
+                                email = "taher@sanctuary.io",
+                                isRtl = false
+                            )
                             EditButton()
                         }
                     }
@@ -142,14 +162,28 @@ fun SettingsScreen(navController: NavHostController) {
             // ======= Sections =======
             item {
                 SettingsSection(title = stringResource(R.string.section_account), isRtl = isRtl) {
-                    SettingsItem(label = stringResource(R.string.item_account_info), icon = Icons.Outlined.Person, isRtl = isRtl, onClick = {})
-                    HorizontalDivider(color = CardBorder, modifier = Modifier.padding(horizontal = 16.dp))
-                    SettingsItem(label = stringResource(R.string.item_security), icon = Icons.Outlined.Lock, isRtl = isRtl, onClick = {})
+                    SettingsItem(
+                        label = stringResource(R.string.item_account_info),
+                        icon = Icons.Outlined.Person,
+                        isRtl = isRtl,
+                        onClick = {})
+                    HorizontalDivider(
+                        color = CardBorder,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    SettingsItem(
+                        label = stringResource(R.string.item_security),
+                        icon = Icons.Outlined.Lock,
+                        isRtl = isRtl,
+                        onClick = {})
                 }
             }
 
             item {
-                SettingsSection(title = stringResource(R.string.section_customization), isRtl = isRtl) {
+                SettingsSection(
+                    title = stringResource(R.string.section_customization),
+                    isRtl = isRtl
+                ) {
                     SettingsItemWithToggle(
                         label = stringResource(R.string.item_dark_mode),
                         subLabel = stringResource(R.string.sub_dark_mode),
@@ -158,41 +192,88 @@ fun SettingsScreen(navController: NavHostController) {
                         onCheckedChange = { darkModeEnabled = it },
                         isRtl = isRtl
                     )
-                    HorizontalDivider(color = CardBorder, modifier = Modifier.padding(horizontal = 16.dp))
-                    SettingsItem(label = stringResource(R.string.item_notifications), icon = Icons.Outlined.Notifications, isRtl = isRtl, onClick = {})
+                    HorizontalDivider(
+                        color = CardBorder,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    SettingsItem(
+                        label = stringResource(R.string.item_notifications),
+                        icon = Icons.Outlined.Notifications,
+                        isRtl = isRtl,
+                        onClick = {})
                 }
             }
 
             item {
                 SettingsSection(title = stringResource(R.string.section_privacy), isRtl = isRtl) {
-                    SettingsItem(label = stringResource(R.string.item_privacy_center), icon = Icons.Outlined.Shield, isRtl = isRtl, onClick = {})
-                    HorizontalDivider(color = CardBorder, modifier = Modifier.padding(horizontal = 16.dp))
-                    SettingsItem(label = stringResource(R.string.item_about), icon = Icons.Outlined.Info, isRtl = isRtl, onClick = {})
+                    SettingsItem(
+                        label = stringResource(R.string.item_privacy_center),
+                        icon = Icons.Outlined.Shield,
+                        isRtl = isRtl,
+                        onClick = {})
+                    HorizontalDivider(
+                        color = CardBorder,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    SettingsItem(
+                        label = stringResource(R.string.item_about),
+                        icon = Icons.Outlined.Info,
+                        isRtl = isRtl,
+                        onClick = {})
                 }
             }
 
             // ======= Logout =======
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth().clickable { },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { },
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DangerRed.copy(alpha = 0.3f)),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        DangerRed.copy(alpha = 0.3f)
+                    ),
                     elevation = CardDefaults.cardElevation(0.dp)
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(18.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (isRtl) {
-                            Text(text = stringResource(R.string.btn_logout), fontSize = 16.sp, fontFamily = ManropeFontFamily, fontWeight = FontWeight.SemiBold, color = DangerRed)
+                            Text(
+                                text = stringResource(R.string.btn_logout),
+                                fontSize = 16.sp,
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                color = DangerRed
+                            )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Icon(imageVector = Icons.AutoMirrored.Outlined.Logout, contentDescription = null, tint = DangerRed, modifier = Modifier.size(20.dp))
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Outlined.Logout,
+                                contentDescription = null,
+                                tint = DangerRed,
+                                modifier = Modifier.size(20.dp)
+                            )
                         } else {
-                            Icon(imageVector = Icons.AutoMirrored.Outlined.Logout, contentDescription = null, tint = DangerRed, modifier = Modifier.size(20.dp))
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Outlined.Logout,
+                                contentDescription = null,
+                                tint = DangerRed,
+                                modifier = Modifier.size(20.dp)
+                            )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = stringResource(R.string.btn_logout), fontSize = 16.sp, fontFamily = ManropeFontFamily, fontWeight = FontWeight.SemiBold, color = DangerRed)
+                            Text(
+                                text = stringResource(R.string.btn_logout),
+                                fontSize = 16.sp,
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                color = DangerRed
+                            )
                         }
                     }
                 }
@@ -206,19 +287,36 @@ fun SettingsScreen(navController: NavHostController) {
 // ======= Helper UI Components =======
 
 @Composable
-fun ProfileAvatar(size: androidx.compose.ui.unit.Dp = 40.dp, iconSize: androidx.compose.ui.unit.Dp = 24.dp) {
+fun ProfileAvatar(
+    size: androidx.compose.ui.unit.Dp = 40.dp,
+    iconSize: androidx.compose.ui.unit.Dp = 24.dp
+) {
     Box(
-        modifier = Modifier.size(size).clip(CircleShape).background(BrownCard),
+        modifier = Modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(BrownCard),
         contentAlignment = Alignment.Center
     ) {
-        Icon(imageVector = Icons.Outlined.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(iconSize))
+        Icon(
+            imageVector = Icons.Outlined.Person,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(iconSize)
+        )
     }
 }
 
 @Composable
 fun ProfileInfo(name: String, email: String, isRtl: Boolean) {
     Column(horizontalAlignment = if (isRtl) Alignment.End else Alignment.Start) {
-        Text(text = name, fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = MansalvaFontFamily, color = TextPrimary)
+        Text(
+            text = name,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = MansalvaFontFamily,
+            color = TextPrimary
+        )
         Text(text = email, fontSize = 13.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
     }
 }
@@ -226,9 +324,18 @@ fun ProfileInfo(name: String, email: String, isRtl: Boolean) {
 @Composable
 fun EditButton() {
     Box(
-        modifier = Modifier.border(1.dp, CardBorder, RoundedCornerShape(20.dp)).clip(RoundedCornerShape(20.dp)).clickable { }.padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier = Modifier
+            .border(1.dp, CardBorder, RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(20.dp))
+            .clickable { }
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Text(text = stringResource(R.string.btn_edit), fontSize = 14.sp, fontFamily = ManropeFontFamily, color = TextPrimary)
+        Text(
+            text = stringResource(R.string.btn_edit),
+            fontSize = 14.sp,
+            fontFamily = ManropeFontFamily,
+            color = TextPrimary
+        )
     }
 }
 
@@ -257,48 +364,133 @@ fun SettingsSection(title: String, isRtl: Boolean, content: @Composable ColumnSc
 @Composable
 fun SettingsItem(label: String, icon: ImageVector, isRtl: Boolean, onClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (isRtl) {
-            Icon(imageVector = Icons.Outlined.ChevronLeft, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(20.dp))
-            Text(text = label, fontSize = 15.sp, fontFamily = ManropeFontFamily, color = TextPrimary, fontWeight = FontWeight.Medium)
+            // ← سهم يسار
+            Icon(
+                imageVector = Icons.Outlined.ChevronLeft,
+                contentDescription = null,
+                tint = TextSecondary,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = label,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp),
+                fontSize = 15.sp,
+                fontFamily = ManropeFontFamily,
+                color = TextPrimary,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.End
+            )
             SettingsIconBox(icon)
         } else {
             SettingsIconBox(icon)
-            Text(text = label, modifier = Modifier.weight(1f).padding(horizontal = 12.dp), fontSize = 15.sp, fontFamily = ManropeFontFamily, color = TextPrimary, fontWeight = FontWeight.Medium)
-            Icon(imageVector = Icons.Outlined.ChevronRight, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(20.dp))
+            Text(
+                text = label,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp),
+                fontSize = 15.sp,
+                fontFamily = ManropeFontFamily,
+                color = TextPrimary,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Start
+            )
+            Icon(
+                imageVector = Icons.Outlined.ChevronRight,
+                contentDescription = null,
+                tint = TextSecondary,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
 
 @Composable
 fun SettingsIconBox(icon: ImageVector) {
-    Box(modifier = Modifier.size(36.dp).background(IconBg, CircleShape), contentAlignment = Alignment.Center) {
-        Icon(imageVector = icon, contentDescription = null, tint = BrownCard, modifier = Modifier.size(18.dp))
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .background(IconBg, CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = BrownCard,
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 
 @Composable
-fun SettingsItemWithToggle(label: String, subLabel: String, icon: ImageVector, checked: Boolean, onCheckedChange: (Boolean) -> Unit, isRtl: Boolean) {
+fun SettingsItemWithToggle(
+    label: String,
+    subLabel: String,
+    icon: ImageVector,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    isRtl: Boolean
+) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (isRtl) {
             Switch(checked = checked, onCheckedChange = onCheckedChange, colors = switchColors())
-            Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                Text(text = label, fontSize = 15.sp, fontFamily = ManropeFontFamily, color = TextPrimary, fontWeight = FontWeight.Medium)
-                Text(text = subLabel, fontSize = 12.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
+            Column(
+                horizontalAlignment = Alignment.End,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp)
+            ) {
+                Text(
+                    text = label,
+                    fontSize = 15.sp,
+                    fontFamily = ManropeFontFamily,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = subLabel,
+                    fontSize = 12.sp,
+                    fontFamily = ManropeFontFamily,
+                    color = TextSecondary
+                )
             }
             SettingsIconBox(icon)
         } else {
             SettingsIconBox(icon)
-            Column(horizontalAlignment = Alignment.Start, modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                Text(text = label, fontSize = 15.sp, fontFamily = ManropeFontFamily, color = TextPrimary, fontWeight = FontWeight.Medium)
-                Text(text = subLabel, fontSize = 12.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
+            Column(
+                horizontalAlignment = Alignment.Start,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp)
+            ) {
+                Text(
+                    text = label,
+                    fontSize = 15.sp,
+                    fontFamily = ManropeFontFamily,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = subLabel,
+                    fontSize = 12.sp,
+                    fontFamily = ManropeFontFamily,
+                    color = TextSecondary
+                )
             }
             Switch(checked = checked, onCheckedChange = onCheckedChange, colors = switchColors())
         }

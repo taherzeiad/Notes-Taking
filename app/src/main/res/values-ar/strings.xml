@@ -1,4 +1,9 @@
 <resources>
+    //splash
+    <string name="splash_app_name">مفكرتي</string>
+    <string name="splash_subtitle">دوّن أفكارك بسرعة</string>
+    <string name="splash_designed_by">تصميم srkdesignwala</string>
+
     <string name="app_name">تدوين الملاحظات</string>
     <string name="all_notes">كل الملاحظات</string>
     <string name="pinned_notes">الملاحظات المثبتة</string>
