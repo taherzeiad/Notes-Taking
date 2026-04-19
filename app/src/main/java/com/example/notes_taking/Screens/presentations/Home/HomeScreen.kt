@@ -20,10 +20,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -37,21 +39,25 @@ fun HomeScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToTasks: () -> Unit,
     viewModel: NoteViewModel,
-    navController: NavHostController // إضافة navController هنا لاستخدامه في البار السفلي
+    navController: NavHostController
 ) {
     val notes by viewModel.allNotes.collectAsState(initial = emptyList())
     val lastNote = notes.firstOrNull()
 
+    // ← اتجاه اللغة
+    val layoutDirection = LocalLayoutDirection.current
+    val isRtl = layoutDirection == LayoutDirection.Rtl
+    val textAlign = if (isRtl) TextAlign.End else TextAlign.Start
+    val horizontalAlignment = if (isRtl) Alignment.End else Alignment.Start
+    val rowArrangementStart = if (isRtl) Arrangement.End else Arrangement.Start
+    val rowArrangementEnd = if (isRtl) Arrangement.Start else Arrangement.End
+
     Scaffold(
         containerColor = PageBackground,
         bottomBar = {
-            BottomNavBar(
-                navController = navController,
-                selectedTab = 3 // الـ Home هو التبويب الرابع (index 3)
-            )
+            BottomNavBar(navController = navController, selectedTab = 3)
         }
     ) { padding ->
-
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -59,6 +65,7 @@ fun HomeScreen(
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+
             // ======= Top Bar =======
             item {
                 Spacer(modifier = Modifier.height(12.dp))
@@ -67,49 +74,35 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(BrownCard),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
+                    if (isRtl) {
+                        Icon(imageVector = Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(26.dp))
+                        Text(text = stringResource(R.string.app_name_styled), fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = ManropeFontFamily, color = TextPrimary)
+                        Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(BrownCard), contentAlignment = Alignment.Center) {
+                            Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
+                        }
+                    } else {
+                        Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(BrownCard), contentAlignment = Alignment.Center) {
+                            Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
+                        }
+                        Text(text = stringResource(R.string.app_name_styled), fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = ManropeFontFamily, color = TextPrimary)
+                        Icon(imageVector = Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(26.dp))
                     }
-
-                    Text(
-                        text = stringResource(R.string.app_name_styled),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = ManropeFontFamily,
-                        color = TextPrimary,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.MenuBook,
-                        contentDescription = null,
-                        tint = TextPrimary,
-                        modifier = Modifier.size(26.dp)
-                    )
                 }
             }
 
             // ======= Welcome =======
             item {
-                Column {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = horizontalAlignment
+                ) {
                     Text(
                         text = stringResource(R.string.welcome_user, "Sara"),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = MansalvaFontFamily,
                         color = TextPrimary,
-                        textAlign = TextAlign.End,
+                        textAlign = textAlign,
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -118,7 +111,7 @@ fun HomeScreen(
                         fontSize = 14.sp,
                         fontFamily = ManropeFontFamily,
                         color = TextSecondary,
-                        textAlign = TextAlign.End,
+                        textAlign = textAlign,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -132,25 +125,20 @@ fun HomeScreen(
                     colors = CardDefaults.cardColors(containerColor = BrownCard)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
+                        // AI Badge
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
+                            horizontalArrangement = rowArrangementEnd,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.ai_suggestion), fontSize = 12.sp,
-                                    fontFamily = ManropeFontFamily,
-                                    color = Color.White.copy(alpha = 0.7f)
-                                )
-                                Icon(
-                                    imageVector = Icons.Outlined.AutoAwesome,
-                                    contentDescription = null,
-                                    tint = Color.White.copy(alpha = 0.7f),
-                                    modifier = Modifier.size(16.dp)
-                                )
+                            if (isRtl) {
+                                Text(text = stringResource(R.string.ai_suggestion), fontSize = 12.sp, fontFamily = ManropeFontFamily, color = Color.White.copy(alpha = 0.7f))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(imageVector = Icons.Outlined.AutoAwesome, contentDescription = null, tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(16.dp))
+                            } else {
+                                Icon(imageVector = Icons.Outlined.AutoAwesome, contentDescription = null, tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(text = stringResource(R.string.ai_suggestion), fontSize = 12.sp, fontFamily = ManropeFontFamily, color = Color.White.copy(alpha = 0.7f))
                             }
                         }
 
@@ -162,25 +150,20 @@ fun HomeScreen(
                             fontWeight = FontWeight.Bold,
                             fontFamily = MansalvaFontFamily,
                             color = Color.White,
-                            textAlign = TextAlign.End,
-                            lineHeight = 26.sp
+                            textAlign = textAlign,
+                            lineHeight = 26.sp,
+                            modifier = Modifier.fillMaxWidth()
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Button(
                             onClick = { },
-                            modifier = Modifier.align(Alignment.End),
+                            modifier = Modifier.align(if (isRtl) Alignment.End else Alignment.Start),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color.White)
                         ) {
-                            Text(
-                                text = stringResource(R.string.start_summary),
-                                fontSize = 14.sp,
-                                fontFamily = ManropeFontFamily,
-                                color = BrownCard,
-                                fontWeight = FontWeight.SemiBold
-                            )
+                            Text(text = stringResource(R.string.start_summary), fontSize = 14.sp, fontFamily = ManropeFontFamily, color = BrownCard, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -195,43 +178,32 @@ fun HomeScreen(
                     elevation = CardDefaults.cardElevation(0.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
+                        // Header
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Outlined.CalendarMonth,
-                                contentDescription = null,
-                                tint = TextSecondary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Text(
-                                text = stringResource(R.string.important_task),
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                fontFamily = ManropeFontFamily,
-                                color = TextPrimary
-                            )
+                            if (isRtl) {
+                                Text(text = stringResource(R.string.important_task), fontSize = 15.sp, fontWeight = FontWeight.SemiBold, fontFamily = ManropeFontFamily, color = TextPrimary)
+                                Icon(imageVector = Icons.Outlined.CalendarMonth, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(20.dp))
+                            } else {
+                                Icon(imageVector = Icons.Outlined.CalendarMonth, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(20.dp))
+                                Text(text = stringResource(R.string.important_task), fontSize = 15.sp, fontWeight = FontWeight.SemiBold, fontFamily = ManropeFontFamily, color = TextPrimary)
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
 
+                        // Time Badge
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
+                            horizontalArrangement = rowArrangementEnd
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .background(TagBg, RoundedCornerShape(20.dp))
-                                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                                modifier = Modifier.background(TagBg, RoundedCornerShape(20.dp)).padding(horizontal = 12.dp, vertical = 4.dp)
                             ) {
-                                Text(
-                                    text = stringResource(R.string.task_due_time),
-                                    fontSize = 12.sp,
-                                    fontFamily = ManropeFontFamily,
-                                    color = TagText
-                                )
+                                Text(text = stringResource(R.string.task_due_time), fontSize = 12.sp, fontFamily = ManropeFontFamily, color = TagText)
                             }
                         }
 
@@ -243,30 +215,27 @@ fun HomeScreen(
                             fontWeight = FontWeight.Bold,
                             fontFamily = ManropeFontFamily,
                             color = TextPrimary,
-                            textAlign = TextAlign.Start,
+                            textAlign = textAlign,
                             modifier = Modifier.fillMaxWidth()
                         )
 
                         Spacer(modifier = Modifier.height(6.dp))
 
+                        // Location
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End,
+                            horizontalArrangement = rowArrangementEnd,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = stringResource(R.string.location_library),
-                                fontSize = 13.sp,
-                                fontFamily = ManropeFontFamily,
-                                color = TextSecondary
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                imageVector = Icons.Outlined.LocationOn,
-                                contentDescription = null,
-                                tint = TextSecondary,
-                                modifier = Modifier.size(14.dp)
-                            )
+                            if (isRtl) {
+                                Text(text = stringResource(R.string.location_library), fontSize = 13.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(imageVector = Icons.Outlined.LocationOn, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(14.dp))
+                            } else {
+                                Icon(imageVector = Icons.Outlined.LocationOn, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(text = stringResource(R.string.location_library), fontSize = 13.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -280,9 +249,7 @@ fun HomeScreen(
                             color = BrownCard,
                             fontWeight = FontWeight.Medium,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onNavigateToTasks() } // ربط الانتقال للمهام
+                            modifier = Modifier.fillMaxWidth().clickable { onNavigateToTasks() }
                         )
                     }
                 }
@@ -296,16 +263,14 @@ fun HomeScreen(
                         fontSize = 15.sp,
                         fontFamily = ManropeFontFamily,
                         color = TextSecondary,
-                        textAlign = TextAlign.End,
+                        textAlign = textAlign,
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { lastNote?.let { onEditNote(it.id) } },
+                        modifier = Modifier.fillMaxWidth().clickable { lastNote?.let { onEditNote(it.id) } },
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         elevation = CardDefaults.cardElevation(0.dp)
@@ -314,18 +279,17 @@ fun HomeScreen(
                             WaveChart(modifier = Modifier.fillMaxWidth().height(100.dp))
 
                             Column(modifier = Modifier.padding(16.dp)) {
+                                // Tags
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp, if (isRtl) Alignment.End else Alignment.Start)
                                 ) {
                                     listOf(
                                         stringResource(R.string.tag_philosophy),
                                         stringResource(R.string.tag_readings)
                                     ).forEach { tag ->
                                         Box(
-                                            modifier = Modifier
-                                                .background(TagBg, RoundedCornerShape(20.dp))
-                                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                                            modifier = Modifier.background(TagBg, RoundedCornerShape(20.dp)).padding(horizontal = 10.dp, vertical = 4.dp)
                                         ) {
                                             Text(text = tag, fontSize = 12.sp, fontFamily = ManropeFontFamily, color = TagText)
                                         }
@@ -340,7 +304,7 @@ fun HomeScreen(
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = MansalvaFontFamily,
                                     color = TextPrimary,
-                                    textAlign = TextAlign.End,
+                                    textAlign = textAlign,
                                     modifier = Modifier.fillMaxWidth()
                                 )
 
@@ -351,7 +315,7 @@ fun HomeScreen(
                                     fontSize = 14.sp,
                                     fontFamily = ManropeFontFamily,
                                     color = TextPrimary.copy(alpha = 0.7f),
-                                    textAlign = TextAlign.End,
+                                    textAlign = textAlign,
                                     maxLines = 3,
                                     overflow = TextOverflow.Ellipsis,
                                     lineHeight = 22.sp,
@@ -362,26 +326,33 @@ fun HomeScreen(
                                 HorizontalDivider(color = Color(0xFFF0EBE6))
                                 Spacer(modifier = Modifier.height(12.dp))
 
+                                // Footer
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        modifier = Modifier.clickable { lastNote?.let { onEditNote(it.id) } }
-                                    ) {
-                                        Text(text = "←", fontSize = 14.sp, color = BrownCard)
-                                        Text(text = stringResource(R.string.continue_writing), fontSize = 14.sp, fontFamily = ManropeFontFamily, color = BrownCard, fontWeight = FontWeight.Medium)
+                                    if (isRtl) {
+                                        Text(text = stringResource(R.string.edited_time_ago, "١٥"), fontSize = 12.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                            modifier = Modifier.clickable { lastNote?.let { onEditNote(it.id) } }
+                                        ) {
+                                            Text(text = stringResource(R.string.continue_writing), fontSize = 14.sp, fontFamily = ManropeFontFamily, color = BrownCard, fontWeight = FontWeight.Medium)
+                                            Text(text = "←", fontSize = 14.sp, color = BrownCard)
+                                        }
+                                    } else {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                            modifier = Modifier.clickable { lastNote?.let { onEditNote(it.id) } }
+                                        ) {
+                                            Text(text = "→", fontSize = 14.sp, color = BrownCard)
+                                            Text(text = stringResource(R.string.continue_writing), fontSize = 14.sp, fontFamily = ManropeFontFamily, color = BrownCard, fontWeight = FontWeight.Medium)
+                                        }
+                                        Text(text = stringResource(R.string.edited_time_ago, "15"), fontSize = 12.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
                                     }
-
-                                    Text(
-                                        text = stringResource(R.string.edited_time_ago, "١٥"),
-                                        fontSize = 12.sp,
-                                        fontFamily = ManropeFontFamily,
-                                        color = TextSecondary
-                                    )
                                 }
                             }
                         }
@@ -393,7 +364,7 @@ fun HomeScreen(
             item {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.End,
+                    horizontalAlignment = horizontalAlignment,
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Row(
@@ -403,20 +374,22 @@ fun HomeScreen(
                         QuickActionButton(
                             label = stringResource(R.string.voice_record),
                             icon = Icons.Outlined.Mic,
+                            isRtl = isRtl,
                             modifier = Modifier.weight(1f),
                             onClick = { }
                         )
                         QuickActionButton(
                             label = stringResource(R.string.quick_idea),
                             icon = Icons.Outlined.Lightbulb,
+                            isRtl = isRtl,
                             modifier = Modifier.weight(1f),
                             onClick = onAddNote
                         )
                     }
-
                     QuickActionButton(
                         label = stringResource(R.string.add_document),
                         icon = Icons.Outlined.Image,
+                        isRtl = isRtl,
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { }
                     )
@@ -434,7 +407,6 @@ fun WaveChart(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val width = size.width
         val height = size.height
-
         val path = Path().apply {
             moveTo(0f, height * 0.7f)
             cubicTo(width * 0.15f, height * 0.8f, width * 0.25f, height * 0.5f, width * 0.4f, height * 0.55f)
@@ -453,6 +425,7 @@ fun WaveChart(modifier: Modifier = Modifier) {
 fun QuickActionButton(
     label: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
+    isRtl: Boolean,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
@@ -465,29 +438,29 @@ fun QuickActionButton(
         Row(
             modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = if (isRtl) Arrangement.End else Arrangement.Start
         ) {
-            Text(text = label, fontSize = 14.sp, fontFamily = ManropeFontFamily, color = TextPrimary, fontWeight = FontWeight.Medium)
-            Spacer(modifier = Modifier.width(8.dp))
-            Icon(imageVector = icon, contentDescription = null, tint = BrownCard, modifier = Modifier.size(20.dp))
+            if (isRtl) {
+                Text(text = label, fontSize = 14.sp, fontFamily = ManropeFontFamily, color = TextPrimary, fontWeight = FontWeight.Medium)
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(imageVector = icon, contentDescription = null, tint = BrownCard, modifier = Modifier.size(20.dp))
+            } else {
+                Icon(imageVector = icon, contentDescription = null, tint = BrownCard, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = label, fontSize = 14.sp, fontFamily = ManropeFontFamily, color = TextPrimary, fontWeight = FontWeight.Medium)
+            }
         }
     }
 }
 
-// ======= Bottom Navigation (تم حل المشاكل هنا) =======
+// ======= Bottom Navigation =======
 @Composable
-fun BottomNavBar(
-    navController: NavHostController,
-    selectedTab: Int
-) {
-    NavigationBar(
-        containerColor = Color.White,
-        tonalElevation = 0.dp
-    ) {
+fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
+    NavigationBar(containerColor = Color.White, tonalElevation = 0.dp) {
         val tabs = listOf(
             Triple(stringResource(R.string.nav_settings), Icons.Outlined.Settings, "settings_screen"),
             Triple(stringResource(R.string.nav_tasks), Icons.Outlined.CheckCircle, "tasks_screen"),
-            Triple(stringResource(R.string.nav_notes), Icons.Outlined.NoteAlt, "home_screen"), // أو مسار قائمة الملاحظات
+            Triple(stringResource(R.string.nav_notes), Icons.Outlined.NoteAlt, "home_screen"),
             Triple(stringResource(R.string.nav_home), Icons.Filled.Home, "home_screen")
         )
 
@@ -497,23 +470,14 @@ fun BottomNavBar(
                 onClick = {
                     if (selectedTab != index) {
                         navController.navigate(route) {
-                            // للحفاظ على نظافة الـ BackStack وتجنب تكرار الصفحات
                             popUpTo("home_screen") { saveState = true }
                             launchSingleTop = true
                             restoreState = true
                         }
                     }
                 },
-                icon = {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = label,
-                        modifier = Modifier.size(24.dp)
-                    )
-                },
-                label = {
-                    Text(text = label, fontSize = 10.sp, fontFamily = ManropeFontFamily)
-                },
+                icon = { Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(24.dp)) },
+                label = { Text(text = label, fontSize = 10.sp, fontFamily = ManropeFontFamily) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = BrownCard,
                     selectedTextColor = BrownCard,

@@ -304,59 +304,128 @@ fun TaskCard(task: Task, isRtl: Boolean) {
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+
+            // ======= Header Row =======
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                // Checkbox
-                RadioButton(
-                    selected = false,
-                    onClick = {},
-                    colors = RadioButtonDefaults.colors(unselectedColor = Color(0xFFD0C8C0))
-                )
-
-                Column(
-                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
-                    horizontalAlignment = contentAlignment
-                ) {
-                    if (task.isUrgent) {
-                        UrgentBadge()
-                        Spacer(modifier = Modifier.height(6.dp))
+                if (isRtl) {
+                    // ← عربي: Checkbox يسار، النص يمين
+                    RadioButton(
+                        selected = false,
+                        onClick = {},
+                        colors = RadioButtonDefaults.colors(unselectedColor = Color(0xFFD0C8C0))
+                    )
+                    Column(
+                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                        horizontalAlignment = Alignment.End // ← النص يبدأ من اليمين
+                    ) {
+                        if (task.isUrgent) {
+                            UrgentBadge()
+                            Spacer(modifier = Modifier.height(6.dp))
+                        }
+                        Text(
+                            text = stringResource(task.titleRes),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = ManropeFontFamily,
+                            color = TextPrimary,
+                            textAlign = TextAlign.End
+                        )
                     }
-                    Text(
-                        text = stringResource(task.titleRes),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = ManropeFontFamily,
-                        color = TextPrimary,
-                        textAlign = textAlign
+                } else {
+                    // ← إنجليزي: النص يسار، Checkbox يمين
+                    Column(
+                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                        horizontalAlignment = Alignment.Start // ← النص يبدأ من اليسار
+                    ) {
+                        if (task.isUrgent) {
+                            UrgentBadge()
+                            Spacer(modifier = Modifier.height(6.dp))
+                        }
+                        Text(
+                            text = stringResource(task.titleRes),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = ManropeFontFamily,
+                            color = TextPrimary,
+                            textAlign = TextAlign.Start
+                        )
+                    }
+                    RadioButton(
+                        selected = false,
+                        onClick = {},
+                        colors = RadioButtonDefaults.colors(unselectedColor = Color(0xFFD0C8C0))
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // ======= Source + Time =======
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (isRtl) {
+                    // ← عربي: الوقت يسار، المصدر يمين
                     if (timeText.isNotEmpty()) {
-                        Text(text = timeText, fontSize = 12.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
-                    } else { Spacer(modifier = Modifier.width(1.dp)) }
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(text = stringResource(task.sourceRes), fontSize = 12.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
-                        Icon(imageVector = Icons.Outlined.Description, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(14.dp))
+                        Text(
+                            text = timeText,
+                            fontSize = 12.sp,
+                            fontFamily = ManropeFontFamily,
+                            color = TextSecondary
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.width(1.dp))
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = stringResource(task.sourceRes),
+                            fontSize = 12.sp,
+                            fontFamily = ManropeFontFamily,
+                            color = TextSecondary,
+                            textAlign = TextAlign.End
+                        )
+                        Icon(
+                            imageVector = Icons.Outlined.Description,
+                            contentDescription = null,
+                            tint = TextSecondary,
+                            modifier = Modifier.size(14.dp)
+                        )
                     }
                 } else {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Icon(imageVector = Icons.Outlined.Description, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(14.dp))
-                        Text(text = stringResource(task.sourceRes), fontSize = 12.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
+                    // ← إنجليزي: المصدر يسار، الوقت يمين
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Description,
+                            contentDescription = null,
+                            tint = TextSecondary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = stringResource(task.sourceRes),
+                            fontSize = 12.sp,
+                            fontFamily = ManropeFontFamily,
+                            color = TextSecondary
+                        )
                     }
                     if (timeText.isNotEmpty()) {
-                        Text(text = timeText, fontSize = 12.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
+                        Text(
+                            text = timeText,
+                            fontSize = 12.sp,
+                            fontFamily = ManropeFontFamily,
+                            color = TextSecondary
+                        )
                     }
                 }
             }

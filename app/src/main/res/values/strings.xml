@@ -1,4 +1,9 @@
 <resources>
+    //spalsh
+    <string name="splash_app_name">NotePad</string>
+    <string name="splash_subtitle">Take Quick Notes</string>
+    <string name="splash_designed_by">designed by srkdesignwala</string>
+
     <string name="app_name">Notes Taking</string>
     <string name="all_notes">All Notes</string>
     <string name="pinned_notes">Pinned Notes</string>

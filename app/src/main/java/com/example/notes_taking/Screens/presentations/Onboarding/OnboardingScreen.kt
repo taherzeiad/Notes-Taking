@@ -1,41 +1,36 @@
 package com.example.notes_taking.Screens.presentations.Onboarding
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.Image
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Icon
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.LayoutDirection
 import com.example.notes_taking.R
-import com.example.notes_taking.ui.theme.ManropeFontFamily
-import com.example.notes_taking.ui.theme.MansalvaFontFamily
-import com.example.notes_taking.ui.theme.OnboardingBackground
-import com.example.notes_taking.ui.theme.OnboardingBrown
-import com.example.notes_taking.ui.theme.OnboardingDot
+import com.example.notes_taking.ui.theme.*
 
 // ======= Data =======
 data class OnboardingPage(
-    val titleRes: Int, val descRes: Int, val imageRes: Int
+    val titleRes: Int,
+    val descRes: Int,
+    val imageRes: Int
 )
 
 val onboardingPages = listOf(
@@ -50,6 +45,8 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
     val page = onboardingPages[currentPage]
 
     val layoutDirection = if (isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
+    val textAlign = if (isRtl) TextAlign.End else TextAlign.Start
+    val isLastPage = currentPage == onboardingPages.size - 1
 
     CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
         Box(
@@ -64,11 +61,12 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
 
                 // ======= العنوان العلوي =======
                 Text(
-                    text = stringResource(id = R.string.intellectual_sanctuary),
+                    text = stringResource(R.string.intellectual_sanctuary),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = ManropeFontFamily,
                     color = OnboardingBrown,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 48.dp)
                 )
 
@@ -101,7 +99,8 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                     onboardingPages.forEachIndexed { index, _ ->
                         val isSelected = index == currentPage
                         val width by animateDpAsState(
-                            targetValue = if (isSelected) 32.dp else 8.dp, label = "dot_width"
+                            targetValue = if (isSelected) 32.dp else 8.dp,
+                            label = "dot_width"
                         )
                         Box(
                             modifier = Modifier
@@ -109,8 +108,7 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                                 .width(width)
                                 .clip(CircleShape)
                                 .background(
-                                    if (isSelected) OnboardingBrown
-                                    else OnboardingDot
+                                    if (isSelected) OnboardingBrown else OnboardingDot
                                 )
                         )
                     }
@@ -120,26 +118,30 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
 
                 // ======= النص الرئيسي =======
                 Text(
-                    text = stringResource(id = page.titleRes),
+                    text = stringResource(page.titleRes),
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = MansalvaFontFamily,
                     color = OnboardingBrown,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 32.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // ======= النص الفرعي =======
                 Text(
-                    text = stringResource(id = page.descRes),
+                    text = stringResource(page.descRes),
                     fontSize = 15.sp,
                     fontFamily = ManropeFontFamily,
                     color = OnboardingBrown.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,
                     lineHeight = 29.3.sp,
-                    modifier = Modifier.padding(horizontal = 40.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 40.dp)
                 )
 
                 Spacer(modifier = Modifier.weight(1.2f))
@@ -147,52 +149,63 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                 // ======= زر التالي =======
                 Button(
                     onClick = {
-                        if (currentPage < onboardingPages.size - 1) {
-                            currentPage++
-                        } else {
-                            onFinish()
-                        }
+                        if (!isLastPage) currentPage++ else onFinish()
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = OnboardingBrown
-                    )
+                    colors = ButtonDefaults.buttonColors(containerColor = OnboardingBrown)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = if (currentPage < onboardingPages.size - 1) stringResource(id = R.string.next) else stringResource(
-                                id = R.string.get_started
-                            ),
-                            fontSize = 18.sp,
-                            fontFamily = MansalvaFontFamily,
-                            color = Color.White
-                        )
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        if (isRtl) {
+                            // ← عربي: نص ← سهم لليسار
+                            Text(
+                                text = if (!isLastPage) stringResource(R.string.next) else stringResource(R.string.get_started),
+                                fontSize = 18.sp,
+                                fontFamily = MansalvaFontFamily,
+                                color = Color.White
+                            )
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        } else {
+                            // ← إنجليزي: سهم لليمين → نص
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = if (!isLastPage) stringResource(R.string.next) else stringResource(R.string.get_started),
+                                fontSize = 18.sp,
+                                fontFamily = MansalvaFontFamily,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // ======= زر تخطي =======
-                TextButton(onClick = onFinish) {
-                    Text(
-                        text = stringResource(id = R.string.skip),
-                        fontSize = 18.sp,
-                        fontFamily = ManropeFontFamily,
-                        color = OnboardingBrown.copy(alpha = 0.6f)
-                    )
+                if (!isLastPage) {
+                    TextButton(onClick = onFinish) {
+                        Text(
+                            text = stringResource(R.string.skip),
+                            fontSize = 18.sp,
+                            fontFamily = ManropeFontFamily,
+                            color = OnboardingBrown.copy(alpha = 0.6f)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
