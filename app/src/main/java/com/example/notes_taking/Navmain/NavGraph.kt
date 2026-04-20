@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -18,9 +19,8 @@ import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModel
 import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModelFactory
 import com.example.notes_taking.Screens.presentations.Home.HomeScreen
 import com.example.notes_taking.Screens.presentations.Onboarding.OnboardingScreen
-import com.example.notes_taking.Screens.presentations.Splash.SplashScreen
-import androidx.compose.ui.platform.LocalLayoutDirection
 import com.example.notes_taking.Screens.presentations.Settings.SettingsScreen
+import com.example.notes_taking.Screens.presentations.Splash.SplashScreen
 import com.example.notes_taking.Screens.presentations.Tasks.TasksScreen
 
 @SuppressLint("LocalContextConfigurationRead")
@@ -30,17 +30,18 @@ fun NavGraph(navController: NavHostController) {
     val context = LocalContext.current
     val dao = NoteDatabase.getDatabase(context).noteDao()
 
-    // تعريف الـ ViewModel هنا ليكون متاحاً لكل الشاشات في الـ NavGraph
+    // الـ ViewModel مشترك لضمان بقاء البيانات عند التنقل
     val viewModel: NoteViewModel = viewModel(factory = NoteViewModelFactory(dao))
 
     NavHost(
         navController = navController,
-        startDestination = Route.Splash.route
+        startDestination = Route.Splash.route // هنا نضمن أن تطبيقك يبدأ بشاشتك الخاصة
     ) {
-        // 1. شاشة البداية (Splash)
+        // 1. شاشة البداية (Splash) - هي أول ما سيراه المستخدم
         composable(route = Route.Splash.route) {
             SplashScreen(onSplashFinished = {
                 navController.navigate(Route.Onboarding.route) {
+                    // حذف شاشة الـ Splash من الـ BackStack لكي لا يعود لها المستخدم عند ضغط زر الرجوع
                     popUpTo(Route.Splash.route) { inclusive = true }
                 }
             })
@@ -63,9 +64,8 @@ fun NavGraph(navController: NavHostController) {
         composable(route = Route.Home.route) {
             HomeScreen(
                 viewModel = viewModel,
-                navController = navController, // نمرر الـ navController ليتم استخدامه في BottomNavBar
+                navController = navController,
                 onAddNote = {
-                    // نمرر 0 لإنشاء ملاحظة جديدة
                     navController.navigate(Route.EditNote.createRoute(0))
                 },
                 onEditNote = { noteId ->

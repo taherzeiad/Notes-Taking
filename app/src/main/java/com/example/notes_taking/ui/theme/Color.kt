@@ -9,7 +9,7 @@ val OnboardingDot = Color(0xFFD4B8A8)
 
 // ======= ألوان الشاشة Splash =======
 
-val SplashBackground = Color(0xFFF5DEB3).copy(alpha = 0.6f) // بيج فاتح
+val SplashBackground = Color(0xFFF5F0EB).copy(alpha = 0.6f) // بيج فاتح
 val BrownColor = Color(0xFF6B2D0E) // بني غامق
 
 // ======= ألوان الشاشة Home =======
