@@ -123,7 +123,7 @@ fun HomeScreen(
 
                     Text(
                         text = stringResource(R.string.app_name_styled),
-                        fontSize = 20.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = ManropeFontFamily,
                         color = TextPrimary,

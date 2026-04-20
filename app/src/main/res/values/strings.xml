@@ -38,7 +38,7 @@
 
 
     /////////////////////////////
-    <string name="app_name_styled">Intellectual\nSanctuary</string>
+    <string name="app_name_styled">Intellectual Sanctuary</string>
     <string name="welcome_user">Welcome, %1$s</string>
     <string name="welcome_subtitle">A quick look at your sanctuary today.</string>
     <string name="ai_suggestion">Smart AI Suggestion</string>

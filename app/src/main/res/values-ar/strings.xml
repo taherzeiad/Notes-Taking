@@ -39,7 +39,7 @@
 
     //////////////////////////////////////////////
 
-    <string name="app_name_styled">واحتك\nالفكرية</string>
+    <string name="app_name_styled">واحتك الفكرية</string>
     <string name="welcome_user">أهلاً بك، %1$s</string>
     <string name="welcome_subtitle">نظرة سريعة على واحتك الفكرية اليوم.</string>
     <string name="ai_suggestion">اقتراح ذكي من الـ AI</string>
