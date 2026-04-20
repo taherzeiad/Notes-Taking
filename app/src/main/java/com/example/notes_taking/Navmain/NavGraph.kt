@@ -1,4 +1,4 @@
-package com.example.notes_taking.navmain
+package com.example.notes_taking.Navmain
 
 import android.annotation.SuppressLint
 import android.os.Build

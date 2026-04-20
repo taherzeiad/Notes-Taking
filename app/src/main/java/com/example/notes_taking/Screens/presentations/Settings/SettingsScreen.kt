@@ -3,16 +3,44 @@ package com.example.notes_taking.Screens.presentations.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,26 +56,29 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.notes_taking.R
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
-import com.example.notes_taking.ui.theme.*
+import com.example.notes_taking.ui.theme.BrownCard
+import com.example.notes_taking.ui.theme.CardBorder
+import com.example.notes_taking.ui.theme.DangerRed
+import com.example.notes_taking.ui.theme.IconBg
+import com.example.notes_taking.ui.theme.ManropeFontFamily
+import com.example.notes_taking.ui.theme.MansalvaFontFamily
+import com.example.notes_taking.ui.theme.PageBackground
+import com.example.notes_taking.ui.theme.SectionTitle
+import com.example.notes_taking.ui.theme.TextPrimary
+import com.example.notes_taking.ui.theme.TextSecondary
 
 @Composable
 fun SettingsScreen(navController: NavHostController) {
     var darkModeEnabled by remember { mutableStateOf(false) }
 
+    // نعتمد على الاتجاه القادم من MainActivity تلقائياً
     val layoutDirection = LocalLayoutDirection.current
     val isRtl = layoutDirection == LayoutDirection.Rtl
-
-    val textAlign = if (isRtl) TextAlign.End else TextAlign.Start
-    val horizontalAlignment = if (isRtl) Alignment.End else Alignment.Start
 
     Scaffold(
         containerColor = PageBackground,
         bottomBar = {
-            // التعديل هنا: تمرير الـ navController والتبويب الصحيح (0 للإعدادات)
-            BottomNavBar(
-                navController = navController,
-                selectedTab = 0
-            )
+            BottomNavBar(navController = navController, selectedTab = 0)
         }
     ) { padding ->
         LazyColumn(
@@ -66,16 +97,8 @@ fun SettingsScreen(navController: NavHostController) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (isRtl) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.MenuBook,
-                            contentDescription = null,
-                            tint = TextPrimary,
-                            modifier = Modifier.size(26.dp)
-                        )
-                    } else {
-                        ProfileAvatar()
-                    }
+                    // الترتيب سينعكس تلقائياً في العربية
+                    ProfileAvatar()
 
                     Text(
                         text = stringResource(R.string.app_name_styled),
@@ -85,32 +108,26 @@ fun SettingsScreen(navController: NavHostController) {
                         color = TextPrimary
                     )
 
-                    if (isRtl) {
-                        ProfileAvatar()
-                    } else {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.MenuBook,
-                            contentDescription = null,
-                            tint = TextPrimary,
-                            modifier = Modifier.size(26.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                        contentDescription = null,
+                        tint = TextPrimary,
+                        modifier = Modifier.size(26.dp)
+                    )
                 }
             }
 
             // ======= Page Title =======
             item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = horizontalAlignment
-                ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = stringResource(R.string.settings_title),
                         fontSize = 36.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = MansalvaFontFamily,
                         color = TextPrimary,
-                        textAlign = textAlign
+                        textAlign = TextAlign.Start, // Start تعني يمين في العربية
+                        modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -118,7 +135,8 @@ fun SettingsScreen(navController: NavHostController) {
                         fontSize = 14.sp,
                         fontFamily = ManropeFontFamily,
                         color = TextSecondary,
-                        textAlign = textAlign
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -135,62 +153,59 @@ fun SettingsScreen(navController: NavHostController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (isRtl) {
-                            EditButton()
-                            ProfileInfo(
-                                name = "Taher Qudeih",
-                                email = "taher@sanctuary.io",
-                                isRtl = true
+                        ProfileAvatar(size = 64.dp, iconSize = 36.dp)
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (isRtl) "طاهر قديح" else "Taher Qudeih",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = MansalvaFontFamily,
+                                color = TextPrimary
                             )
-                            ProfileAvatar(size = 64.dp, iconSize = 36.dp)
-                        } else {
-                            ProfileAvatar(size = 64.dp, iconSize = 36.dp)
-                            ProfileInfo(
-                                name = "Taher Qudeih",
-                                email = "taher@sanctuary.io",
-                                isRtl = false
+                            Text(
+                                text = "taher@sanctuary.io",
+                                fontSize = 13.sp,
+                                fontFamily = ManropeFontFamily,
+                                color = TextSecondary
                             )
-                            EditButton()
                         }
+
+                        EditButton()
                     }
                 }
             }
 
             // ======= Sections =======
             item {
-                SettingsSection(title = stringResource(R.string.section_account), isRtl = isRtl) {
+                SettingsSection(title = stringResource(R.string.section_account)) {
                     SettingsItem(
                         label = stringResource(R.string.item_account_info),
-                        icon = Icons.Outlined.Person,
-                        isRtl = isRtl,
-                        onClick = {})
+                        icon = Icons.Outlined.Person
+                    )
                     HorizontalDivider(
                         color = CardBorder,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                     SettingsItem(
                         label = stringResource(R.string.item_security),
-                        icon = Icons.Outlined.Lock,
-                        isRtl = isRtl,
-                        onClick = {})
+                        icon = Icons.Outlined.Lock
+                    )
                 }
             }
 
             item {
-                SettingsSection(
-                    title = stringResource(R.string.section_customization),
-                    isRtl = isRtl
-                ) {
+                SettingsSection(title = stringResource(R.string.section_customization)) {
                     SettingsItemWithToggle(
                         label = stringResource(R.string.item_dark_mode),
                         subLabel = stringResource(R.string.sub_dark_mode),
                         icon = Icons.Outlined.DarkMode,
                         checked = darkModeEnabled,
-                        onCheckedChange = { darkModeEnabled = it },
-                        isRtl = isRtl
+                        onCheckedChange = { darkModeEnabled = it }
                     )
                     HorizontalDivider(
                         color = CardBorder,
@@ -198,28 +213,25 @@ fun SettingsScreen(navController: NavHostController) {
                     )
                     SettingsItem(
                         label = stringResource(R.string.item_notifications),
-                        icon = Icons.Outlined.Notifications,
-                        isRtl = isRtl,
-                        onClick = {})
+                        icon = Icons.Outlined.Notifications
+                    )
                 }
             }
 
             item {
-                SettingsSection(title = stringResource(R.string.section_privacy), isRtl = isRtl) {
+                SettingsSection(title = stringResource(R.string.section_privacy)) {
                     SettingsItem(
                         label = stringResource(R.string.item_privacy_center),
-                        icon = Icons.Outlined.Shield,
-                        isRtl = isRtl,
-                        onClick = {})
+                        icon = Icons.Outlined.Shield
+                    )
                     HorizontalDivider(
                         color = CardBorder,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                     SettingsItem(
                         label = stringResource(R.string.item_about),
-                        icon = Icons.Outlined.Info,
-                        isRtl = isRtl,
-                        onClick = {})
+                        icon = Icons.Outlined.Info
+                    )
                 }
             }
 
@@ -244,47 +256,29 @@ fun SettingsScreen(navController: NavHostController) {
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (isRtl) {
-                            Text(
-                                text = stringResource(R.string.btn_logout),
-                                fontSize = 16.sp,
-                                fontFamily = ManropeFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                color = DangerRed
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Outlined.Logout,
-                                contentDescription = null,
-                                tint = DangerRed,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Outlined.Logout,
-                                contentDescription = null,
-                                tint = DangerRed,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(R.string.btn_logout),
-                                fontSize = 16.sp,
-                                fontFamily = ManropeFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                color = DangerRed
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.Logout,
+                            contentDescription = null,
+                            tint = DangerRed,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.btn_logout),
+                            fontSize = 16.sp,
+                            fontFamily = ManropeFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            color = DangerRed
+                        )
                     }
                 }
             }
-
             item { Spacer(modifier = Modifier.height(8.dp)) }
         }
     }
 }
 
-// ======= Helper UI Components =======
+// ======= Helper UI Components (Clean & Automated) =======
 
 @Composable
 fun ProfileAvatar(
@@ -308,20 +302,6 @@ fun ProfileAvatar(
 }
 
 @Composable
-fun ProfileInfo(name: String, email: String, isRtl: Boolean) {
-    Column(horizontalAlignment = if (isRtl) Alignment.End else Alignment.Start) {
-        Text(
-            text = name,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = MansalvaFontFamily,
-            color = TextPrimary
-        )
-        Text(text = email, fontSize = 13.sp, fontFamily = ManropeFontFamily, color = TextSecondary)
-    }
-}
-
-@Composable
 fun EditButton() {
     Box(
         modifier = Modifier
@@ -340,14 +320,14 @@ fun EditButton() {
 }
 
 @Composable
-fun SettingsSection(title: String, isRtl: Boolean, content: @Composable ColumnScope.() -> Unit) {
+fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = title,
             fontSize = 13.sp,
             fontFamily = ManropeFontFamily,
             color = SectionTitle,
-            textAlign = if (isRtl) TextAlign.End else TextAlign.Start,
+            textAlign = TextAlign.Start,
             modifier = Modifier.fillMaxWidth()
         )
         Card(
@@ -362,55 +342,70 @@ fun SettingsSection(title: String, isRtl: Boolean, content: @Composable ColumnSc
 }
 
 @Composable
-fun SettingsItem(label: String, icon: ImageVector, isRtl: Boolean, onClick: () -> Unit) {
+fun SettingsItem(label: String, icon: ImageVector, onClick: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (isRtl) {
-            // ← سهم يسار
-            Icon(
-                imageVector = Icons.Outlined.ChevronLeft,
-                contentDescription = null,
-                tint = TextSecondary,
-                modifier = Modifier.size(20.dp)
-            )
+        SettingsIconBox(icon)
+        Text(
+            text = label,
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 12.dp),
+            fontSize = 15.sp,
+            fontFamily = ManropeFontFamily,
+            color = TextPrimary,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Start
+        )
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = TextSecondary,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+@Composable
+fun SettingsItemWithToggle(
+    label: String,
+    subLabel: String,
+    icon: ImageVector,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        SettingsIconBox(icon)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 12.dp)
+        ) {
             Text(
                 text = label,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 12.dp),
                 fontSize = 15.sp,
                 fontFamily = ManropeFontFamily,
                 color = TextPrimary,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.End
+                fontWeight = FontWeight.Medium
             )
-            SettingsIconBox(icon)
-        } else {
-            SettingsIconBox(icon)
             Text(
-                text = label,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 12.dp),
-                fontSize = 15.sp,
+                text = subLabel,
+                fontSize = 12.sp,
                 fontFamily = ManropeFontFamily,
-                color = TextPrimary,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Start
-            )
-            Icon(
-                imageVector = Icons.Outlined.ChevronRight,
-                contentDescription = null,
-                tint = TextSecondary,
-                modifier = Modifier.size(20.dp)
+                color = TextSecondary
             )
         }
+        Switch(checked = checked, onCheckedChange = onCheckedChange, colors = switchColors())
     }
 }
 
@@ -428,72 +423,6 @@ fun SettingsIconBox(icon: ImageVector) {
             tint = BrownCard,
             modifier = Modifier.size(18.dp)
         )
-    }
-}
-
-@Composable
-fun SettingsItemWithToggle(
-    label: String,
-    subLabel: String,
-    icon: ImageVector,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    isRtl: Boolean
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (isRtl) {
-            Switch(checked = checked, onCheckedChange = onCheckedChange, colors = switchColors())
-            Column(
-                horizontalAlignment = Alignment.End,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 12.dp)
-            ) {
-                Text(
-                    text = label,
-                    fontSize = 15.sp,
-                    fontFamily = ManropeFontFamily,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = subLabel,
-                    fontSize = 12.sp,
-                    fontFamily = ManropeFontFamily,
-                    color = TextSecondary
-                )
-            }
-            SettingsIconBox(icon)
-        } else {
-            SettingsIconBox(icon)
-            Column(
-                horizontalAlignment = Alignment.Start,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 12.dp)
-            ) {
-                Text(
-                    text = label,
-                    fontSize = 15.sp,
-                    fontFamily = ManropeFontFamily,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = subLabel,
-                    fontSize = 12.sp,
-                    fontFamily = ManropeFontFamily,
-                    color = TextSecondary
-                )
-            }
-            Switch(checked = checked, onCheckedChange = onCheckedChange, colors = switchColors())
-        }
     }
 }
 

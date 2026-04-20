@@ -1,4 +1,4 @@
-package com.example.notes_taking.navmain
+package com.example.notes_taking.Navmain
 
 sealed class Route(val route: String) {
     object Splash : Route("splash_screen")

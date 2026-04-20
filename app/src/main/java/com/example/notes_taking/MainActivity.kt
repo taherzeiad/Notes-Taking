@@ -13,7 +13,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.navigation.compose.rememberNavController
-import com.example.notes_taking.navmain.NavGraph
+import com.example.notes_taking.Navmain.NavGraph
 import com.example.notes_taking.utils.LocaleUtils
 import java.util.Locale
 
