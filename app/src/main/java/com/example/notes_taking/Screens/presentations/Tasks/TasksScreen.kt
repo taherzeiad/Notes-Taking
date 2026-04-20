@@ -2,30 +2,57 @@ package com.example.notes_taking.Screens.presentations.Tasks
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.notes_taking.R
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
-import com.example.notes_taking.ui.theme.*
+import com.example.notes_taking.ui.theme.BrownCard
+import com.example.notes_taking.ui.theme.ManropeFontFamily
+import com.example.notes_taking.ui.theme.MansalvaFontFamily
+import com.example.notes_taking.ui.theme.PageBackground
+import com.example.notes_taking.ui.theme.TextPrimary
+import com.example.notes_taking.ui.theme.TextSecondary
 
 // ======= Data Models =======
 data class Task(
@@ -52,11 +79,6 @@ val sampleTasks = listOf(
 
 @Composable
 fun TasksScreen(navController: NavHostController) {
-    val layoutDirection = LocalLayoutDirection.current
-    val isRtl = layoutDirection == LayoutDirection.Rtl
-    val textAlign = if (isRtl) TextAlign.End else TextAlign.Start
-    val horizontalAlignment = if (isRtl) Alignment.End else Alignment.Start
-    val rowArrangementStart = if (isRtl) Arrangement.End else Arrangement.Start
 
     var selectedTab by remember { mutableStateOf(0) }
 
@@ -75,11 +97,7 @@ fun TasksScreen(navController: NavHostController) {
     Scaffold(
         containerColor = PageBackground,
         bottomBar = {
-            // تصحيح: تمرير الـ navController والتبويب الصحيح (index 1 للمهام)
-            BottomNavBar(
-                navController = navController,
-                selectedTab = 1
-            )
+            BottomNavBar(navController = navController, selectedTab = 1)
         }
     ) { padding ->
         LazyColumn(
@@ -98,31 +116,40 @@ fun TasksScreen(navController: NavHostController) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (isRtl) {
-                        Icon(imageVector = Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(26.dp))
-                        Text(text = stringResource(R.string.app_name_styled), fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = ManropeFontFamily, color = TextPrimary)
-                        Icon(imageVector = Icons.Outlined.Search, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(26.dp))
-                    } else {
-                        Icon(imageVector = Icons.Outlined.Search, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(26.dp))
-                        Text(text = stringResource(R.string.app_name_styled), fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = ManropeFontFamily, color = TextPrimary)
-                        Icon(imageVector = Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(26.dp))
-                    }
+                    // Start ← ينعكس تلقائياً
+                    Icon(
+                        imageVector = Icons.Outlined.Search,
+                        contentDescription = null,
+                        tint = TextPrimary,
+                        modifier = Modifier.size(26.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.app_name_styled),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = ManropeFontFamily,
+                        color = TextPrimary
+                    )
+                    // End ← ينعكس تلقائياً
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                        contentDescription = null,
+                        tint = TextPrimary,
+                        modifier = Modifier.size(26.dp)
+                    )
                 }
             }
 
             // ======= Page Title =======
             item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = horizontalAlignment
-                ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = stringResource(R.string.tasks_title),
                         fontSize = 36.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = MansalvaFontFamily,
                         color = TextPrimary,
-                        textAlign = textAlign,
+                        textAlign = TextAlign.Start, // ← ينعكس تلقائياً
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -131,7 +158,7 @@ fun TasksScreen(navController: NavHostController) {
                         fontSize = 13.sp,
                         fontFamily = ManropeFontFamily,
                         color = TextSecondary,
-                        textAlign = textAlign,
+                        textAlign = TextAlign.Start,
                         lineHeight = 20.sp,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -142,7 +169,7 @@ fun TasksScreen(navController: NavHostController) {
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = rowArrangementStart,
+                    horizontalArrangement = Arrangement.Start, // ← ينعكس تلقائياً
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     tabs.forEachIndexed { index, tab ->
@@ -158,7 +185,7 @@ fun TasksScreen(navController: NavHostController) {
 
             // ======= Tasks List (First 3) =======
             items(sampleTasks.take(3)) { task ->
-                TaskCard(task = task, isRtl = isRtl)
+                TaskCard(task = task)
             }
 
             // ======= AI Insights Card =======
@@ -169,20 +196,24 @@ fun TasksScreen(navController: NavHostController) {
                     colors = CardDefaults.cardColors(containerColor = BrownCard)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
+                        // Header Start ← ينعكس تلقائياً
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = rowArrangementStart,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            if (isRtl) {
-                                Text(text = stringResource(R.string.ai_insights_title), fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = MansalvaFontFamily, color = Color.White)
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Icon(imageVector = Icons.Outlined.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
-                            } else {
-                                Icon(imageVector = Icons.Outlined.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(text = stringResource(R.string.ai_insights_title), fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = MansalvaFontFamily, color = Color.White)
-                            }
+                            Icon(
+                                imageVector = Icons.Outlined.AutoAwesome,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.ai_insights_title),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = MansalvaFontFamily,
+                                color = Color.White
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -192,7 +223,7 @@ fun TasksScreen(navController: NavHostController) {
                             fontSize = 14.sp,
                             fontFamily = ManropeFontFamily,
                             color = Color.White.copy(alpha = 0.9f),
-                            textAlign = textAlign,
+                            textAlign = TextAlign.Start, // ← ينعكس تلقائياً
                             lineHeight = 22.sp,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -211,17 +242,14 @@ fun TasksScreen(navController: NavHostController) {
 
             // ======= Source Categories =======
             item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = horizontalAlignment
-                ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = stringResource(R.string.source_categories),
                         fontSize = 15.sp,
                         fontFamily = ManropeFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         color = TextPrimary,
-                        textAlign = textAlign,
+                        textAlign = TextAlign.Start, // ← ينعكس تلقائياً
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -243,13 +271,21 @@ fun TasksScreen(navController: NavHostController) {
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    if (isRtl) {
-                                        Text(text = "${category.count} ${stringResource(category.unitRes)}", fontSize = 14.sp, fontFamily = ManropeFontFamily, color = BrownCard, fontWeight = FontWeight.Bold)
-                                        Text(text = stringResource(category.nameRes), fontSize = 14.sp, fontFamily = ManropeFontFamily, color = TextPrimary)
-                                    } else {
-                                        Text(text = stringResource(category.nameRes), fontSize = 14.sp, fontFamily = ManropeFontFamily, color = TextPrimary)
-                                        Text(text = "${category.count} ${stringResource(category.unitRes)}", fontSize = 14.sp, fontFamily = ManropeFontFamily, color = BrownCard, fontWeight = FontWeight.Bold)
-                                    }
+                                    // Start ← ينعكس تلقائياً
+                                    Text(
+                                        text = stringResource(category.nameRes),
+                                        fontSize = 14.sp,
+                                        fontFamily = ManropeFontFamily,
+                                        color = TextPrimary
+                                    )
+                                    // End ← ينعكس تلقائياً
+                                    Text(
+                                        text = "${category.count} ${stringResource(category.unitRes)}",
+                                        fontSize = 14.sp,
+                                        fontFamily = ManropeFontFamily,
+                                        color = BrownCard,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
                                 if (index < categories.size - 1) {
                                     HorizontalDivider(color = Color(0xFFF0EBE6))
@@ -262,7 +298,7 @@ fun TasksScreen(navController: NavHostController) {
 
             // ======= Remaining Tasks =======
             items(sampleTasks.drop(3)) { task ->
-                TaskCard(task = task, isRtl = isRtl)
+                TaskCard(task = task)
             }
 
             item { Spacer(modifier = Modifier.height(8.dp)) }
@@ -270,8 +306,7 @@ fun TasksScreen(navController: NavHostController) {
     }
 }
 
-// ======= Helper UI Components =======
-
+// ======= Task Tab =======
 @Composable
 fun TaskTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
@@ -291,10 +326,9 @@ fun TaskTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
     }
 }
 
+// ======= Task Card =======
 @Composable
-fun TaskCard(task: Task, isRtl: Boolean) {
-    val textAlign = if (isRtl) TextAlign.End else TextAlign.Start
-    val contentAlignment = if (isRtl) Alignment.End else Alignment.Start
+fun TaskCard(task: Task) {
     val timeText = stringResource(task.timeRes)
 
     Card(
@@ -311,55 +345,33 @@ fun TaskCard(task: Task, isRtl: Boolean) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                if (isRtl) {
-                    // ← عربي: Checkbox يسار، النص يمين
-                    RadioButton(
-                        selected = false,
-                        onClick = {},
-                        colors = RadioButtonDefaults.colors(unselectedColor = Color(0xFFD0C8C0))
-                    )
-                    Column(
-                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
-                        horizontalAlignment = Alignment.End // ← النص يبدأ من اليمين
-                    ) {
-                        if (task.isUrgent) {
-                            UrgentBadge()
-                            Spacer(modifier = Modifier.height(6.dp))
-                        }
-                        Text(
-                            text = stringResource(task.titleRes),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = ManropeFontFamily,
-                            color = TextPrimary,
-                            textAlign = TextAlign.End
-                        )
+                // النص Start ← ينعكس تلقائياً
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.Start // ← ينعكس تلقائياً
+                ) {
+                    if (task.isUrgent) {
+                        UrgentBadge()
+                        Spacer(modifier = Modifier.height(6.dp))
                     }
-                } else {
-                    // ← إنجليزي: النص يسار، Checkbox يمين
-                    Column(
-                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
-                        horizontalAlignment = Alignment.Start // ← النص يبدأ من اليسار
-                    ) {
-                        if (task.isUrgent) {
-                            UrgentBadge()
-                            Spacer(modifier = Modifier.height(6.dp))
-                        }
-                        Text(
-                            text = stringResource(task.titleRes),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = ManropeFontFamily,
-                            color = TextPrimary,
-                            textAlign = TextAlign.Start
-                        )
-                    }
-                    RadioButton(
-                        selected = false,
-                        onClick = {},
-                        colors = RadioButtonDefaults.colors(unselectedColor = Color(0xFFD0C8C0))
+                    Text(
+                        text = stringResource(task.titleRes),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = ManropeFontFamily,
+                        color = TextPrimary,
+                        textAlign = TextAlign.Start // ← ينعكس تلقائياً
                     )
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Checkbox End ← ينعكس تلقائياً
+                RadioButton(
+                    selected = false,
+                    onClick = {},
+                    colors = RadioButtonDefaults.colors(unselectedColor = Color(0xFFD0C8C0))
+                )
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -370,69 +382,40 @@ fun TaskCard(task: Task, isRtl: Boolean) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (isRtl) {
-                    // ← عربي: الوقت يسار، المصدر يمين
-                    if (timeText.isNotEmpty()) {
-                        Text(
-                            text = timeText,
-                            fontSize = 12.sp,
-                            fontFamily = ManropeFontFamily,
-                            color = TextSecondary
-                        )
-                    } else {
-                        Spacer(modifier = Modifier.width(1.dp))
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = stringResource(task.sourceRes),
-                            fontSize = 12.sp,
-                            fontFamily = ManropeFontFamily,
-                            color = TextSecondary,
-                            textAlign = TextAlign.End
-                        )
-                        Icon(
-                            imageVector = Icons.Outlined.Description,
-                            contentDescription = null,
-                            tint = TextSecondary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-                } else {
-                    // ← إنجليزي: المصدر يسار، الوقت يمين
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Description,
-                            contentDescription = null,
-                            tint = TextSecondary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Text(
-                            text = stringResource(task.sourceRes),
-                            fontSize = 12.sp,
-                            fontFamily = ManropeFontFamily,
-                            color = TextSecondary
-                        )
-                    }
-                    if (timeText.isNotEmpty()) {
-                        Text(
-                            text = timeText,
-                            fontSize = 12.sp,
-                            fontFamily = ManropeFontFamily,
-                            color = TextSecondary
-                        )
-                    }
+                // المصدر Start ← ينعكس تلقائياً
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Description,
+                        contentDescription = null,
+                        tint = TextSecondary,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = stringResource(task.sourceRes),
+                        fontSize = 12.sp,
+                        fontFamily = ManropeFontFamily,
+                        color = TextSecondary
+                    )
+                }
+
+                // الوقت End ← ينعكس تلقائياً
+                if (timeText.isNotEmpty()) {
+                    Text(
+                        text = timeText,
+                        fontSize = 12.sp,
+                        fontFamily = ManropeFontFamily,
+                        color = TextSecondary
+                    )
                 }
             }
         }
     }
 }
 
+// ======= Urgent Badge =======
 @Composable
 fun UrgentBadge() {
     Box(
