@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -51,9 +50,7 @@ import com.example.notes_taking.ui.theme.OnboardingDot
 
 // ======= Data =======
 data class OnboardingPage(
-    val titleRes: Int,
-    val descRes: Int,
-    val imageRes: Int
+    val titleRes: Int, val descRes: Int, val imageRes: Int
 )
 
 val onboardingPages = listOf(
@@ -114,7 +111,7 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // ======= النقاط =======
+                // ======= Points =======
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -122,8 +119,7 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                     onboardingPages.forEachIndexed { index, _ ->
                         val isSelected = index == currentPage
                         val width by animateDpAsState(
-                            targetValue = if (isSelected) 32.dp else 8.dp,
-                            label = "dot_width"
+                            targetValue = if (isSelected) 32.dp else 8.dp, label = "dot_width"
                         )
                         Box(
                             modifier = Modifier
@@ -167,7 +163,7 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                         .padding(horizontal = 40.dp)
                 )
 
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(30.dp))
 
                 // ======= زر التالي =======
                 Button(
@@ -185,39 +181,21 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        if (isRtl) {
-                            // ← عربي: نص ← سهم لليسار
-                            Text(
-                                text = if (!isLastPage) stringResource(R.string.next) else stringResource(
-                                    R.string.get_started
-                                ),
-                                fontSize = 18.sp,
-                                fontFamily = MansalvaFontFamily,
-                                color = Color.White
-                            )
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        } else {
-                            // ← إنجليزي: سهم لليمين → نص
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Text(
-                                text = if (!isLastPage) stringResource(R.string.next) else stringResource(
-                                    R.string.get_started
-                                ),
-                                fontSize = 18.sp,
-                                fontFamily = MansalvaFontFamily,
-                                color = Color.White
-                            )
-                        }
+
+                        Text(
+                            text = if (!isLastPage) stringResource(R.string.next)
+                            else stringResource(R.string.get_started),
+                            fontSize = 18.sp,
+                            fontFamily = MansalvaFontFamily,
+                            color = Color.White
+                        )
+                        // ← السهم Start ينعكس تلقائياً في RTL
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 }
 
