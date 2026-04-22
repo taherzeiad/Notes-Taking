@@ -84,11 +84,9 @@ fun HomeScreen(
     val lastNote = notes.firstOrNull()
 
     Scaffold(
-        containerColor = PageBackground,
-        bottomBar = {
+        containerColor = PageBackground, bottomBar = {
             BottomNavBar(navController = navController, selectedTab = 3)
-        }
-    ) { padding ->
+        }) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -105,7 +103,6 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Start → في العربية يصبح يمين تلقائياً
                     Box(
                         modifier = Modifier
                             .size(40.dp)
@@ -144,12 +141,12 @@ fun HomeScreen(
             item {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = stringResource(R.string.welcome_user, "Sara"),
+                        text = stringResource(R.string.welcome_user, "Taher"),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = MansalvaFontFamily,
                         color = TextPrimary,
-                        textAlign = TextAlign.Start, // ← ينعكس تلقائياً
+                        textAlign = TextAlign.Start,
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -200,14 +197,13 @@ fun HomeScreen(
                             fontWeight = FontWeight.Bold,
                             fontFamily = MansalvaFontFamily,
                             color = Color.White,
-                            textAlign = TextAlign.Start, // ← ينعكس تلقائياً
+                            textAlign = TextAlign.Start,
                             lineHeight = 26.sp,
                             modifier = Modifier.fillMaxWidth()
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // الزر على Start → يمين في العربية تلقائياً
                         Button(
                             onClick = { },
                             modifier = Modifier.align(Alignment.Start),
@@ -236,8 +232,6 @@ fun HomeScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
 
-                        // Header ← النص أولاً، الأيقونة ثانياً
-                        // في العربية: نص يمين، أيقونة يسار تلقائياً
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -260,11 +254,9 @@ fun HomeScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Time Badge ← Start بدل End
-                        // في العربية: يمين، في الإنجليزية: يسار
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Start // ← غيّر من End إلى Start
+                            horizontalArrangement = Arrangement.Start
                         ) {
                             Box(
                                 modifier = Modifier
@@ -294,10 +286,9 @@ fun HomeScreen(
 
                         Spacer(modifier = Modifier.height(6.dp))
 
-                        // Location ← النص أولاً، الأيقونة ثانياً + Start بدل End
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Start, // ← غيّر من End إلى Start
+                            horizontalArrangement = Arrangement.Start,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
@@ -328,8 +319,7 @@ fun HomeScreen(
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { onNavigateToTasks() }
-                        )
+                                .clickable { onNavigateToTasks() })
                     }
                 }
             }
@@ -365,7 +355,6 @@ fun HomeScreen(
 
                             Column(modifier = Modifier.padding(16.dp)) {
 
-                                // Tags → Start ينعكس تلقائياً
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
@@ -375,7 +364,9 @@ fun HomeScreen(
                                     ).forEach { tag ->
                                         Box(
                                             modifier = Modifier
-                                                .background(TagBg, RoundedCornerShape(20.dp))
+                                                .background(
+                                                    TagBg, RoundedCornerShape(20.dp)
+                                                )
                                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                                         ) {
                                             Text(
@@ -431,8 +422,7 @@ fun HomeScreen(
                                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                                         modifier = Modifier.clickable {
                                             lastNote?.let { onEditNote(it.id) }
-                                        }
-                                    ) {
+                                        }) {
                                         Icon(
                                             imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
                                             contentDescription = null,
@@ -448,7 +438,6 @@ fun HomeScreen(
                                         )
                                     }
 
-                                    // End
                                     Text(
                                         text = stringResource(R.string.edited_time_ago, "15"),
                                         fontSize = 12.sp,
@@ -476,8 +465,7 @@ fun HomeScreen(
                             label = stringResource(R.string.voice_record),
                             icon = Icons.Outlined.Mic,
                             modifier = Modifier.weight(1f),
-                            onClick = { }
-                        )
+                            onClick = { })
                         QuickActionButton(
                             label = stringResource(R.string.quick_idea),
                             icon = Icons.Outlined.Lightbulb,
@@ -489,8 +477,7 @@ fun HomeScreen(
                         label = stringResource(R.string.add_document),
                         icon = Icons.Outlined.Image,
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = { }
-                    )
+                        onClick = { })
                 }
             }
 
@@ -524,12 +511,7 @@ fun WaveChart(modifier: Modifier = Modifier) {
                 height * 0.35f
             )
             cubicTo(
-                width * 0.9f,
-                height * 0.38f,
-                width * 0.95f,
-                height * 0.45f,
-                width,
-                height * 0.4f
+                width * 0.9f, height * 0.38f, width * 0.95f, height * 0.45f, width, height * 0.4f
             )
             lineTo(width, height)
             lineTo(0f, height)
@@ -560,7 +542,7 @@ fun QuickActionButton(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start // ← ينعكس تلقائياً
+            horizontalArrangement = Arrangement.Start
         ) {
             Icon(
                 imageVector = icon,
@@ -586,9 +568,7 @@ fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
     NavigationBar(containerColor = Color.White, tonalElevation = 0.dp) {
         val tabs = listOf(
             Triple(
-                stringResource(R.string.nav_settings),
-                Icons.Outlined.Settings,
-                "settings_screen"
+                stringResource(R.string.nav_settings), Icons.Outlined.Settings, "settings_screen"
             ),
             Triple(stringResource(R.string.nav_tasks), Icons.Outlined.CheckCircle, "tasks_screen"),
             Triple(stringResource(R.string.nav_notes), Icons.Outlined.NoteAlt, "home_screen"),
