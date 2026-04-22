@@ -7,12 +7,11 @@ sealed class Route(val route: String) {
     object EditNote : Route("create_note/{noteId}") {
         fun createRoute(noteId: Int) = "create_note/$noteId"
     }
+
     object Onboarding : Route("onboarding_screen")
-
-
     object Settings : Route("settings_screen")
-
     object Tasks : Route("tasks_screen")
 
+    object Notes : Route("notes_screen")
 
 }

@@ -58,6 +58,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
 import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModel
 import com.example.notes_taking.ui.theme.BrownCard
@@ -77,6 +78,7 @@ fun HomeScreen(
     onEditNote: (Int) -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToTasks: () -> Unit,
+    onNavigateToNotes: () -> Unit,
     viewModel: NoteViewModel,
     navController: NavHostController
 ) {
@@ -568,11 +570,17 @@ fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
     NavigationBar(containerColor = Color.White, tonalElevation = 0.dp) {
         val tabs = listOf(
             Triple(
-                stringResource(R.string.nav_settings), Icons.Outlined.Settings, "settings_screen"
+                stringResource(R.string.nav_settings),
+                Icons.Outlined.Settings,
+                Route.Settings.route
             ),
-            Triple(stringResource(R.string.nav_tasks), Icons.Outlined.CheckCircle, "tasks_screen"),
-            Triple(stringResource(R.string.nav_notes), Icons.Outlined.NoteAlt, "home_screen"),
-            Triple(stringResource(R.string.nav_home), Icons.Filled.Home, "home_screen")
+            Triple(
+                stringResource(R.string.nav_tasks),
+                Icons.Outlined.CheckCircle,
+                Route.Tasks.route
+            ),
+            Triple(stringResource(R.string.nav_notes), Icons.Outlined.NoteAlt, Route.Notes.route),
+            Triple(stringResource(R.string.nav_home), Icons.Filled.Home, Route.Home.route)
         )
 
         tabs.forEachIndexed { index, (label, icon, route) ->
@@ -581,7 +589,7 @@ fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
                 onClick = {
                     if (selectedTab != index) {
                         navController.navigate(route) {
-                            popUpTo("home_screen") { saveState = true }
+                            popUpTo(Route.Home.route) { saveState = true }
                             launchSingleTop = true
                             restoreState = true
                         }
