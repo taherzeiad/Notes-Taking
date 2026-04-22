@@ -189,7 +189,6 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                             fontFamily = MansalvaFontFamily,
                             color = Color.White
                         )
-                        // ← السهم Start ينعكس تلقائياً في RTL
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
