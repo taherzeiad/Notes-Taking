@@ -110,4 +110,20 @@
     <string name="task_5_title">The Almanack of Naval Ravikant</string>
     <string name="task_5_source">المصدر: مكتبة القراءة الذكية</string>
     <string name="task_empty_time"></string>
+
+    ////////////////////////////////////////////
+    <!-- Notes Screen -->
+    <string name="notes_screen_title_bar">الملاذ الفكري</string>
+    <string name="notes_title">ملاحظاتي</string>
+    <string name="notes_subtitle">حيث تسكن الأفكار وتنمو الرؤى</string>
+    <string name="note_cat_all">الكل</string>
+    <string name="note_cat_philosophy">فلسفة</string>
+    <string name="note_cat_literature">أدب</string>
+    <string name="note_cat_self_dev">تطوير الذات</string>
+    <string name="note_tag_philosophy">فلسفة</string>
+    <string name="note_tag_literature">أدب</string>
+    <string name="note_tag_self_dev">تطوير ذات</string>
+    <string name="note_tag_projects">مشاريع</string>
+    <string name="note_date_1">أكتوبر</string>
+    <string name="read_more">اقرأ المزيد</string>
 </resources>

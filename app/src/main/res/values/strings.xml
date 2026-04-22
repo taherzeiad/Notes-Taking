@@ -109,5 +109,21 @@
     <string name="task_5_title">The Almanack of Naval Ravikant</string>
     <string name="task_5_source">Source: Smart Reading Library</string>
     <string name="task_empty_time"></string>
+
+    /////////////////////////
+    <!-- Notes Screen -->
+    <string name="notes_screen_title_bar">Intellectual Sanctuary</string>
+    <string name="notes_title">Notes</string>
+    <string name="notes_subtitle">Where ideas live and visions grow</string>
+    <string name="note_cat_all">All</string>
+    <string name="note_cat_philosophy">Philosophy</string>
+    <string name="note_cat_literature">Literature</string>
+    <string name="note_cat_self_dev">Self Development</string>
+    <string name="note_tag_philosophy">Philosophy</string>
+    <string name="note_tag_literature">Literature</string>
+    <string name="note_tag_self_dev">Self Development</string>
+    <string name="note_tag_projects">Projects</string>
+    <string name="note_date_1">October</string>
+    <string name="read_more">Read more</string>
 </resources>
 

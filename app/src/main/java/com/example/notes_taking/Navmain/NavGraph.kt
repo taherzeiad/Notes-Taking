@@ -100,9 +100,8 @@ fun NavGraph(navController: NavHostController) {
 
         composable(route = Route.Notes.route) {
             NotesScreen(
-                navController = navController,
-                onAddNote = { navController.navigate(Route.EditNote.createRoute(0)) },
-                onEditNote = { noteId -> navController.navigate(Route.EditNote.createRoute(noteId)) })
+                navController = navController
+            )
         }
     }
 }

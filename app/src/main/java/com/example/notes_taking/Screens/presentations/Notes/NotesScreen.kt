@@ -2,42 +2,25 @@ package com.example.notes_taking.Screens.presentations.Notes
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -46,98 +29,77 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.notes_taking.R
+import com.example.notes_taking.Navmain.Route // استيراد ملف المسارات
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
-import com.example.notes_taking.ui.theme.BrownCard
-import com.example.notes_taking.ui.theme.ManropeFontFamily
-import com.example.notes_taking.ui.theme.MansalvaFontFamily
-import com.example.notes_taking.ui.theme.PageBackground
-import com.example.notes_taking.ui.theme.TextPrimary
-import com.example.notes_taking.ui.theme.TextSecondary
+import com.example.notes_taking.ui.theme.*
 
-// ======= Data Models =======
+// ======= Data Model =======
 data class NoteCardData(
     val id: Int,
-    val tag: String,
-    val date: String = "",
-    val title: String,
-    val content: String = "",
+    val tagRes: Int = 0,
+    val dateRes: Int = 0,
+    val titleRes: Int,
+    val contentRes: Int = 0,
     val imageUrl: String? = null,
     val isItalic: Boolean = false,
-    val bullets: List<String> = emptyList(),
+    val bulletsRes: List<Int> = emptyList(),
     val type: NoteCardType = NoteCardType.TEXT
 )
 
 enum class NoteCardType { TEXT, IMAGE, BULLETS }
 
-// ======= Sample Data =======
+// ======= Sample Data (Updated with string resources) =======
+// تأكد من إضافة هذه المفاتيح في ملف strings.xml كما فعلنا سابقاً
 val sampleNotes = listOf(
     NoteCardData(
         id = 1,
-        tag = "فلسفة الوجود",
-        date = "١٤ أكتوبر ٢٠٢٣",
-        title = "تأملات في مفهوم \"السكينة الرقمية\" في العصر الحديث",
-        content = "في خضم الضوضاء الرقمية المتصاعدة، تبرز الحاجة الماسة إلى خلق مساحات من الصمت المتعمد. ليس السكينة مجرد غياب للصوت، بل هي حضور واعٍ للإيجاد",
+        tagRes = R.string.note_tag_philosophy,
+        dateRes = R.string.note_date_1,
+        titleRes = R.string.notes_title, // مثال: استخدمنا العنوان العام للتجربة
+        contentRes = R.string.notes_subtitle,
         type = NoteCardType.TEXT
     ),
     NoteCardData(
         id = 2,
-        tag = "أدب",
-        title = "شذرات من ديوان المتنبي",
-        content = "﷽﷽﷽﷽﷽ . ﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽ - ﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽",
+        tagRes = R.string.note_tag_literature,
+        titleRes = R.string.note_cat_literature,
+        contentRes = R.string.notes_subtitle,
         isItalic = true,
         type = NoteCardType.TEXT
     ),
     NoteCardData(
         id = 3,
-        tag = "",
-        title = "﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽",
+        titleRes = R.string.notes_screen_title_bar,
         imageUrl = "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",
         type = NoteCardType.IMAGE
-    ),
-    NoteCardData(
-        id = 4,
-        tag = "تطوير الذات",
-        title = "قائمة قراءات الشتاء",
-        bullets = listOf(
-            "البحث عن المعنى - فيكتور فرانكل",
-            "التركيز العميق - كال نيوبورت"
-        ),
-        content = "محدثة منذ ساعتين",
-        type = NoteCardType.BULLETS
-    ),
-    NoteCardData(
-        id = 5,
-        tag = "مشاريع",
-        title = "مخطط بودكاست \"أصداء\"",
-        content = "الحلقة الأولى: ما وراء الكلمات. استضافة د. سارة لمناقشة أثر الله على تشكيل الوعي الجمعي.",
-        type = NoteCardType.TEXT
     )
 )
 
-val noteCategories = listOf("الكل", "فلسفة", "أدب", "تطوير الذات")
-
 @Composable
 fun NotesScreen(
-    navController: NavHostController,
-    onAddNote: () -> Unit = {},
-    onEditNote: (Int) -> Unit = {}
+    navController: NavHostController
 ) {
-    var selectedCategory by remember { mutableStateOf("الكل") }
+    var selectedCategoryIndex by remember { mutableStateOf(0) }
 
-    val filteredNotes = if (selectedCategory == "الكل") sampleNotes
-    else sampleNotes.filter { it.tag.contains(selectedCategory) }
+    val categories = listOf(
+        stringResource(R.string.note_cat_all),
+        stringResource(R.string.note_cat_philosophy),
+        stringResource(R.string.note_cat_literature),
+        stringResource(R.string.note_cat_self_dev)
+    )
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            containerColor = PageBackground,
-            bottomBar = {
-                BottomNavBar(navController = navController, selectedTab = 2)
-            }
-        ) { padding ->
+    Scaffold(
+        containerColor = PageBackground,
+        bottomBar = {
+            // نستخدم التبويب رقم 2 للملاحظات كما هو محدد في BottomNavBar
+            BottomNavBar(navController = navController, selectedTab = 2)
+        }
+    ) { padding ->
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
                     .padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -150,7 +112,6 @@ fun NotesScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Search Start ← ينعكس تلقائياً
                         Icon(
                             imageVector = Icons.Outlined.Search,
                             contentDescription = null,
@@ -159,14 +120,13 @@ fun NotesScreen(
                         )
 
                         Text(
-                            text = "الملاذ الفكري",
+                            text = stringResource(R.string.notes_screen_title_bar),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = ManropeFontFamily,
                             color = TextPrimary
                         )
 
-                        // Avatar End ← ينعكس تلقائياً
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
@@ -188,7 +148,7 @@ fun NotesScreen(
                 item {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            text = "الملاحظات",
+                            text = stringResource(R.string.notes_title),
                             fontSize = 36.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = MansalvaFontFamily,
@@ -198,7 +158,7 @@ fun NotesScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "حيث تسكن الأفكار وتنمو الرؤى",
+                            text = stringResource(R.string.notes_subtitle),
                             fontSize = 14.sp,
                             fontFamily = ManropeFontFamily,
                             color = TextSecondary,
@@ -211,23 +171,19 @@ fun NotesScreen(
                 // ======= Category Tabs =======
                 item {
                     LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        reverseLayout = true // ← للعربية تبدأ من اليمين
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(noteCategories) { category ->
-                            val isSelected = selectedCategory == category
+                        items(categories.size) { index ->
+                            val isSelected = selectedCategoryIndex == index
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(20.dp))
-                                    .background(
-                                        if (isSelected) BrownCard
-                                        else Color(0xFFEDE8E3)
-                                    )
-                                    .clickable { selectedCategory = category }
+                                    .background(if (isSelected) BrownCard else Color(0xFFEDE8E3))
+                                    .clickable { selectedCategoryIndex = index }
                                     .padding(horizontal = 18.dp, vertical = 10.dp)
                             ) {
                                 Text(
-                                    text = category,
+                                    text = categories[index],
                                     fontSize = 14.sp,
                                     fontFamily = ManropeFontFamily,
                                     color = if (isSelected) Color.White else TextSecondary,
@@ -239,32 +195,41 @@ fun NotesScreen(
                 }
 
                 // ======= Notes List =======
-                items(filteredNotes) { note ->
+                items(sampleNotes) { note ->
                     when (note.type) {
-                        NoteCardType.IMAGE -> ImageNoteCard(note = note, onClick = { onEditNote(note.id) })
-                        NoteCardType.BULLETS -> BulletsNoteCard(note = note, onClick = { onEditNote(note.id) })
-                        else -> TextNoteCard(note = note, onClick = { onEditNote(note.id) })
+                        NoteCardType.IMAGE -> ImageNoteCard(
+                            note = note,
+                            onClick = { navController.navigate(Route.EditNote.createRoute(note.id)) }
+                        )
+                        NoteCardType.BULLETS -> BulletsNoteCard(
+                            note = note,
+                            onClick = { navController.navigate(Route.EditNote.createRoute(note.id)) }
+                        )
+                        else -> TextNoteCard(
+                            note = note,
+                            onClick = { navController.navigate(Route.EditNote.createRoute(note.id)) }
+                        )
                     }
                 }
 
                 item { Spacer(modifier = Modifier.height(80.dp)) }
             }
-        }
 
-        // ======= FAB =======
-        FloatingActionButton(
-            onClick = onAddNote,
-            containerColor = BrownCard,
-            shape = CircleShape,
-            modifier = Modifier
-                .align(Alignment.BottomStart) // ← Start ينعكس تلقائياً
-                .padding(start = 24.dp, bottom = 80.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add Note",
-                tint = Color.White
-            )
+            // ======= FAB (Floating Action Button) =======
+            FloatingActionButton(
+                onClick = { navController.navigate(Route.CreateNote.route) },
+                containerColor = BrownCard,
+                shape = CircleShape,
+                modifier = Modifier
+                    .align(Alignment.BottomStart) // ينعكس تلقائياً في RTL ليصبح يميناً
+                    .padding(start = 24.dp, bottom = 24.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    tint = Color.White
+                )
+            }
         }
     }
 }
@@ -280,16 +245,16 @@ fun TextNoteCard(note: NoteCardData, onClick: () -> Unit) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
-            // Tag + Date Row
+            // Tag + Date ← SpaceBetween ينعكس تلقائياً
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Date Start ← ينعكس تلقائياً
-                if (note.date.isNotEmpty()) {
+                if (note.dateRes != 0) {
                     Text(
-                        text = note.date,
+                        text = stringResource(note.dateRes),
                         fontSize = 12.sp,
                         fontFamily = ManropeFontFamily,
                         color = TextSecondary
@@ -297,29 +262,28 @@ fun TextNoteCard(note: NoteCardData, onClick: () -> Unit) {
                 } else {
                     Spacer(modifier = Modifier.width(1.dp))
                 }
-
                 // Tag End ← ينعكس تلقائياً
-                if (note.tag.isNotEmpty()) {
-                    NoteTag(tag = note.tag)
+                if (note.tagRes != 0) {
+                    NoteTag(tagRes = note.tagRes)
                 }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = note.title,
+                text = stringResource(note.titleRes),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = ManropeFontFamily,
                 color = TextPrimary,
-                textAlign = TextAlign.Start,
+                textAlign = TextAlign.Start, // ← ينعكس تلقائياً
                 modifier = Modifier.fillMaxWidth()
             )
 
-            if (note.content.isNotEmpty()) {
+            if (note.contentRes != 0) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = note.content,
+                    text = stringResource(note.contentRes),
                     fontSize = 14.sp,
                     fontFamily = ManropeFontFamily,
                     fontStyle = if (note.isItalic) FontStyle.Italic else FontStyle.Normal,
@@ -332,20 +296,26 @@ fun TextNoteCard(note: NoteCardData, onClick: () -> Unit) {
                 )
             }
 
-            if (!note.isItalic && note.content.isNotEmpty()) {
+            // اقرأ المزيد ← Start ينعكس تلقائياً
+            if (!note.isItalic && note.contentRes != 0) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "اقرأ المزيد",
+                        text = stringResource(R.string.read_more),
                         fontSize = 13.sp,
                         fontFamily = ManropeFontFamily,
                         color = BrownCard,
                         fontWeight = FontWeight.Medium
                     )
-                    Text(text = "←", fontSize = 13.sp, color = BrownCard)
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                        contentDescription = null,
+                        tint = BrownCard,
+                        modifier = Modifier.size(14.dp)
+                    )
                 }
             }
         }
@@ -361,7 +331,11 @@ fun ImageNoteCard(note: NoteCardData, onClick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
-        Box(modifier = Modifier.fillMaxWidth().height(200.dp)) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        ) {
             AsyncImage(
                 model = note.imageUrl,
                 contentDescription = null,
@@ -370,15 +344,14 @@ fun ImageNoteCard(note: NoteCardData, onClick: () -> Unit) {
                     .fillMaxSize()
                     .clip(RoundedCornerShape(20.dp))
             )
-            // Overlay
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(20.dp))
             )
-            // Text overlay
+            // Text Start ← ينعكس تلقائياً
             Text(
-                text = note.title,
+                text = stringResource(note.titleRes),
                 fontSize = 14.sp,
                 fontFamily = ManropeFontFamily,
                 fontStyle = FontStyle.Italic,
@@ -404,29 +377,31 @@ fun BulletsNoteCard(note: NoteCardData, onClick: () -> Unit) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
-            // Tag
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                if (note.tag.isNotEmpty()) NoteTag(tag = note.tag)
+            // Tag End ← ينعكس تلقائياً
+            if (note.tagRes != 0) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    NoteTag(tagRes = note.tagRes)
+                }
+                Spacer(modifier = Modifier.height(10.dp))
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
             Text(
-                text = note.title,
+                text = stringResource(note.titleRes),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = ManropeFontFamily,
                 color = TextPrimary,
-                textAlign = TextAlign.Start,
+                textAlign = TextAlign.Start, // ← ينعكس تلقائياً
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            note.bullets.forEach { bullet ->
+            // Bullets ← Start ينعكس تلقائياً
+            note.bulletsRes.forEach { bulletRes ->
                 Row(
                     verticalAlignment = Alignment.Top,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -439,7 +414,7 @@ fun BulletsNoteCard(note: NoteCardData, onClick: () -> Unit) {
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = bullet,
+                        text = stringResource(bulletRes),
                         fontSize = 14.sp,
                         fontFamily = ManropeFontFamily,
                         color = TextPrimary.copy(alpha = 0.8f),
@@ -449,10 +424,10 @@ fun BulletsNoteCard(note: NoteCardData, onClick: () -> Unit) {
                 Spacer(modifier = Modifier.height(4.dp))
             }
 
-            if (note.content.isNotEmpty()) {
+            if (note.contentRes != 0) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = note.content,
+                    text = stringResource(note.contentRes),
                     fontSize = 12.sp,
                     fontFamily = ManropeFontFamily,
                     color = TextSecondary,
@@ -466,14 +441,14 @@ fun BulletsNoteCard(note: NoteCardData, onClick: () -> Unit) {
 
 // ======= Note Tag =======
 @Composable
-fun NoteTag(tag: String) {
+fun NoteTag(tagRes: Int) {
     Box(
         modifier = Modifier
             .background(Color(0xFFF0EBE6), RoundedCornerShape(20.dp))
             .padding(horizontal = 10.dp, vertical = 4.dp)
     ) {
         Text(
-            text = tag,
+            text = stringResource(tagRes),
             fontSize = 12.sp,
             fontFamily = ManropeFontFamily,
             color = BrownCard,
