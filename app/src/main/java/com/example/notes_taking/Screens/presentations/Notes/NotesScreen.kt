@@ -2,7 +2,17 @@ package com.example.notes_taking.Screens.presentations.Notes
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -13,8 +23,17 @@ import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,10 +48,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
-import com.example.notes_taking.Navmain.Route // استيراد ملف المسارات
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
-import com.example.notes_taking.ui.theme.*
+import com.example.notes_taking.ui.theme.BrownCard
+import com.example.notes_taking.ui.theme.ManropeFontFamily
+import com.example.notes_taking.ui.theme.MansalvaFontFamily
+import com.example.notes_taking.ui.theme.PageBackground
+import com.example.notes_taking.ui.theme.TextPrimary
+import com.example.notes_taking.ui.theme.TextSecondary
 
 // ======= Data Model =======
 data class NoteCardData(
@@ -50,13 +74,12 @@ data class NoteCardData(
 enum class NoteCardType { TEXT, IMAGE, BULLETS }
 
 // ======= Sample Data (Updated with string resources) =======
-// تأكد من إضافة هذه المفاتيح في ملف strings.xml كما فعلنا سابقاً
 val sampleNotes = listOf(
     NoteCardData(
         id = 1,
         tagRes = R.string.note_tag_philosophy,
         dateRes = R.string.note_date_1,
-        titleRes = R.string.notes_title, // مثال: استخدمنا العنوان العام للتجربة
+        titleRes = R.string.notes_title,
         contentRes = R.string.notes_subtitle,
         type = NoteCardType.TEXT
     ),
@@ -78,7 +101,9 @@ val sampleNotes = listOf(
 
 @Composable
 fun NotesScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    onAddNote: () -> Unit,
+    onEditNote: Function<Unit>
 ) {
     var selectedCategoryIndex by remember { mutableStateOf(0) }
 
@@ -92,11 +117,14 @@ fun NotesScreen(
     Scaffold(
         containerColor = PageBackground,
         bottomBar = {
-            // نستخدم التبويب رقم 2 للملاحظات كما هو محدد في BottomNavBar
             BottomNavBar(navController = navController, selectedTab = 2)
         }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -199,15 +227,17 @@ fun NotesScreen(
                     when (note.type) {
                         NoteCardType.IMAGE -> ImageNoteCard(
                             note = note,
-                            onClick = { navController.navigate(Route.EditNote.createRoute(note.id)) }
+                            onClick = { navController.navigate(Route.NoteEditor.createRoute(note.id)) }
                         )
+
                         NoteCardType.BULLETS -> BulletsNoteCard(
                             note = note,
-                            onClick = { navController.navigate(Route.EditNote.createRoute(note.id)) }
+                            onClick = { navController.navigate(Route.NoteEditor.createRoute(note.id)) }
                         )
+
                         else -> TextNoteCard(
                             note = note,
-                            onClick = { navController.navigate(Route.EditNote.createRoute(note.id)) }
+                            onClick = { navController.navigate(Route.NoteEditor.createRoute(note.id)) }
                         )
                     }
                 }
@@ -217,11 +247,13 @@ fun NotesScreen(
 
             // ======= FAB (Floating Action Button) =======
             FloatingActionButton(
-                onClick = { navController.navigate(Route.CreateNote.route) },
+                onClick = {
+                    navController.navigate(Route.NoteEditor.createRoute(0))
+                },
                 containerColor = BrownCard,
                 shape = CircleShape,
                 modifier = Modifier
-                    .align(Alignment.BottomStart) // ينعكس تلقائياً في RTL ليصبح يميناً
+                    .align(Alignment.BottomStart)
                     .padding(start = 24.dp, bottom = 24.dp)
             ) {
                 Icon(
@@ -238,20 +270,20 @@ fun NotesScreen(
 @Composable
 fun TextNoteCard(note: NoteCardData, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
-            // Tag + Date ← SpaceBetween ينعكس تلقائياً
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Date Start ← ينعكس تلقائياً
                 if (note.dateRes != 0) {
                     Text(
                         text = stringResource(note.dateRes),
@@ -262,7 +294,6 @@ fun TextNoteCard(note: NoteCardData, onClick: () -> Unit) {
                 } else {
                     Spacer(modifier = Modifier.width(1.dp))
                 }
-                // Tag End ← ينعكس تلقائياً
                 if (note.tagRes != 0) {
                     NoteTag(tagRes = note.tagRes)
                 }
@@ -276,7 +307,7 @@ fun TextNoteCard(note: NoteCardData, onClick: () -> Unit) {
                 fontWeight = FontWeight.Bold,
                 fontFamily = ManropeFontFamily,
                 color = TextPrimary,
-                textAlign = TextAlign.Start, // ← ينعكس تلقائياً
+                textAlign = TextAlign.Start,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -296,7 +327,6 @@ fun TextNoteCard(note: NoteCardData, onClick: () -> Unit) {
                 )
             }
 
-            // اقرأ المزيد ← Start ينعكس تلقائياً
             if (!note.isItalic && note.contentRes != 0) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(
@@ -326,7 +356,9 @@ fun TextNoteCard(note: NoteCardData, onClick: () -> Unit) {
 @Composable
 fun ImageNoteCard(note: NoteCardData, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(0.dp)
@@ -349,7 +381,6 @@ fun ImageNoteCard(note: NoteCardData, onClick: () -> Unit) {
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(20.dp))
             )
-            // Text Start ← ينعكس تلقائياً
             Text(
                 text = stringResource(note.titleRes),
                 fontSize = 14.sp,
@@ -370,14 +401,15 @@ fun ImageNoteCard(note: NoteCardData, onClick: () -> Unit) {
 @Composable
 fun BulletsNoteCard(note: NoteCardData, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
-            // Tag End ← ينعكس تلقائياً
             if (note.tagRes != 0) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -394,13 +426,12 @@ fun BulletsNoteCard(note: NoteCardData, onClick: () -> Unit) {
                 fontWeight = FontWeight.Bold,
                 fontFamily = ManropeFontFamily,
                 color = TextPrimary,
-                textAlign = TextAlign.Start, // ← ينعكس تلقائياً
+                textAlign = TextAlign.Start,
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Bullets ← Start ينعكس تلقائياً
             note.bulletsRes.forEach { bulletRes ->
                 Row(
                     verticalAlignment = Alignment.Top,

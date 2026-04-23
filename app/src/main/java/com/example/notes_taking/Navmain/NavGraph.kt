@@ -1,12 +1,10 @@
 package com.example.notes_taking.Navmain
 
-import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -14,9 +12,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.notes_taking.RoomDatabase.NoteDatabase
-import com.example.notes_taking.Screens.presentations.CreateNote.CreateNoteScreen
 import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModel
 import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModelFactory
+import com.example.notes_taking.Screens.presentations.Editor.NoteEditorScreen
 import com.example.notes_taking.Screens.presentations.Home.HomeScreen
 import com.example.notes_taking.Screens.presentations.Notes.NotesScreen
 import com.example.notes_taking.Screens.presentations.Onboarding.OnboardingScreen
@@ -24,83 +22,107 @@ import com.example.notes_taking.Screens.presentations.Settings.SettingsScreen
 import com.example.notes_taking.Screens.presentations.Splash.SplashScreen
 import com.example.notes_taking.Screens.presentations.Tasks.TasksScreen
 
-@SuppressLint("LocalContextConfigurationRead")
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun NavGraph(navController: NavHostController) {
     val context = LocalContext.current
     val dao = NoteDatabase.getDatabase(context).noteDao()
-
-    // الـ ViewModel مشترك لضمان بقاء البيانات عند التنقل
     val viewModel: NoteViewModel = viewModel(factory = NoteViewModelFactory(dao))
+
+    val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    val lang = prefs.getString("language", "en") ?: "en"
+    val isRtl = lang == "ar"
 
     NavHost(
         navController = navController,
-        startDestination = Route.Splash.route // هنا نضمن أن تطبيقك يبدأ بشاشتك الخاصة
+        startDestination = Route.Splash.route
     ) {
-        // 1. شاشة البداية (Splash) - هي أول ما سيراه المستخدم
+
+        // ======= Splash =======
         composable(route = Route.Splash.route) {
-            SplashScreen(onSplashFinished = {
-                navController.navigate(Route.Onboarding.route) {
-                    // حذف شاشة الـ Splash من الـ BackStack لكي لا يعود لها المستخدم عند ضغط زر الرجوع
-                    popUpTo(Route.Splash.route) { inclusive = true }
+            SplashScreen(
+                onSplashFinished = {
+                    navController.navigate(Route.Onboarding.route) {
+                        popUpTo(Route.Splash.route) { inclusive = true }
+                    }
                 }
-            })
+            )
         }
 
-        // 2. شاشة التعريف (Onboarding)
+        // ======= Onboarding =======
         composable(route = Route.Onboarding.route) {
-            val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
             OnboardingScreen(
                 onFinish = {
                     navController.navigate(Route.Home.route) {
                         popUpTo(Route.Onboarding.route) { inclusive = true }
                     }
-                }, isRtl = isRtl
+                },
+                isRtl = isRtl
             )
         }
 
-        // 3. الشاشة الرئيسية (Home)
+        // ======= Home =======
         composable(route = Route.Home.route) {
-            HomeScreen(viewModel = viewModel, navController = navController, onAddNote = {
-                navController.navigate(Route.EditNote.createRoute(0))
-            }, onEditNote = { noteId ->
-                navController.navigate(Route.EditNote.createRoute(noteId))
-            }, onNavigateToSettings = {
-                navController.navigate(Route.Settings.route)
-            }, onNavigateToTasks = {
-                navController.navigate(Route.Tasks.route)
-            }, onNavigateToNotes = {
-                navController.navigate(Route.Notes.route)
-            })
+            HomeScreen(
+                viewModel = viewModel,
+                navController = navController,
+                onAddNote = {
+                    navController.navigate(Route.NoteEditor.createRoute(0))
+                },
+                onEditNote = { noteId ->
+                    navController.navigate(Route.NoteEditor.createRoute(noteId))
+                },
+                onNavigateToSettings = {
+                    navController.navigate(Route.Settings.route)
+                },
+                onNavigateToTasks = {
+                    navController.navigate(Route.Tasks.route)
+                },
+                onNavigateToNotes = {
+                    navController.navigate(Route.Notes.route)
+                }
+            )
         }
 
-        // 4. شاشة إنشاء/تعديل الملاحظة
+        // ======= Note Editor (إنشاء + تعديل) =======
         composable(
-            route = Route.EditNote.route, arguments = listOf(navArgument("noteId") {
-                type = NavType.IntType
-                defaultValue = 0
-            })
+            route = Route.NoteEditor.route,
+            arguments = listOf(
+                navArgument("noteId") {
+                    type = NavType.IntType
+                    defaultValue = 0
+                }
+            )
         ) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getInt("noteId") ?: 0
-            CreateNoteScreen(
-                noteId = noteId, onBack = { navController.popBackStack() }, viewModel = viewModel
+            NoteEditorScreen(
+                noteId = noteId,
+                viewModel = viewModel,
+                onClose = { navController.popBackStack() },
+                onSave = { navController.popBackStack() }
             )
         }
 
-        // 5. شاشة الإعدادات
+        // ======= Settings =======
         composable(route = Route.Settings.route) {
             SettingsScreen(navController = navController)
         }
 
-        // 6. شاشة المهام
+        // ======= Tasks =======
         composable(route = Route.Tasks.route) {
             TasksScreen(navController = navController)
         }
 
+        // ======= Notes =======
         composable(route = Route.Notes.route) {
             NotesScreen(
-                navController = navController
+                navController = navController,
+                onAddNote = {
+                    navController.navigate(Route.NoteEditor.createRoute(0))
+                },
+                onEditNote = { noteId: Int ->
+                    navController.navigate(Route.NoteEditor.createRoute(noteId))
+                }
             )
         }
     }

@@ -29,7 +29,7 @@ class NoteViewModel(private val noteDao: NoteDao) : ViewModel() {
     fun saveNote(
         id: Int = 0,
         title: String,
-        content: String,
+        content: String?,
         imageUri: String?,
         date: String,
         onSuccess: () -> Unit
@@ -37,7 +37,7 @@ class NoteViewModel(private val noteDao: NoteDao) : ViewModel() {
         viewModelScope.launch {
             try {
                 val note = Note(
-                    id = id, title = title, content = content, imageUri = imageUri, date = date
+                    id = id, title = title, content = content!!, imageUri = imageUri, date = date
                 )
                 noteDao.insertNote(note)
                 onSuccess()
