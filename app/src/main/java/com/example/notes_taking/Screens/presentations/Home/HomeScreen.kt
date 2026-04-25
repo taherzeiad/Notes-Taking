@@ -1,5 +1,6 @@
 package com.example.notes_taking.Screens.presentations.Home
 
+import HomeViewModel
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -43,24 +44,25 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
-import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModel
 import com.example.notes_taking.ui.theme.BrownCard
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
@@ -79,11 +81,11 @@ fun HomeScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToTasks: () -> Unit,
     onNavigateToNotes: () -> Unit,
-    viewModel: NoteViewModel,
+    viewModel: HomeViewModel,
     navController: NavHostController
 ) {
-    val notes by viewModel.allNotes.collectAsState(initial = emptyList())
-    val lastNote = notes.firstOrNull()
+
+    val lastNote by viewModel.lastEditedNote.collectAsStateWithLifecycle()
 
     Scaffold(
         containerColor = PageBackground, bottomBar = {
@@ -353,6 +355,7 @@ fun HomeScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(100.dp)
+                                    .graphicsLayer(renderEffect = null)
                             )
 
                             Column(modifier = Modifier.padding(16.dp)) {
@@ -491,7 +494,7 @@ fun HomeScreen(
 // ======= Wave Chart =======
 @Composable
 fun WaveChart(modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
+    Canvas(modifier = modifier.clipToBounds()) {
         val width = size.width
         val height = size.height
         val path = Path().apply {
@@ -570,14 +573,10 @@ fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
     NavigationBar(containerColor = Color.White, tonalElevation = 0.dp) {
         val tabs = listOf(
             Triple(
-                stringResource(R.string.nav_settings),
-                Icons.Outlined.Settings,
-                Route.Settings.route
+                stringResource(R.string.nav_settings), Icons.Outlined.Settings, Route.Settings.route
             ),
             Triple(
-                stringResource(R.string.nav_tasks),
-                Icons.Outlined.CheckCircle,
-                Route.Tasks.route
+                stringResource(R.string.nav_tasks), Icons.Outlined.CheckCircle, Route.Tasks.route
             ),
             Triple(stringResource(R.string.nav_notes), Icons.Outlined.NoteAlt, Route.Notes.route),
             Triple(stringResource(R.string.nav_home), Icons.Filled.Home, Route.Home.route)

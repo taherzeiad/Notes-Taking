@@ -31,9 +31,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.notes_taking.Navmain.Route
@@ -58,54 +56,13 @@ import com.example.notes_taking.ui.theme.PageBackground
 import com.example.notes_taking.ui.theme.TextPrimary
 import com.example.notes_taking.ui.theme.TextSecondary
 
-// ======= Data Model =======
-data class NoteCardData(
-    val id: Int,
-    val tagRes: Int = 0,
-    val dateRes: Int = 0,
-    val titleRes: Int,
-    val contentRes: Int = 0,
-    val imageUrl: String? = null,
-    val isItalic: Boolean = false,
-    val bulletsRes: List<Int> = emptyList(),
-    val type: NoteCardType = NoteCardType.TEXT
-)
-
-enum class NoteCardType { TEXT, IMAGE, BULLETS }
-
-// ======= Sample Data (Updated with string resources) =======
-val sampleNotes = listOf(
-    NoteCardData(
-        id = 1,
-        tagRes = R.string.note_tag_philosophy,
-        dateRes = R.string.note_date_1,
-        titleRes = R.string.notes_title,
-        contentRes = R.string.notes_subtitle,
-        type = NoteCardType.TEXT
-    ),
-    NoteCardData(
-        id = 2,
-        tagRes = R.string.note_tag_literature,
-        titleRes = R.string.note_cat_literature,
-        contentRes = R.string.notes_subtitle,
-        isItalic = true,
-        type = NoteCardType.TEXT
-    ),
-    NoteCardData(
-        id = 3,
-        titleRes = R.string.notes_screen_title_bar,
-        imageUrl = "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",
-        type = NoteCardType.IMAGE
-    )
-)
-
 @Composable
 fun NotesScreen(
-    navController: NavHostController,
-    onAddNote: () -> Unit,
-    onEditNote: Function<Unit>
+    viewModel: NotesViewModel, navController: NavHostController
 ) {
-    var selectedCategoryIndex by remember { mutableStateOf(0) }
+    // مراقبة البيانات من الـ ViewModel
+    val notes by viewModel.notesState.collectAsStateWithLifecycle()
+    val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
 
     val categories = listOf(
         stringResource(R.string.note_cat_all),
@@ -116,10 +73,7 @@ fun NotesScreen(
 
     Scaffold(
         containerColor = PageBackground,
-        bottomBar = {
-            BottomNavBar(navController = navController, selectedTab = 2)
-        }
-    ) { padding ->
+        bottomBar = { BottomNavBar(navController = navController, selectedTab = 2) }) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -131,138 +85,68 @@ fun NotesScreen(
                     .padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
-                // ======= Top Bar =======
+                // 1. Top Bar (Search + Profile)
                 item {
                     Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Search,
-                            contentDescription = null,
-                            tint = TextPrimary,
-                            modifier = Modifier.size(26.dp)
-                        )
+                    TopBarSection()
+                }
 
-                        Text(
-                            text = stringResource(R.string.notes_screen_title_bar),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = ManropeFontFamily,
-                            color = TextPrimary
-                        )
+                // 2. Page Title
+                item { PageTitleSection() }
 
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(BrownCard),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
+                // 3. Category Tabs (الديناميكية الآن من الـ ViewModel)
+                item {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(categories) { category ->
+                            val isSelected = selectedCategory == category
+                            CategoryTab(
+                                label = category,
+                                isSelected = isSelected,
+                                onClick = { viewModel.onCategoryChange(category) })
                         }
                     }
                 }
 
-                // ======= Page Title =======
-                item {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = stringResource(R.string.notes_title),
-                            fontSize = 36.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = MansalvaFontFamily,
-                            color = TextPrimary,
-                            textAlign = TextAlign.Start,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = stringResource(R.string.notes_subtitle),
-                            fontSize = 14.sp,
-                            fontFamily = ManropeFontFamily,
-                            color = TextSecondary,
-                            textAlign = TextAlign.Start,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-
-                // ======= Category Tabs =======
-                item {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(categories.size) { index ->
-                            val isSelected = selectedCategoryIndex == index
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .background(if (isSelected) BrownCard else Color(0xFFEDE8E3))
-                                    .clickable { selectedCategoryIndex = index }
-                                    .padding(horizontal = 18.dp, vertical = 10.dp)
-                            ) {
-                                Text(
-                                    text = categories[index],
-                                    fontSize = 14.sp,
-                                    fontFamily = ManropeFontFamily,
-                                    color = if (isSelected) Color.White else TextSecondary,
-                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // ======= Notes List =======
-                items(sampleNotes) { note ->
-                    when (note.type) {
-                        NoteCardType.IMAGE -> ImageNoteCard(
-                            note = note,
-                            onClick = { navController.navigate(Route.NoteEditor.createRoute(note.id)) }
-                        )
-
-                        NoteCardType.BULLETS -> BulletsNoteCard(
-                            note = note,
-                            onClick = { navController.navigate(Route.NoteEditor.createRoute(note.id)) }
-                        )
-
-                        else -> TextNoteCard(
-                            note = note,
-                            onClick = { navController.navigate(Route.NoteEditor.createRoute(note.id)) }
-                        )
-                    }
+                // 4. Notes List (جلب البيانات الفعلية)
+                items(notes) { note ->
+                    NoteDispatcher(note, navController)
                 }
 
                 item { Spacer(modifier = Modifier.height(80.dp)) }
             }
 
-            // ======= FAB (Floating Action Button) =======
-            FloatingActionButton(
-                onClick = {
-                    navController.navigate(Route.NoteEditor.createRoute(0))
-                },
-                containerColor = BrownCard,
-                shape = CircleShape,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = 24.dp, bottom = 24.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    tint = Color.White
-                )
-            }
+            // 5. FAB
+            AddNoteFAB(onAddClick = { navController.navigate(Route.NoteEditor.createRoute(0)) })
         }
+    }
+}
+
+@Composable
+fun CategoryTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(if (isSelected) BrownCard else Color(0xFFEDE8E3))
+            .clickable { onClick() }
+            .padding(horizontal = 18.dp, vertical = 10.dp)) {
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            fontFamily = ManropeFontFamily,
+            color = if (isSelected) Color.White else TextSecondary,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+        )
+    }
+}
+
+@Composable
+fun NoteDispatcher(note: NoteCardData, navController: NavHostController) {
+    val onNoteClick = { navController.navigate(Route.NoteEditor.createRoute(note.id)) }
+
+    when (note.type) {
+        NoteCardType.IMAGE -> ImageNoteCard(note = note, onClick = onNoteClick)
+        NoteCardType.BULLETS -> BulletsNoteCard(note = note, onClick = onNoteClick)
+        else -> TextNoteCard(note = note, onClick = onNoteClick)
     }
 }
 
@@ -412,8 +296,7 @@ fun BulletsNoteCard(note: NoteCardData, onClick: () -> Unit) {
 
             if (note.tagRes != 0) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End
                 ) {
                     NoteTag(tagRes = note.tagRes)
                 }
@@ -484,6 +367,84 @@ fun NoteTag(tagRes: Int) {
             fontFamily = ManropeFontFamily,
             color = BrownCard,
             fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+// ======= Top Bar Section =======
+@Composable
+fun TopBarSection() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Search,
+            contentDescription = null,
+            tint = TextPrimary,
+            modifier = Modifier.size(26.dp)
+        )
+
+        Text(
+            text = stringResource(R.string.notes_screen_title_bar),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = ManropeFontFamily,
+            color = TextPrimary
+        )
+
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(BrownCard),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
+
+// ======= Page Title Section =======
+@Composable
+fun PageTitleSection() {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.notes_title),
+            fontSize = 36.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = MansalvaFontFamily,
+            color = TextPrimary,
+            textAlign = TextAlign.Start,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = stringResource(R.string.notes_subtitle),
+            fontSize = 14.sp,
+            fontFamily = ManropeFontFamily,
+            color = TextSecondary,
+            textAlign = TextAlign.Start,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+// ======= Floating Action Button =======
+@Composable
+fun AddNoteFAB(onAddClick: () -> Unit) {
+    FloatingActionButton(
+        onClick = onAddClick, containerColor = BrownCard, shape = CircleShape, modifier = Modifier
+            .padding(start = 24.dp, bottom = 24.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Add, contentDescription = null, tint = Color.White
         )
     }
 }

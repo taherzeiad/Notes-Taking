@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -18,6 +19,8 @@ interface NoteDao {
     @Query("SELECT * FROM notes_table WHERE id = :noteId LIMIT 1")
     suspend fun getNoteById(noteId: Int): Note?
 
+    @Update
+    suspend fun updateNote(note: Note)
     @Delete
     suspend fun deleteNote(note: Note)
 }

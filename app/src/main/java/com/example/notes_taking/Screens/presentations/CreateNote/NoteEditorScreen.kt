@@ -58,7 +58,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.notes_taking.R
-import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModel
 import com.example.notes_taking.ui.theme.BrownCard
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
@@ -150,9 +149,23 @@ fun NoteEditorScreen(
                 Button(
                     onClick = {
                         if (noteId > 0) {
-                            viewModel.updateNote(noteId, title, content, null, currentDate, onSave)
+                            // تحديث ملاحظة موجودة
+                            viewModel.updateNote(
+                                id = noteId,
+                                title = title,
+                                content = content,
+                                imagePath = null,
+                                date = currentDate,
+                                onSuccess = onSave
+                            )
                         } else {
-                            viewModel.saveNote(noteId, title, content, null, currentDate, onSave)
+                            viewModel.saveNote(
+                                title = title,
+                                content = content,
+                                imagePath = null,
+                                date = currentDate,
+                                onSuccess = onSave
+                            )
                         }
                     },
                     shape = RoundedCornerShape(20.dp),

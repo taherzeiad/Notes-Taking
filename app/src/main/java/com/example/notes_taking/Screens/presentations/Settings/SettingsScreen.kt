@@ -37,10 +37,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +50,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.BrownCard
@@ -68,19 +65,16 @@ import com.example.notes_taking.ui.theme.TextPrimary
 import com.example.notes_taking.ui.theme.TextSecondary
 
 @Composable
-fun SettingsScreen(navController: NavHostController) {
-    var darkModeEnabled by remember { mutableStateOf(false) }
-
-    // نعتمد على الاتجاه القادم من MainActivity تلقائياً
+fun SettingsScreen(
+    viewModel: SettingsViewModel, navController: NavHostController
+) {
     val layoutDirection = LocalLayoutDirection.current
     val isRtl = layoutDirection == LayoutDirection.Rtl
 
     Scaffold(
-        containerColor = PageBackground,
-        bottomBar = {
+        containerColor = PageBackground, bottomBar = {
             BottomNavBar(navController = navController, selectedTab = 0)
-        }
-    ) { padding ->
+        }) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -161,14 +155,14 @@ fun SettingsScreen(navController: NavHostController) {
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = if (isRtl) "طاهر قديح" else "Taher Qudeih",
+                                text = viewModel.userName,
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = MansalvaFontFamily,
                                 color = TextPrimary
                             )
                             Text(
-                                text = "taher@sanctuary.io",
+                                text = viewModel.userEmail,
                                 fontSize = 13.sp,
                                 fontFamily = ManropeFontFamily,
                                 color = TextSecondary
@@ -188,12 +182,10 @@ fun SettingsScreen(navController: NavHostController) {
                         icon = Icons.Outlined.Person
                     )
                     HorizontalDivider(
-                        color = CardBorder,
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        color = CardBorder, modifier = Modifier.padding(horizontal = 16.dp)
                     )
                     SettingsItem(
-                        label = stringResource(R.string.item_security),
-                        icon = Icons.Outlined.Lock
+                        label = stringResource(R.string.item_security), icon = Icons.Outlined.Lock
                     )
                 }
             }
@@ -204,12 +196,10 @@ fun SettingsScreen(navController: NavHostController) {
                         label = stringResource(R.string.item_dark_mode),
                         subLabel = stringResource(R.string.sub_dark_mode),
                         icon = Icons.Outlined.DarkMode,
-                        checked = darkModeEnabled,
-                        onCheckedChange = { darkModeEnabled = it }
-                    )
+                        checked = viewModel.isDarkModeEnabled,
+                        onCheckedChange = { viewModel.toggleDarkMode(it) })
                     HorizontalDivider(
-                        color = CardBorder,
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        color = CardBorder, modifier = Modifier.padding(horizontal = 16.dp)
                     )
                     SettingsItem(
                         label = stringResource(R.string.item_notifications),
@@ -225,12 +215,10 @@ fun SettingsScreen(navController: NavHostController) {
                         icon = Icons.Outlined.Shield
                     )
                     HorizontalDivider(
-                        color = CardBorder,
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        color = CardBorder, modifier = Modifier.padding(horizontal = 16.dp)
                     )
                     SettingsItem(
-                        label = stringResource(R.string.item_about),
-                        icon = Icons.Outlined.Info
+                        label = stringResource(R.string.item_about), icon = Icons.Outlined.Info
                     )
                 }
             }
@@ -240,12 +228,17 @@ fun SettingsScreen(navController: NavHostController) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { },
+                        .clickable {
+                            viewModel.logout {
+                                navController.navigate(Route.Onboarding.route) {
+                                    popUpTo(0)
+                                }
+                            }
+                        },
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     border = androidx.compose.foundation.BorderStroke(
-                        1.dp,
-                        DangerRed.copy(alpha = 0.3f)
+                        1.dp, DangerRed.copy(alpha = 0.3f)
                     ),
                     elevation = CardDefaults.cardElevation(0.dp)
                 ) {
@@ -282,8 +275,7 @@ fun SettingsScreen(navController: NavHostController) {
 
 @Composable
 fun ProfileAvatar(
-    size: androidx.compose.ui.unit.Dp = 40.dp,
-    iconSize: androidx.compose.ui.unit.Dp = 24.dp
+    size: androidx.compose.ui.unit.Dp = 40.dp, iconSize: androidx.compose.ui.unit.Dp = 24.dp
 ) {
     Box(
         modifier = Modifier
@@ -308,8 +300,7 @@ fun EditButton() {
             .border(1.dp, CardBorder, RoundedCornerShape(20.dp))
             .clip(RoundedCornerShape(20.dp))
             .clickable { }
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
+            .padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
             text = stringResource(R.string.btn_edit),
             fontSize = 14.sp,
@@ -348,8 +339,7 @@ fun SettingsItem(label: String, icon: ImageVector, onClick: () -> Unit = {}) {
             .fillMaxWidth()
             .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+        verticalAlignment = Alignment.CenterVertically) {
         SettingsIconBox(icon)
         Text(
             text = label,
@@ -405,7 +395,9 @@ fun SettingsItemWithToggle(
                 color = TextSecondary
             )
         }
-        Switch(checked = checked, onCheckedChange = onCheckedChange, colors = switchColors())
+        Switch(
+            checked = checked, onCheckedChange = onCheckedChange, colors = switchColors()
+        )
     }
 }
 

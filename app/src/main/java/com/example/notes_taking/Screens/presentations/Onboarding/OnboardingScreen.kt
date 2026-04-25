@@ -1,5 +1,6 @@
 package com.example.notes_taking.Screens.presentations.Onboarding
 
+import OnboardingViewModel
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,11 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -52,7 +49,6 @@ import com.example.notes_taking.ui.theme.MansalvaFontFamily
 import com.example.notes_taking.ui.theme.OnboardingBackground
 import com.example.notes_taking.ui.theme.OnboardingBrown
 import com.example.notes_taking.ui.theme.OnboardingDot
-import kotlinx.coroutines.delay
 
 // ======= Data =======
 data class OnboardingPage(
@@ -66,22 +62,15 @@ val onboardingPages = listOf(
 )
 
 @Composable
-fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
-    var currentPage by remember { mutableStateOf(0) }
-    val page = onboardingPages[currentPage]
-    var isLoading by remember { mutableStateOf(false) }
-
+fun OnboardingScreen(
+    viewModel: OnboardingViewModel,
+    onFinish: () -> Unit,
+    isRtl: Boolean
+) {
+    val page = onboardingPages[viewModel.currentPage]
+    val isLastPage = viewModel.currentPage == onboardingPages.size - 1
 
     val layoutDirection = if (isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
-    val textAlign = if (isRtl) TextAlign.End else TextAlign.Start
-    val isLastPage = currentPage == onboardingPages.size - 1
-
-    LaunchedEffect(isLoading) {
-        if (isLoading) {
-            delay(1500)
-            onFinish()
-        }
-    }
 
     CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
         Box(
@@ -92,7 +81,7 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .alpha(if (isLoading) 0.3f else 1f),
+                    .alpha(if (viewModel.isLoading) 0.3f else 1f),
                 horizontalAlignment = Alignment.CenterHorizontally
 
             ) {
@@ -135,7 +124,7 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     onboardingPages.forEachIndexed { index, _ ->
-                        val isSelected = index == currentPage
+                        val isSelected = index == viewModel.currentPage
                         val width by animateDpAsState(
                             targetValue = if (isSelected) 32.dp else 8.dp, label = "dot_width"
                         )
@@ -185,11 +174,8 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
 
                 // ======= زر التالي =======
                 Button(
-                    onClick = {
-                        if (!isLastPage) currentPage++
-                        else isLoading = true
-                    },
-                    enabled = !isLoading,
+                    onClick = { viewModel.nextPage(isLastPage, onFinish) },
+                    enabled = !viewModel.isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
@@ -197,7 +183,7 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = OnboardingBrown)
                 ) {
-                    if (isLoading && isLastPage) {
+                    if (viewModel.isLoading && isLastPage) {
                         CircularProgressIndicator(
                             color = Color.White,
                             modifier = Modifier.size(24.dp),
@@ -230,10 +216,10 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                 // ======= زر تخطي =======
                 if (!isLastPage) {
                     TextButton(
-                        onClick = { isLoading = true },
-                        enabled = !isLoading
+                        onClick = { viewModel.skip(onFinish) },
+                        enabled = !viewModel.isLoading
                     ) {
-                        if (isLoading) {
+                        if (viewModel.isLoading) {
                             CircularProgressIndicator(
                                 color = OnboardingBrown,
                                 modifier = Modifier.size(20.dp),
@@ -253,7 +239,7 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                 Spacer(modifier = Modifier.height(32.dp))
             }
             // ======= Loading Overlay =======
-            if (isLoading) {
+            if (viewModel.isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
