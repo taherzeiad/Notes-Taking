@@ -233,7 +233,7 @@ fun NoteEditorScreen(
                                 textAlign = TextAlign.Start,
                                 modifier = Modifier.fillMaxWidth(),
 
-                            )
+                                )
                         }
                         innerTextField()
                     }

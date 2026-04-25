@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -26,7 +27,7 @@ import com.example.notes_taking.Screens.presentations.Tasks.TasksScreen
 @Composable
 fun NavGraph(navController: NavHostController) {
     val context = LocalContext.current
-    val dao = NoteDatabase.getDatabase(context).noteDao()
+    val dao = remember { NoteDatabase.getDatabase(context).noteDao() }
     val viewModel: NoteViewModel = viewModel(factory = NoteViewModelFactory(dao))
 
     val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -44,6 +45,8 @@ fun NavGraph(navController: NavHostController) {
                 onSplashFinished = {
                     navController.navigate(Route.Onboarding.route) {
                         popUpTo(Route.Splash.route) { inclusive = true }
+                        launchSingleTop = true
+
                     }
                 }
             )
