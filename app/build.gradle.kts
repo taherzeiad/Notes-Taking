@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.contentpager)
     implementation(libs.androidx.ui)
+    implementation(libs.generativeai)
     //  implementation(libs.androidx.room3.common.jvm)
   //  implementation(libs.androidx.room3.runtime)
     testImplementation(libs.junit)

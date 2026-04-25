@@ -2,6 +2,7 @@ package com.example.notes_taking.Navmain
 
 import HomeViewModel
 import OnboardingViewModel
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -29,6 +30,7 @@ import com.example.notes_taking.Screens.presentations.Splash.SplashScreen
 import com.example.notes_taking.Screens.presentations.Tasks.TasksScreen
 import com.example.notes_taking.Screens.presentations.Tasks.TasksViewModel
 
+@SuppressLint("NewApi")
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -75,9 +77,8 @@ fun NavGraph(navController: NavHostController) {
                 navController = navController,
                 onAddNote = { navController.navigate(Route.NoteEditor.createRoute(0)) },
                 onEditNote = { id -> navController.navigate(Route.NoteEditor.createRoute(id)) },
-                onNavigateToSettings = { navController.navigate(Route.Settings.route) },
                 onNavigateToTasks = { navController.navigate(Route.Tasks.route) },
-                onNavigateToNotes = { navController.navigate(Route.Notes.route) })
+              )
         }
 
         // ======= Note Editor =======
