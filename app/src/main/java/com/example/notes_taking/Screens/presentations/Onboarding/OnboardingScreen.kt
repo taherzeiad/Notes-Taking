@@ -69,7 +69,6 @@ fun OnboardingScreen(
 ) {
     val page = onboardingPages[viewModel.currentPage]
     val isLastPage = viewModel.currentPage == onboardingPages.size - 1
-
     val layoutDirection = if (isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
 
     CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
@@ -78,196 +77,196 @@ fun OnboardingScreen(
                 .fillMaxSize()
                 .background(OnboardingBackground)
         ) {
+            // محتوى الصفحة
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .alpha(if (viewModel.isLoading) 0.3f else 1f),
+                    .alpha(if (viewModel.isLoading) 0.3f else 1f)
+                    .padding(bottom = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
-
             ) {
-
-                // ======= العنوان العلوي =======
+                // ترويسة التطبيق
                 Text(
                     text = stringResource(R.string.intellectual_sanctuary),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = ManropeFontFamily,
-                    color = OnboardingBrown,
-                    textAlign = TextAlign.Center,
+                    style = androidx.compose.ui.text.TextStyle(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = ManropeFontFamily,
+                        color = OnboardingBrown
+                    ),
                     modifier = Modifier.padding(top = 48.dp)
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // ======= الصورة =======
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp)
-                        .padding(horizontal = 24.dp)
-                        .clip(RoundedCornerShape(32.dp))
-                        .background(Color(0xFFF5E6D8)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = page.imageRes),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+                // حاوية الصورة بتصميم عصري
+                OnboardingImageSection(imageRes = page.imageRes)
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // ======= Points =======
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    onboardingPages.forEachIndexed { index, _ ->
-                        val isSelected = index == viewModel.currentPage
-                        val width by animateDpAsState(
-                            targetValue = if (isSelected) 32.dp else 8.dp, label = "dot_width"
-                        )
-                        Box(
-                            modifier = Modifier
-                                .height(8.dp)
-                                .width(width)
-                                .clip(CircleShape)
-                                .background(
-                                    if (isSelected) OnboardingBrown else OnboardingDot
-                                )
-                        )
-                    }
-                }
+                // مؤشر الصفحات (Dots)
+                OnboardingPagerIndicator(
+                    pageSize = onboardingPages.size,
+                    currentPage = viewModel.currentPage
+                )
 
                 Spacer(modifier = Modifier.height(25.dp))
 
-                // ======= النص الرئيسي =======
-                Text(
-                    text = stringResource(page.titleRes),
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = MansalvaFontFamily,
-                    color = OnboardingBrown,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 32.dp)
+                // النصوص التعريفية
+                OnboardingTextSection(
+                    title = stringResource(page.titleRes),
+                    description = stringResource(page.descRes)
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.weight(1f)) // لدفع الأزرار للأسفل
 
-                // ======= النص الفرعي =======
-                Text(
-                    text = stringResource(page.descRes),
-                    fontSize = 15.sp,
-                    fontFamily = ManropeFontFamily,
-                    color = OnboardingBrown.copy(alpha = 0.7f),
-                    textAlign = TextAlign.Center,
-                    lineHeight = 29.3.sp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 40.dp)
+                // أزرار التحكم
+                OnboardingActions(
+                    isLastPage = isLastPage,
+                    isLoading = viewModel.isLoading,
+                    onNext = { viewModel.nextPage(isLastPage, onFinish) },
+                    onSkip = { viewModel.skip(onFinish) }
                 )
-
-                Spacer(modifier = Modifier.height(30.dp))
-
-                // ======= زر التالي =======
-                Button(
-                    onClick = { viewModel.nextPage(isLastPage, onFinish) },
-                    enabled = !viewModel.isLoading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                        .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = OnboardingBrown)
-                ) {
-                    if (viewModel.isLoading && isLastPage) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = if (!isLastPage) stringResource(R.string.next)
-                                else stringResource(R.string.get_started),
-                                fontSize = 18.sp,
-                                fontFamily = MansalvaFontFamily,
-                                color = Color.White
-                            )
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // ======= زر تخطي =======
-                if (!isLastPage) {
-                    TextButton(
-                        onClick = { viewModel.skip(onFinish) },
-                        enabled = !viewModel.isLoading
-                    ) {
-                        if (viewModel.isLoading) {
-                            CircularProgressIndicator(
-                                color = OnboardingBrown,
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text(
-                                text = stringResource(R.string.skip),
-                                fontSize = 18.sp,
-                                fontFamily = ManropeFontFamily,
-                                color = OnboardingBrown.copy(alpha = 0.6f)
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
             }
-            // ======= Loading Overlay =======
+
+            // غطاء التحميل (Loading Overlay)
             if (viewModel.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(8.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(32.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            CircularProgressIndicator(
-                                color = OnboardingBrown,
-                                modifier = Modifier.size(40.dp),
-                                strokeWidth = 3.dp
-                            )
-                            Text(
-                                text = stringResource(R.string.loading),
-                                fontSize = 14.sp,
-                                fontFamily = ManropeFontFamily,
-                                color = OnboardingBrown.copy(alpha = 0.7f)
-                            )
-                        }
-                    }
+                LoadingOverlay()
+            }
+        }
+    }
+}
+
+// ======= مكونات فرعية لتحسين نظافة الكود =======
+
+@Composable
+fun OnboardingImageSection(imageRes: Int) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp)
+            .padding(horizontal = 24.dp)
+            .clip(RoundedCornerShape(32.dp))
+            .background(Color(0xFFF5E6D8).copy(alpha = 0.5f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = imageRes),
+            contentDescription = null,
+            modifier = Modifier.size(240.dp)
+        )
+    }
+}
+
+@Composable
+fun OnboardingPagerIndicator(pageSize: Int, currentPage: Int) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(pageSize) { index ->
+            val isSelected = index == currentPage
+            val width by animateDpAsState(
+                targetValue = if (isSelected) 32.dp else 8.dp, label = "dot_width"
+            )
+            Box(
+                modifier = Modifier
+                    .height(8.dp)
+                    .width(width)
+                    .clip(CircleShape)
+                    .background(if (isSelected) OnboardingBrown else OnboardingDot)
+            )
+        }
+    }
+}
+
+@Composable
+fun OnboardingTextSection(title: String, description: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = title,
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = MansalvaFontFamily,
+            color = OnboardingBrown,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 32.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = description,
+            fontSize = 15.sp,
+            fontFamily = ManropeFontFamily,
+            color = OnboardingBrown.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
+            lineHeight = 26.sp,
+            modifier = Modifier.padding(horizontal = 40.dp)
+        )
+    }
+}
+
+@Composable
+fun OnboardingActions(
+    isLastPage: Boolean,
+    isLoading: Boolean,
+    onNext: () -> Unit,
+    onSkip: () -> Unit
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Button(
+            onClick = onNext,
+            enabled = !isLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .height(56.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = OnboardingBrown)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = if (isLastPage) stringResource(R.string.get_started) else stringResource(R.string.next),
+                    fontSize = 18.sp,
+                    fontFamily = MansalvaFontFamily,
+                    color = Color.White
+                )
+                if (!isLastPage) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
                 }
+            }
+        }
+
+        if (!isLastPage) {
+            TextButton(onClick = onSkip, enabled = !isLoading) {
+                Text(
+                    stringResource(R.string.skip),
+                    fontFamily = ManropeFontFamily,
+                    color = OnboardingBrown.copy(alpha = 0.6f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun LoadingOverlay() {
+    Box(
+        modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.2f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(12.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator(color = OnboardingBrown)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(stringResource(R.string.loading), fontFamily = ManropeFontFamily)
             }
         }
     }

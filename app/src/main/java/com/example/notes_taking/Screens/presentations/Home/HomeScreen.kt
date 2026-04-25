@@ -79,7 +79,6 @@ fun HomeScreen(
     onEditNote: (Int) -> Unit,
     onNavigateToTasks: () -> Unit
 ) {
-    // مراقبة آخر ملاحظة من الـ ViewModel
     val lastNote by viewModel.lastEditedNote.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -122,12 +121,17 @@ fun HomeScreen(
 @Composable
 fun HomeTopBarSection() {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
-            modifier = Modifier.size(40.dp).clip(CircleShape).background(BrownCard),
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(BrownCard),
             contentAlignment = Alignment.Center
         ) {
             Icon(Icons.Default.Person, null, tint = Color.White, modifier = Modifier.size(24.dp))
@@ -386,6 +390,7 @@ fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
         }
     }
 }
+
 @Composable
 fun AICardSection() {
     Card(
@@ -453,13 +458,17 @@ fun UpcomingTaskSection(onViewAll: () -> Unit) {
             HorizontalDivider(color = Color(0xFFF0EBE6))
             Text(
                 text = stringResource(R.string.view_all_tasks),
-                modifier = Modifier.fillMaxWidth().clickable { onViewAll() }.padding(top = 12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onViewAll() }
+                    .padding(top = 12.dp),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 color = BrownCard
             )
         }
     }
 }
+
 @Composable
 fun QuickActionButton(
     label: String,
@@ -468,12 +477,16 @@ fun QuickActionButton(
     onClick: () -> Unit
 ) {
     Card(
-        modifier = modifier.height(52.dp).clickable { onClick() },
+        modifier = modifier
+            .height(52.dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F2EF))
     ) {
         Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(icon, null, tint = BrownCard, modifier = Modifier.size(20.dp))

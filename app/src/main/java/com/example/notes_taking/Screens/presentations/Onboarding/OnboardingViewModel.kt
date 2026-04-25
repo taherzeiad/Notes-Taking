@@ -6,15 +6,11 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class OnboardingViewModel(
-    // private val dataStoreRepository: DataStoreRepository // اختياري لحفظ الحالة
-) : ViewModel() {
+class OnboardingViewModel : ViewModel() {
 
-    // إدارة الصفحة الحالية
     var currentPage by mutableStateOf(0)
         private set
 
-    // إدارة حالة التحميل (Loading)
     var isLoading by mutableStateOf(false)
         private set
 
@@ -31,12 +27,10 @@ class OnboardingViewModel(
     }
 
     private fun startLoading(onFinish: () -> Unit) {
+        if (isLoading) return
         isLoading = true
         viewModelScope.launch {
-            // هنا نقوم بحفظ أن المستخدم أتم الـ Onboarding
-            // dataStoreRepository.saveOnboardingCompleted() 
-
-            delay(1500) // محاكاة لعملية الحفظ أو التحميل
+            delay(1500)
             onFinish()
         }
     }
