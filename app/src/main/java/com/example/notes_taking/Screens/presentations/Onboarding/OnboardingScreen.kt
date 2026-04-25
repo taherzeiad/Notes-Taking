@@ -20,17 +20,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -47,6 +52,7 @@ import com.example.notes_taking.ui.theme.MansalvaFontFamily
 import com.example.notes_taking.ui.theme.OnboardingBackground
 import com.example.notes_taking.ui.theme.OnboardingBrown
 import com.example.notes_taking.ui.theme.OnboardingDot
+import kotlinx.coroutines.delay
 
 // ======= Data =======
 data class OnboardingPage(
@@ -63,10 +69,19 @@ val onboardingPages = listOf(
 fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
     var currentPage by remember { mutableStateOf(0) }
     val page = onboardingPages[currentPage]
+    var isLoading by remember { mutableStateOf(false) }
+
 
     val layoutDirection = if (isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
     val textAlign = if (isRtl) TextAlign.End else TextAlign.Start
     val isLastPage = currentPage == onboardingPages.size - 1
+
+    LaunchedEffect(isLoading) {
+        if (isLoading) {
+            delay(1500)
+            onFinish()
+        }
+    }
 
     CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
         Box(
@@ -75,8 +90,11 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                 .background(OnboardingBackground)
         ) {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(if (isLoading) 0.3f else 1f),
                 horizontalAlignment = Alignment.CenterHorizontally
+
             ) {
 
                 // ======= العنوان العلوي =======
@@ -168,8 +186,10 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                 // ======= زر التالي =======
                 Button(
                     onClick = {
-                        if (!isLastPage) currentPage++ else onFinish()
+                        if (!isLastPage) currentPage++
+                        else isLoading = true
                     },
+                    enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
@@ -177,24 +197,31 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = OnboardingBrown)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-
-                        Text(
-                            text = if (!isLastPage) stringResource(R.string.next)
-                            else stringResource(R.string.get_started),
-                            fontSize = 18.sp,
-                            fontFamily = MansalvaFontFamily,
-                            color = Color.White
+                    if (isLoading && isLastPage) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
                         )
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = if (!isLastPage) stringResource(R.string.next)
+                                else stringResource(R.string.get_started),
+                                fontSize = 18.sp,
+                                fontFamily = MansalvaFontFamily,
+                                color = Color.White
+                            )
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
 
@@ -202,17 +229,59 @@ fun OnboardingScreen(onFinish: () -> Unit, isRtl: Boolean) {
 
                 // ======= زر تخطي =======
                 if (!isLastPage) {
-                    TextButton(onClick = onFinish) {
-                        Text(
-                            text = stringResource(R.string.skip),
-                            fontSize = 18.sp,
-                            fontFamily = ManropeFontFamily,
-                            color = OnboardingBrown.copy(alpha = 0.6f)
-                        )
+                    TextButton(
+                        onClick = { isLoading = true },
+                        enabled = !isLoading
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = OnboardingBrown,
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(R.string.skip),
+                                fontSize = 18.sp,
+                                fontFamily = ManropeFontFamily,
+                                color = OnboardingBrown.copy(alpha = 0.6f)
+                            )
+                        }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
+            }
+            // ======= Loading Overlay =======
+            if (isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(8.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                color = OnboardingBrown,
+                                modifier = Modifier.size(40.dp),
+                                strokeWidth = 3.dp
+                            )
+                            Text(
+                                text = stringResource(R.string.loading),
+                                fontSize = 14.sp,
+                                fontFamily = ManropeFontFamily,
+                                color = OnboardingBrown.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                }
             }
         }
     }
