@@ -9,30 +9,25 @@ import kotlinx.coroutines.launch
 
 class SettingsViewModel : ViewModel() {
 
-    // حالة الوضع الليلي
+    // إدارة حالة الوضع الليلي
     var isDarkModeEnabled by mutableStateOf(false)
         private set
 
-    // بيانات المستخدم (يمكن جلبها مستقبلاً من Repository أو DataStore)
+    // بيانات المستخدم - يفضل جلبها من الـ Repository لاحقاً
     var userName by mutableStateOf("طاهر قديح")
         private set
 
-    var userEmail by mutableStateOf("taher@sanctuary.io")
+    var userEmail by mutableStateOf("taherqudeih@gmail.com")
         private set
 
     fun toggleDarkMode(enabled: Boolean) {
         isDarkModeEnabled = enabled
-        // هنا يمكنك حفظ القيمة في SharedPreferences أو DataStore
+        // TODO: Save to DataStore so the theme persists
     }
 
     fun logout(onSuccess: () -> Unit) {
         viewModelScope.launch {
-            // منطق تسجيل الخروج (مسح التوكن، حذف البيانات المؤقتة)
             onSuccess()
         }
-    }
-
-    fun updateProfile() {
-        // منطق تحديث الملف الشخصي
     }
 }

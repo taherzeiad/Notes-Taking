@@ -118,7 +118,7 @@ fun OnboardingScreen(
                     description = stringResource(page.descRes)
                 )
 
-                Spacer(modifier = Modifier.weight(1f)) // لدفع الأزرار للأسفل
+                Spacer(modifier = Modifier.height(20.dp))
 
                 // أزرار التحكم
                 OnboardingActions(
