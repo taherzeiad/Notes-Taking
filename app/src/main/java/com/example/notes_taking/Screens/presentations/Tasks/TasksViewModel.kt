@@ -13,30 +13,23 @@ import kotlinx.coroutines.launch
 
 class TasksViewModel : ViewModel() {
 
-    // 1. إدارة التبويب المختار (0: In Progress, 1: Completed, 2: Scheduled)
     var selectedTab by mutableIntStateOf(0)
         private set
 
-    // 2. حل مشكلة Unresolved reference بجعل القائمة تبدأ فارغة أو ببيانات أولية داخل الـ ViewModel
-    // وحل مشكلة Cannot infer type بتحديد النوع صراحة <List<Task>>
+    // القائمة الكاملة (كمصدر وحيد للحقيقة داخل الـ ViewModel)
+    private var allTasks = sampleTasks
+
     private val _tasks = MutableStateFlow<List<Task>>(emptyList())
     val tasks: StateFlow<List<Task>> = _tasks.asStateFlow()
 
-    // 3. بيانات الـ AI Insights
-    var aiProgress by mutableFloatStateOf(0.7f)
+    var aiProgress by mutableFloatStateOf(0f)
         private set
 
     init {
-        // تحميل البيانات عند تشغيل الـ ViewModel
-        loadTasks()
+        filterTasksByTab(0) // تحميل مهام "قيد التنفيذ" عند البدء
+        updateAiProgress()
     }
 
-    private fun loadTasks() {
-        // يمكنك لاحقاً استبدال هذا بجلب البيانات من Repository
-        _tasks.value = sampleTasks
-    }
-
-    // منطق تبديل التبويب
     fun onTabSelected(index: Int) {
         selectedTab = index
         filterTasksByTab(index)
@@ -48,31 +41,28 @@ class TasksViewModel : ViewModel() {
             1 -> TaskStatus.COMPLETED
             else -> TaskStatus.SCHEDULED
         }
-        // فلترة القائمة بناءً على الحالة
-        _tasks.value = sampleTasks.filter { it.status == status }
+        _tasks.value = allTasks.filter { it.status == status }
     }
 
-    // منطق إكمال المهمة
     fun toggleTaskCompletion(taskId: Int) {
         viewModelScope.launch {
-            // تحديث الحالة في القائمة الحالية (مؤقتاً حتى نستخدم قاعدة البيانات)
-            val updatedList = _tasks.value.map { task ->
+            // تحديث الحالة في المصدر الرئيسي
+            allTasks = allTasks.map { task ->
                 if (task.id == taskId) {
                     val newStatus = if (task.status == TaskStatus.COMPLETED)
                         TaskStatus.IN_PROGRESS else TaskStatus.COMPLETED
                     task.copy(status = newStatus)
                 } else task
             }
-            _tasks.value = updatedList
-
-            // تحديث شريط التقدم AI بناءً على المهام المكتملة
+            // إعادة الفلترة لتحديث الواجهة
+            filterTasksByTab(selectedTab)
             updateAiProgress()
         }
     }
 
     private fun updateAiProgress() {
-        val total = sampleTasks.size
-        val completed = _tasks.value.count { it.status == TaskStatus.COMPLETED }
+        val total = allTasks.size
+        val completed = allTasks.count { it.status == TaskStatus.COMPLETED }
         if (total > 0) {
             aiProgress = completed.toFloat() / total.toFloat()
         }
