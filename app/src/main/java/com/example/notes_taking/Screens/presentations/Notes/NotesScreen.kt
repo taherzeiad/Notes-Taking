@@ -116,7 +116,12 @@ fun NotesScreen(
             }
 
             // 5. FAB
-            AddNoteFAB(onAddClick = { navController.navigate(Route.NoteEditor.createRoute(0)) })
+            AddNoteFAB(
+                onAddClick = { navController.navigate(Route.NoteEditor.createRoute(0)) },
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 24.dp, bottom = 24.dp)
+            )
         }
     }
 }
@@ -438,10 +443,12 @@ fun PageTitleSection() {
 
 // ======= Floating Action Button =======
 @Composable
-fun AddNoteFAB(onAddClick: () -> Unit) {
+fun AddNoteFAB(onAddClick: () -> Unit, modifier: Modifier = Modifier) {
     FloatingActionButton(
-        onClick = onAddClick, containerColor = BrownCard, shape = CircleShape, modifier = Modifier
-            .padding(start = 24.dp, bottom = 24.dp)
+        onClick = onAddClick,
+        containerColor = BrownCard,
+        shape = CircleShape,
+        modifier = modifier
     ) {
         Icon(
             imageVector = Icons.Default.Add, contentDescription = null, tint = Color.White
