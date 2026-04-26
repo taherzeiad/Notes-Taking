@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.AutoAwesome
@@ -52,6 +53,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -106,7 +108,8 @@ fun HomeScreen(
             item {
                 LastEditedNoteSection(
                     note = lastNote,
-                    onEditClick = { id -> onEditNote(id) }
+                    onEditClick = { id -> onEditNote(id) },
+                    onAddNote = onAddNote  
                 )
             }
 
@@ -197,62 +200,133 @@ fun QuickActionsSection(onAddNote: () -> Unit) {
 
 // ======= المكونات المنفصلة (Components) =======
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun LastEditedNoteSection(note: Note?, onEditClick: (Int) -> Unit) {
+fun LastEditedNoteSection(note: Note?, onEditClick: (Int) -> Unit, onAddNote: () -> Unit) {
     Column {
         Text(
             text = stringResource(R.string.last_edited_note),
-            style = androidx.compose.ui.text.TextStyle(
-                fontSize = 15.sp,
-                fontFamily = ManropeFontFamily,
-                color = TextSecondary
-            )
+            fontSize = 15.sp,
+            fontFamily = ManropeFontFamily,
+            color = TextSecondary
         )
         Spacer(modifier = Modifier.height(10.dp))
 
-        Card(
+        if (note == null) {
+            // ======= Empty State =======
+            EmptyNoteCard(onAddNote = onAddNote)
+        } else {
+            // ======= Note Card =======
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onEditClick(note.id) },
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Column {
+                    WaveChart(modifier = Modifier.fillMaxWidth().height(100.dp))
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        NoteTagsRow(tags = listOf(
+                            stringResource(R.string.tag_philosophy),
+                            stringResource(R.string.tag_readings)
+                        ))
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = note.title,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = MansalvaFontFamily,
+                            color = TextPrimary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = note.content,
+                            fontSize = 14.sp,
+                            fontFamily = ManropeFontFamily,
+                            color = TextPrimary.copy(alpha = 0.7f),
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                            lineHeight = 22.sp
+                        )
+                        NoteCardFooter(onContinueClick = { onEditClick(note.id) })
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ======= Empty State Card =======
+@Composable
+fun EmptyNoteCard(onAddNote: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { note?.let { onEditClick(it.id) } },
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column {
-                WaveChart(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp)
+            // أيقونة فارغة
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .background(Color(0xFFF5F0EB), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.NoteAlt,
+                    contentDescription = null,
+                    tint = BrownCard.copy(alpha = 0.5f),
+                    modifier = Modifier.size(32.dp)
                 )
+            }
 
-                Column(modifier = Modifier.padding(16.dp)) {
-                    // عرض التصنيفات (Tags) - يمكن جعلها ديناميكية لاحقاً
-                    NoteTagsRow(tags = listOf("Philosophy", "Readings"))
+            Text(
+                text = stringResource(R.string.empty_notes_title),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = MansalvaFontFamily,
+                color = TextPrimary,
+                textAlign = TextAlign.Center
+            )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = stringResource(R.string.empty_notes_subtitle),
+                fontSize = 14.sp,
+                fontFamily = ManropeFontFamily,
+                color = TextSecondary,
+                textAlign = TextAlign.Center,
+                lineHeight = 22.sp
+            )
 
-                    Text(
-                        text = note?.title ?: stringResource(R.string.default_note_title),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = MansalvaFontFamily,
-                        color = TextPrimary
-                    )
+            Spacer(modifier = Modifier.height(4.dp))
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = note?.content ?: stringResource(R.string.default_note_content),
-                        fontSize = 14.sp,
-                        fontFamily = ManropeFontFamily,
-                        color = TextPrimary.copy(alpha = 0.7f),
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
-                        lineHeight = 22.sp
-                    )
-
-                    NoteCardFooter(onContinueClick = { note?.let { onEditClick(it.id) } })
-                }
+            // زر إضافة ملاحظة
+            androidx.compose.material3.Button(
+                onClick = onAddNote,
+                shape = RoundedCornerShape(12.dp),
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = BrownCard
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = stringResource(R.string.add_first_note),
+                    fontFamily = ManropeFontFamily,
+                    color = Color.White
+                )
             }
         }
     }

@@ -29,6 +29,7 @@
     <string name="get_started">ابدأ الآن</string>
     <string name="skip">تخطي</string>
 
+
     <string name="ob_title_1">سجّل أفكارك بذكاء</string>
     <string name="ob_desc_1">دع الذكاء الاصطناعي ينظم خواطرك ويحولها إلى ملاحظات منظمة بلمسة إبداعية.</string>
 
@@ -38,6 +39,9 @@
     <string name="ob_title_3">استخراج المهام تلقائياً</string>
     <string name="ob_desc_3">ببساطة، اكتب أفكارك. وسيقوم ذكاؤنا الاصطناعي بتحويل ملاحظاتك إلى قائمة مهام منظمة وقابلة للتنفيذ.</string>
 
+    <string name="empty_notes_title">لا توجد ملاحظات بعد</string>
+    <string name="empty_notes_subtitle">ابدأ بتدوين أفكارك وأحلامك. ملاحظتك الأولى تنتظرك.</string>
+    <string name="add_first_note">أضف ملاحظتك الأولى</string>
 
     //////////////////////////////////////////////
 
