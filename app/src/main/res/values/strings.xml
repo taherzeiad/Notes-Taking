@@ -38,6 +38,9 @@
 
     <string name="ob_title_3">Automatic task extraction</string>
     <string name="ob_desc_3">Simply write your thoughts, and our AI will turn your notes into an organized, actionable task list.</string>
+    <string name="empty_notes_title">No Notes Yet</string>
+    <string name="empty_notes_subtitle">Start capturing your thoughts and ideas. Your first note is waiting to be written.</string>
+    <string name="add_first_note">Add Your First Note</string>
 
 
     /////////////////////////////
