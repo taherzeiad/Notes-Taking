@@ -37,23 +37,18 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.BrownCard
@@ -68,13 +63,10 @@ import com.example.notes_taking.ui.theme.TextPrimary
 import com.example.notes_taking.ui.theme.TextSecondary
 
 @Composable
-fun SettingsScreen(navController: NavHostController) {
-    var darkModeEnabled by remember { mutableStateOf(false) }
-
-    // نعتمد على الاتجاه القادم من MainActivity تلقائياً
-    val layoutDirection = LocalLayoutDirection.current
-    val isRtl = layoutDirection == LayoutDirection.Rtl
-
+fun SettingsScreen(
+    viewModel: SettingsViewModel,
+    navController: NavHostController
+) {
     Scaffold(
         containerColor = PageBackground,
         bottomBar = {
@@ -89,201 +81,127 @@ fun SettingsScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
-            // ======= Top Bar =======
+            // 1. الترويسة (Top Bar)
+            item { SettingsTopBar() }
+
+            // 2. عنوان الصفحة
+            item { SettingsHeader() }
+
+            // 3. بطاقة الملف الشخصي (Profile Card)
             item {
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // الترتيب سينعكس تلقائياً في العربية
-                    ProfileAvatar()
-
-                    Text(
-                        text = stringResource(R.string.app_name_styled),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = ManropeFontFamily,
-                        color = TextPrimary
-                    )
-
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.MenuBook,
-                        contentDescription = null,
-                        tint = TextPrimary,
-                        modifier = Modifier.size(26.dp)
-                    )
-                }
+                ProfileCard(
+                    name = viewModel.userName,
+                    email = viewModel.userEmail
+                )
             }
 
-            // ======= Page Title =======
+            // 4. أقسام الإعدادات
             item {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = stringResource(R.string.settings_title),
-                        fontSize = 36.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = MansalvaFontFamily,
-                        color = TextPrimary,
-                        textAlign = TextAlign.Start, // Start تعني يمين في العربية
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.settings_subtitle),
-                        fontSize = 14.sp,
-                        fontFamily = ManropeFontFamily,
-                        color = TextSecondary,
-                        textAlign = TextAlign.Start,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+                AccountSection()
             }
 
-            // ======= Profile Card =======
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(0.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        ProfileAvatar(size = 64.dp, iconSize = 36.dp)
+                CustomizationSection(
+                    isDarkMode = viewModel.isDarkModeEnabled,
+                    onDarkModeChange = { viewModel.toggleDarkMode(it) }
+                )
+            }
 
-                        Spacer(modifier = Modifier.width(12.dp))
+            item {
+                PrivacySection()
+            }
 
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = if (isRtl) "طاهر قديح" else "Taher Qudeih",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = MansalvaFontFamily,
-                                color = TextPrimary
-                            )
-                            Text(
-                                text = "taher@sanctuary.io",
-                                fontSize = 13.sp,
-                                fontFamily = ManropeFontFamily,
-                                color = TextSecondary
-                            )
+            // 5. زر تسجيل الخروج
+            item {
+                LogoutButton(onLogout = {
+                    viewModel.logout {
+                        navController.navigate(Route.Onboarding.route) {
+                            popUpTo(0)
                         }
-
-                        EditButton()
                     }
-                }
+                })
             }
 
-            // ======= Sections =======
-            item {
-                SettingsSection(title = stringResource(R.string.section_account)) {
-                    SettingsItem(
-                        label = stringResource(R.string.item_account_info),
-                        icon = Icons.Outlined.Person
-                    )
-                    HorizontalDivider(
-                        color = CardBorder,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                    SettingsItem(
-                        label = stringResource(R.string.item_security),
-                        icon = Icons.Outlined.Lock
-                    )
-                }
-            }
+            item { Spacer(modifier = Modifier.height(12.dp)) }
+        }
+    }
+}
 
-            item {
-                SettingsSection(title = stringResource(R.string.section_customization)) {
-                    SettingsItemWithToggle(
-                        label = stringResource(R.string.item_dark_mode),
-                        subLabel = stringResource(R.string.sub_dark_mode),
-                        icon = Icons.Outlined.DarkMode,
-                        checked = darkModeEnabled,
-                        onCheckedChange = { darkModeEnabled = it }
-                    )
-                    HorizontalDivider(
-                        color = CardBorder,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                    SettingsItem(
-                        label = stringResource(R.string.item_notifications),
-                        icon = Icons.Outlined.Notifications
-                    )
-                }
-            }
+// ======= مكونات فرعية (UI Components) =======
 
-            item {
-                SettingsSection(title = stringResource(R.string.section_privacy)) {
-                    SettingsItem(
-                        label = stringResource(R.string.item_privacy_center),
-                        icon = Icons.Outlined.Shield
-                    )
-                    HorizontalDivider(
-                        color = CardBorder,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                    SettingsItem(
-                        label = stringResource(R.string.item_about),
-                        icon = Icons.Outlined.Info
-                    )
-                }
-            }
+@Composable
+fun AccountSection() {
+    SettingsSection(title = stringResource(R.string.section_account)) {
+        SettingsItem(
+            label = stringResource(R.string.item_account_info),
+            icon = Icons.Outlined.Person
+        )
+        HorizontalDivider(color = CardBorder, modifier = Modifier.padding(horizontal = 16.dp))
+        SettingsItem(
+            label = stringResource(R.string.item_security),
+            icon = Icons.Outlined.Lock
+        )
+    }
+}
 
-            // ======= Logout =======
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { },
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(
-                        1.dp,
-                        DangerRed.copy(alpha = 0.3f)
-                    ),
-                    elevation = CardDefaults.cardElevation(0.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(18.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.Logout,
-                            contentDescription = null,
-                            tint = DangerRed,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(R.string.btn_logout),
-                            fontSize = 16.sp,
-                            fontFamily = ManropeFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            color = DangerRed
-                        )
-                    }
-                }
+@Composable
+fun CustomizationSection(isDarkMode: Boolean, onDarkModeChange: (Boolean) -> Unit) {
+    SettingsSection(title = stringResource(R.string.section_customization)) {
+        SettingsItemWithToggle(
+            label = stringResource(R.string.item_dark_mode),
+            subLabel = stringResource(R.string.sub_dark_mode),
+            icon = Icons.Outlined.DarkMode,
+            checked = isDarkMode,
+            onCheckedChange = onDarkModeChange
+        )
+        HorizontalDivider(color = CardBorder, modifier = Modifier.padding(horizontal = 16.dp))
+        SettingsItem(
+            label = stringResource(R.string.item_notifications),
+            icon = Icons.Outlined.Notifications
+        )
+    }
+}
+
+@Composable
+fun ProfileCard(name: String, email: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ProfileAvatar(size = 64.dp, iconSize = 36.dp)
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = name,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = MansalvaFontFamily,
+                    color = TextPrimary
+                )
+                Text(
+                    text = email,
+                    fontSize = 13.sp,
+                    fontFamily = ManropeFontFamily,
+                    color = TextSecondary
+                )
             }
-            item { Spacer(modifier = Modifier.height(8.dp)) }
+            EditButton()
         }
     }
 }
 
 // ======= Helper UI Components (Clean & Automated) =======
-
 @Composable
 fun ProfileAvatar(
-    size: androidx.compose.ui.unit.Dp = 40.dp,
-    iconSize: androidx.compose.ui.unit.Dp = 24.dp
+    size: androidx.compose.ui.unit.Dp = 40.dp, iconSize: androidx.compose.ui.unit.Dp = 24.dp
 ) {
     Box(
         modifier = Modifier
@@ -308,8 +226,7 @@ fun EditButton() {
             .border(1.dp, CardBorder, RoundedCornerShape(20.dp))
             .clip(RoundedCornerShape(20.dp))
             .clickable { }
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
+            .padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
             text = stringResource(R.string.btn_edit),
             fontSize = 14.sp,
@@ -348,8 +265,7 @@ fun SettingsItem(label: String, icon: ImageVector, onClick: () -> Unit = {}) {
             .fillMaxWidth()
             .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+        verticalAlignment = Alignment.CenterVertically) {
         SettingsIconBox(icon)
         Text(
             text = label,
@@ -405,7 +321,9 @@ fun SettingsItemWithToggle(
                 color = TextSecondary
             )
         }
-        Switch(checked = checked, onCheckedChange = onCheckedChange, colors = switchColors())
+        Switch(
+            checked = checked, onCheckedChange = onCheckedChange, colors = switchColors()
+        )
     }
 }
 
@@ -433,3 +351,103 @@ fun switchColors() = SwitchDefaults.colors(
     uncheckedThumbColor = Color.White,
     uncheckedTrackColor = Color(0xFFD0C8C0)
 )
+
+@Composable
+fun SettingsTopBar() {
+    Spacer(modifier = Modifier.height(12.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        ProfileAvatar()
+        Text(
+            text = stringResource(R.string.app_name_styled),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = ManropeFontFamily,
+            color = TextPrimary
+        )
+        Icon(
+            imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+            contentDescription = null,
+            tint = TextPrimary,
+            modifier = Modifier.size(26.dp)
+        )
+    }
+}
+
+@Composable
+fun SettingsHeader() {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.settings_title),
+            fontSize = 36.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = MansalvaFontFamily,
+            color = TextPrimary,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = stringResource(R.string.settings_subtitle),
+            fontSize = 14.sp,
+            fontFamily = ManropeFontFamily,
+            color = TextSecondary,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+fun PrivacySection() {
+    SettingsSection(title = stringResource(R.string.section_privacy)) {
+        SettingsItem(
+            label = stringResource(R.string.item_privacy_center),
+            icon = Icons.Outlined.Shield
+        )
+        HorizontalDivider(color = CardBorder, modifier = Modifier.padding(horizontal = 16.dp))
+        SettingsItem(
+            label = stringResource(R.string.item_about),
+            icon = Icons.Outlined.Info
+        )
+    }
+}
+
+@Composable
+fun LogoutButton(onLogout: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onLogout() },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp, DangerRed.copy(alpha = 0.3f)
+        ),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.Logout,
+                contentDescription = null,
+                tint = DangerRed,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.btn_logout),
+                fontSize = 16.sp,
+                fontFamily = ManropeFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                color = DangerRed
+            )
+        }
+    }
+}

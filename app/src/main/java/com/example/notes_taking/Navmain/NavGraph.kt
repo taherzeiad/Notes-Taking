@@ -1,109 +1,122 @@
 package com.example.notes_taking.Navmain
 
+import HomeViewModel
+import OnboardingViewModel
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.notes_taking.Repository.GenericViewModelFactory
+import com.example.notes_taking.Repository.NoteRepositoryImpl
 import com.example.notes_taking.RoomDatabase.NoteDatabase
-import com.example.notes_taking.Screens.presentations.CreateNote.CreateNoteScreen
-import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModel
-import com.example.notes_taking.Screens.presentations.CreateNote.NoteViewModelFactory
+import com.example.notes_taking.Screens.presentations.Editor.NoteEditorScreen
+import com.example.notes_taking.Screens.presentations.Editor.NoteViewModel
 import com.example.notes_taking.Screens.presentations.Home.HomeScreen
+import com.example.notes_taking.Screens.presentations.Notes.NotesScreen
+import com.example.notes_taking.Screens.presentations.Notes.NotesViewModel
 import com.example.notes_taking.Screens.presentations.Onboarding.OnboardingScreen
 import com.example.notes_taking.Screens.presentations.Settings.SettingsScreen
+import com.example.notes_taking.Screens.presentations.Settings.SettingsViewModel
 import com.example.notes_taking.Screens.presentations.Splash.SplashScreen
 import com.example.notes_taking.Screens.presentations.Tasks.TasksScreen
+import com.example.notes_taking.Screens.presentations.Tasks.TasksViewModel
 
-@SuppressLint("LocalContextConfigurationRead")
+@SuppressLint("NewApi")
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun NavGraph(navController: NavHostController) {
     val context = LocalContext.current
-    val dao = NoteDatabase.getDatabase(context).noteDao()
 
-    // الـ ViewModel مشترك لضمان بقاء البيانات عند التنقل
-    val viewModel: NoteViewModel = viewModel(factory = NoteViewModelFactory(dao))
+    // 1. إعداد الـ Repository والـ DAO مرة واحدة فقط
+    val dao = remember { NoteDatabase.getDatabase(context).noteDao() }
+    val repository = remember { NoteRepositoryImpl(dao) }
+    val factory = remember { GenericViewModelFactory(repository) }
+
+    val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    val lang = prefs.getString("language", "en") ?: "en"
+    val isRtl = lang == "ar"
 
     NavHost(
-        navController = navController,
-        startDestination = Route.Splash.route // هنا نضمن أن تطبيقك يبدأ بشاشتك الخاصة
+        navController = navController, startDestination = Route.Splash.route
     ) {
-        // 1. شاشة البداية (Splash) - هي أول ما سيراه المستخدم
+        // ======= Splash =======
         composable(route = Route.Splash.route) {
             SplashScreen(onSplashFinished = {
                 navController.navigate(Route.Onboarding.route) {
-                    // حذف شاشة الـ Splash من الـ BackStack لكي لا يعود لها المستخدم عند ضغط زر الرجوع
                     popUpTo(Route.Splash.route) { inclusive = true }
                 }
             })
         }
 
-        // 2. شاشة التعريف (Onboarding)
+        // ======= Onboarding =======
         composable(route = Route.Onboarding.route) {
-            val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+            val onboardingViewModel: OnboardingViewModel = viewModel()
             OnboardingScreen(
-                onFinish = {
+                viewModel = onboardingViewModel, onFinish = {
                     navController.navigate(Route.Home.route) {
                         popUpTo(Route.Onboarding.route) { inclusive = true }
                     }
-                },
-                isRtl = isRtl
+                }, isRtl = isRtl
             )
         }
 
-        // 3. الشاشة الرئيسية (Home)
+        // ======= Home =======
         composable(route = Route.Home.route) {
+            val homeViewModel: HomeViewModel = viewModel(factory = factory)
             HomeScreen(
-                viewModel = viewModel,
+                viewModel = homeViewModel,
                 navController = navController,
-                onAddNote = {
-                    navController.navigate(Route.EditNote.createRoute(0))
-                },
-                onEditNote = { noteId ->
-                    navController.navigate(Route.EditNote.createRoute(noteId))
-                },
-                onNavigateToSettings = {
-                    navController.navigate(Route.Settings.route)
-                },
-                onNavigateToTasks = {
-                    navController.navigate(Route.Tasks.route)
-                }
-            )
+                onAddNote = { navController.navigate(Route.NoteEditor.createRoute(0)) },
+                onEditNote = { id -> navController.navigate(Route.NoteEditor.createRoute(id)) },
+                onNavigateToTasks = { navController.navigate(Route.Tasks.route) },
+              )
         }
 
-        // 4. شاشة إنشاء/تعديل الملاحظة
+        // ======= Note Editor =======
         composable(
-            route = Route.EditNote.route,
-            arguments = listOf(navArgument("noteId") {
-                type = NavType.IntType
-                defaultValue = 0
-            })
+            route = Route.NoteEditor.route,
+            arguments = listOf(navArgument("noteId") { type = NavType.IntType; defaultValue = 0 })
         ) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getInt("noteId") ?: 0
-            CreateNoteScreen(
+            val editorViewModel: NoteViewModel = viewModel(factory = factory)
+
+            NoteEditorScreen(
                 noteId = noteId,
-                onBack = { navController.popBackStack() },
-                viewModel = viewModel
+                viewModel = editorViewModel,
+                onClose = { navController.popBackStack() },
+                onSave = { navController.popBackStack() })
+        }
+
+        // ======= Notes =======
+        composable(route = Route.Notes.route) {
+            val notesViewModel: NotesViewModel = viewModel(factory = factory)
+            NotesScreen(
+                viewModel = notesViewModel,
+                navController = navController
             )
         }
 
-        // 5. شاشة الإعدادات
         composable(route = Route.Settings.route) {
-            SettingsScreen(navController = navController)
+            val settingsViewModel: SettingsViewModel = viewModel()
+            SettingsScreen(
+                viewModel = settingsViewModel, navController = navController
+            )
         }
-
-        // 6. شاشة المهام
         composable(route = Route.Tasks.route) {
-            TasksScreen(navController = navController)
+            val tasksViewModel: TasksViewModel = viewModel()
+            TasksScreen(
+                viewModel = tasksViewModel,
+                navController = navController
+            )
         }
     }
 }

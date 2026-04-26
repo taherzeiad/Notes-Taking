@@ -4,6 +4,9 @@
     <string name="splash_subtitle">Take Quick Notes</string>
     <string name="splash_designed_by">designed by srkdesignwala</string>
 
+    <string name="loading">Preparing your workspace...</string>
+
+
     <string name="app_name">Notes Taking</string>
     <string name="all_notes">All Notes</string>
     <string name="pinned_notes">Pinned Notes</string>
@@ -109,5 +112,28 @@
     <string name="task_5_title">The Almanack of Naval Ravikant</string>
     <string name="task_5_source">Source: Smart Reading Library</string>
     <string name="task_empty_time"></string>
+
+    /////////////////////////
+    <!-- Notes Screen -->
+    <string name="notes_screen_title_bar">Intellectual Sanctuary</string>
+    <string name="notes_title">Notes</string>
+    <string name="notes_subtitle">Where ideas live and visions grow</string>
+    <string name="note_cat_all">All</string>
+    <string name="note_cat_philosophy">Philosophy</string>
+    <string name="note_cat_literature">Literature</string>
+    <string name="note_cat_self_dev">Self Development</string>
+    <string name="note_tag_philosophy">Philosophy</string>
+    <string name="note_tag_literature">Literature</string>
+    <string name="note_tag_self_dev">Self Development</string>
+    <string name="note_tag_projects">Projects</string>
+    <string name="note_date_1">October</string>
+    <string name="read_more">Read more</string>
+
+    //////////////////////////
+    <!-- Edit Notes Screen -->
+    <string name="editor_save">Save</string>
+    <string name="editor_title_hint">Title of reflection...</string>
+    <string name="editor_content_hint">Start capturing your thoughts here... let the words flow in silence.</string>
+    <string name="editor_reading_time">%1$d min read</string>
 </resources>
 

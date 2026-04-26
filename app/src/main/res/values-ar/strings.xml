@@ -4,6 +4,8 @@
     <string name="splash_subtitle">دوّن أفكارك بسرعة</string>
     <string name="splash_designed_by">تصميم srkdesignwala</string>
 
+    <string name="loading">جاري تجهيز مساحتك...</string>
+
     <string name="app_name">تدوين الملاحظات</string>
     <string name="all_notes">كل الملاحظات</string>
     <string name="pinned_notes">الملاحظات المثبتة</string>
@@ -110,4 +112,27 @@
     <string name="task_5_title">The Almanack of Naval Ravikant</string>
     <string name="task_5_source">المصدر: مكتبة القراءة الذكية</string>
     <string name="task_empty_time"></string>
+
+    ////////////////////////////////////////////
+    <!-- Notes Screen -->
+    <string name="notes_screen_title_bar">الملاذ الفكري</string>
+    <string name="notes_title">ملاحظاتي</string>
+    <string name="notes_subtitle">حيث تسكن الأفكار وتنمو الرؤى</string>
+    <string name="note_cat_all">الكل</string>
+    <string name="note_cat_philosophy">فلسفة</string>
+    <string name="note_cat_literature">أدب</string>
+    <string name="note_cat_self_dev">تطوير الذات</string>
+    <string name="note_tag_philosophy">فلسفة</string>
+    <string name="note_tag_literature">أدب</string>
+    <string name="note_tag_self_dev">تطوير ذات</string>
+    <string name="note_tag_projects">مشاريع</string>
+    <string name="note_date_1">أكتوبر</string>
+    <string name="read_more">اقرأ المزيد</string>
+
+    ///////////////////////////////////////////////////
+    <!-- Edit Notes Screen -->
+    <string name="editor_save">حفظ</string>
+    <string name="editor_title_hint">عنوان التأمل...</string>
+    <string name="editor_content_hint">ابدأ في تدوين أفكارك هنا... دع الكلمات تتدفق في صمت.</string>
+    <string name="editor_reading_time">%1$d دقائق قراءة</string>
 </resources>

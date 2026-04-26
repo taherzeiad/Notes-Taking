@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
@@ -32,9 +33,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.notes_taking.R
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
@@ -54,7 +53,6 @@ import com.example.notes_taking.ui.theme.PageBackground
 import com.example.notes_taking.ui.theme.TextPrimary
 import com.example.notes_taking.ui.theme.TextSecondary
 
-// ======= Data Models =======
 data class Task(
     val id: Int,
     val titleRes: Int,
@@ -68,7 +66,7 @@ enum class TaskStatus { IN_PROGRESS, COMPLETED, SCHEDULED }
 
 data class SourceCategory(val nameRes: Int, val count: Int, val unitRes: Int)
 
-// ======= Sample Data =======
+// البيانات التجريبية يجب أن تكون خارج أي دالة لكي يراها الـ ViewModel
 val sampleTasks = listOf(
     Task(1, R.string.task_1_title, R.string.task_1_source, R.string.task_1_time, isUrgent = true),
     Task(2, R.string.task_2_title, R.string.task_2_source, R.string.task_2_time),
@@ -76,11 +74,12 @@ val sampleTasks = listOf(
     Task(4, R.string.task_4_title, R.string.task_4_source, R.string.task_empty_time),
     Task(5, R.string.task_5_title, R.string.task_5_source, R.string.task_empty_time)
 )
-
 @Composable
-fun TasksScreen(navController: NavHostController) {
-
-    var selectedTab by remember { mutableStateOf(0) }
+fun TasksScreen(
+    viewModel: TasksViewModel,
+    navController: NavHostController
+) {
+    val tasks by viewModel.tasks.collectAsStateWithLifecycle()
 
     val tabs = listOf(
         stringResource(R.string.tab_in_progress),
@@ -108,7 +107,7 @@ fun TasksScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // ======= Top Bar =======
+            // ======= 1. Top Bar =======
             item {
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
@@ -116,12 +115,11 @@ fun TasksScreen(navController: NavHostController) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Start ← ينعكس تلقائياً
                     Icon(
                         imageVector = Icons.Outlined.Search,
                         contentDescription = null,
                         tint = TextPrimary,
-                        modifier = Modifier.size(26.dp)
+                        modifier = Modifier.size(26.dp).clickable { /* TODO: Search */ }
                     )
                     Text(
                         text = stringResource(R.string.app_name_styled),
@@ -130,7 +128,6 @@ fun TasksScreen(navController: NavHostController) {
                         fontFamily = ManropeFontFamily,
                         color = TextPrimary
                     )
-                    // End ← ينعكس تلقائياً
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.MenuBook,
                         contentDescription = null,
@@ -140,7 +137,7 @@ fun TasksScreen(navController: NavHostController) {
                 }
             }
 
-            // ======= Page Title =======
+            // ======= 2. Page Title =======
             item {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
@@ -149,7 +146,6 @@ fun TasksScreen(navController: NavHostController) {
                         fontWeight = FontWeight.Bold,
                         fontFamily = MansalvaFontFamily,
                         color = TextPrimary,
-                        textAlign = TextAlign.Start, // ← ينعكس تلقائياً
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -158,37 +154,31 @@ fun TasksScreen(navController: NavHostController) {
                         fontSize = 13.sp,
                         fontFamily = ManropeFontFamily,
                         color = TextSecondary,
-                        textAlign = TextAlign.Start,
                         lineHeight = 20.sp,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
 
-            // ======= Tabs =======
+            // ======= 3. Tabs =======
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Start, // ← ينعكس تلقائياً
+                    horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     tabs.forEachIndexed { index, tab ->
                         TaskTab(
                             label = tab,
-                            isSelected = selectedTab == index,
-                            onClick = { selectedTab = index }
+                            isSelected = viewModel.selectedTab == index,
+                            onClick = { viewModel.onTabSelected(index) }
                         )
                         if (index < tabs.size - 1) Spacer(modifier = Modifier.width(8.dp))
                     }
                 }
             }
 
-            // ======= Tasks List (First 3) =======
-            items(sampleTasks.take(3)) { task ->
-                TaskCard(task = task)
-            }
-
-            // ======= AI Insights Card =======
+            // ======= 4. AI Insights Card =======
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -196,17 +186,11 @@ fun TasksScreen(navController: NavHostController) {
                     colors = CardDefaults.cardColors(containerColor = BrownCard)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
-                        // Header Start ← ينعكس تلقائياً
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Outlined.AutoAwesome,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
+                            Icon(Icons.Outlined.AutoAwesome, null, tint = Color.White, modifier = Modifier.size(18.dp))
                             Text(
                                 text = stringResource(R.string.ai_insights_title),
                                 fontSize = 16.sp,
@@ -215,24 +199,18 @@ fun TasksScreen(navController: NavHostController) {
                                 color = Color.White
                             )
                         }
-
                         Spacer(modifier = Modifier.height(12.dp))
-
                         Text(
                             text = stringResource(R.string.ai_insights_body),
                             fontSize = 14.sp,
                             fontFamily = ManropeFontFamily,
                             color = Color.White.copy(alpha = 0.9f),
-                            textAlign = TextAlign.Start, // ← ينعكس تلقائياً
-                            lineHeight = 22.sp,
-                            modifier = Modifier.fillMaxWidth()
+                            lineHeight = 22.sp
                         )
-
                         Spacer(modifier = Modifier.height(16.dp))
-
                         LinearProgressIndicator(
-                            progress = { 0.7f },
-                            modifier = Modifier.fillMaxWidth().height(6.dp),
+                            progress = { viewModel.aiProgress },
+                            modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
                             color = Color.White,
                             trackColor = Color.White.copy(alpha = 0.3f)
                         )
@@ -240,73 +218,130 @@ fun TasksScreen(navController: NavHostController) {
                 }
             }
 
-            // ======= Source Categories =======
-            item {
-                Column(modifier = Modifier.fillMaxWidth()) {
+            // ======= 5. Dynamic Tasks List =======
+            if (tasks.isEmpty()) {
+                item {
                     Text(
-                        text = stringResource(R.string.source_categories),
-                        fontSize = 15.sp,
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextPrimary,
-                        textAlign = TextAlign.Start, // ← ينعكس تلقائياً
-                        modifier = Modifier.fillMaxWidth()
+                        text = "لا توجد مهام حالياً",
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                        textAlign = TextAlign.Center,
+                        color = TextSecondary
                     )
+                }
+            } else {
+                items(tasks) { task ->
+                    TaskCard(
+                        task = task,
+                        onCheck = { viewModel.toggleTaskCompletion(task.id) }
+                    )
+                }
+            }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(0.dp)
+            // ======= 6. Source Categories =======
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.source_categories),
+                    fontSize = 15.sp,
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TextPrimary
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(0.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(14.dp)
-                        ) {
-                            categories.forEachIndexed { index, category ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    // Start ← ينعكس تلقائياً
-                                    Text(
-                                        text = stringResource(category.nameRes),
-                                        fontSize = 14.sp,
-                                        fontFamily = ManropeFontFamily,
-                                        color = TextPrimary
-                                    )
-                                    // End ← ينعكس تلقائياً
-                                    Text(
-                                        text = "${category.count} ${stringResource(category.unitRes)}",
-                                        fontSize = 14.sp,
-                                        fontFamily = ManropeFontFamily,
-                                        color = BrownCard,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                if (index < categories.size - 1) {
-                                    HorizontalDivider(color = Color(0xFFF0EBE6))
-                                }
+                        categories.forEachIndexed { index, category ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(stringResource(category.nameRes), fontSize = 14.sp, color = TextPrimary)
+                                Text(
+                                    text = "${category.count} ${stringResource(category.unitRes)}",
+                                    fontSize = 14.sp,
+                                    color = BrownCard,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
+                            if (index < categories.size - 1) HorizontalDivider(color = Color(0xFFF0EBE6))
                         }
                     }
                 }
             }
 
-            // ======= Remaining Tasks =======
-            items(sampleTasks.drop(3)) { task ->
-                TaskCard(task = task)
-            }
-
-            item { Spacer(modifier = Modifier.height(8.dp)) }
+            item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 }
 
-// ======= Task Tab =======
+// ======= Helper UI Components =======
+
+@Composable
+fun TaskCard(task: com.example.notes_taking.Screens.presentations.Tasks.Task, onCheck: () -> Unit) {
+    val isCompleted = task.status == TaskStatus.COMPLETED
+
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable { onCheck() },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    if (task.isUrgent) {
+                        UrgentBadge()
+                        Spacer(modifier = Modifier.height(6.dp))
+                    }
+                    Text(
+                        text = stringResource(task.titleRes),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = ManropeFontFamily,
+                        color = if (isCompleted) TextSecondary else TextPrimary
+                    )
+                }
+                RadioButton(
+                    selected = isCompleted,
+                    onClick = onCheck,
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = BrownCard,
+                        unselectedColor = Color(0xFFD0C8C0)
+                    )
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Icon(Icons.Outlined.Description, null, tint = TextSecondary, modifier = Modifier.size(14.dp))
+                    Text(stringResource(task.sourceRes), fontSize = 12.sp, color = TextSecondary)
+                }
+                val time = stringResource(task.timeRes)
+                if (time.isNotEmpty()) {
+                    Text(time, fontSize = 12.sp, color = TextSecondary)
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun TaskTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
@@ -326,96 +361,6 @@ fun TaskTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
     }
 }
 
-// ======= Task Card =======
-@Composable
-fun TaskCard(task: Task) {
-    val timeText = stringResource(task.timeRes)
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(0.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-
-            // ======= Header Row =======
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                // النص Start ← ينعكس تلقائياً
-                Column(
-                    modifier = Modifier.weight(1f),
-                    horizontalAlignment = Alignment.Start // ← ينعكس تلقائياً
-                ) {
-                    if (task.isUrgent) {
-                        UrgentBadge()
-                        Spacer(modifier = Modifier.height(6.dp))
-                    }
-                    Text(
-                        text = stringResource(task.titleRes),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = ManropeFontFamily,
-                        color = TextPrimary,
-                        textAlign = TextAlign.Start // ← ينعكس تلقائياً
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // Checkbox End ← ينعكس تلقائياً
-                RadioButton(
-                    selected = false,
-                    onClick = {},
-                    colors = RadioButtonDefaults.colors(unselectedColor = Color(0xFFD0C8C0))
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // ======= Source + Time =======
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // المصدر Start ← ينعكس تلقائياً
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Description,
-                        contentDescription = null,
-                        tint = TextSecondary,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Text(
-                        text = stringResource(task.sourceRes),
-                        fontSize = 12.sp,
-                        fontFamily = ManropeFontFamily,
-                        color = TextSecondary
-                    )
-                }
-
-                // الوقت End ← ينعكس تلقائياً
-                if (timeText.isNotEmpty()) {
-                    Text(
-                        text = timeText,
-                        fontSize = 12.sp,
-                        fontFamily = ManropeFontFamily,
-                        color = TextSecondary
-                    )
-                }
-            }
-        }
-    }
-}
-
-// ======= Urgent Badge =======
 @Composable
 fun UrgentBadge() {
     Box(
@@ -426,7 +371,6 @@ fun UrgentBadge() {
         Text(
             text = stringResource(R.string.tag_urgent),
             fontSize = 11.sp,
-            fontFamily = ManropeFontFamily,
             color = Color(0xFFD94F3D),
             fontWeight = FontWeight.SemiBold
         )
