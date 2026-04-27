@@ -80,28 +80,26 @@ import java.util.UUID
 // ======= Content Block Types =======
 sealed class ContentBlock {
     data class TextBlock(
-        val id: String = UUID.randomUUID().toString(),
-        var text: String = ""
+        val id: String = UUID.randomUUID().toString(), var text: String = ""
     ) : ContentBlock()
 
     data class ImageBlock(
-        val id: String = UUID.randomUUID().toString(),
-        val uri: Uri
+        val id: String = UUID.randomUUID().toString(), val uri: Uri
     ) : ContentBlock()
 
     data class AudioBlock(
+        val id: String = UUID.randomUUID().toString(), val uri: Uri, val name: String
+    ) : ContentBlock()
+
+    data class BulletBlock(
         val id: String = UUID.randomUUID().toString(),
-        val uri: Uri,
-        val name: String
+        var text: String = ""
     ) : ContentBlock()
 }
 
 @Composable
 fun NoteEditorScreen(
-    noteId: Int = 0,
-    viewModel: NoteViewModel,
-    onClose: () -> Unit = {},
-    onSave: () -> Unit = {}
+    noteId: Int = 0, viewModel: NoteViewModel, onClose: () -> Unit = {}, onSave: () -> Unit = {}
 ) {
     val sdf = remember { SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()) }
     val currentDate = remember { sdf.format(Date()) }
@@ -110,12 +108,9 @@ fun NoteEditorScreen(
     var isBold by remember { mutableStateOf(false) }
     var isItalic by remember { mutableStateOf(false) }
 
-    // ← قائمة الـ blocks
     val contentBlocks = remember { mutableStateListOf<ContentBlock>(ContentBlock.TextBlock()) }
 
-    // حساب وقت القراءة من كل الـ text blocks
-    val wordCount = contentBlocks
-        .filterIsInstance<ContentBlock.TextBlock>()
+    val wordCount = contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
         .sumOf { it.text.trim().split("\\s+".toRegex()).filter { w -> w.isNotEmpty() }.size }
     val readingMinutes = maxOf(1, wordCount / 200)
 
@@ -124,9 +119,7 @@ fun NoteEditorScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            // 1. إضافة الصورة في المكان الحالي أو النهاية
             contentBlocks.add(ContentBlock.ImageBlock(uri = it))
-            // 2. إضافة Block نصي جديد فوراً تحتها
             contentBlocks.add(ContentBlock.TextBlock())
         }
     }
@@ -198,17 +191,11 @@ fun NoteEditorScreen(
             ) {
                 Button(
                     onClick = {
-                        val fullContent = contentBlocks
-                            .filterIsInstance<ContentBlock.TextBlock>()
+                        val fullContent = contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
                             .joinToString("\n") { it.text }
                         if (noteId > 0) {
                             viewModel.updateNote(
-                                noteId,
-                                title,
-                                fullContent,
-                                null,
-                                currentDate,
-                                onSave
+                                noteId, title, fullContent, null, currentDate, onSave
                             )
                         } else {
                             viewModel.saveNote(title, fullContent, null, currentDate, onSave)
@@ -246,8 +233,7 @@ fun NoteEditorScreen(
         }
 
         HorizontalDivider(
-            color = Color(0xFFE8E0D8),
-            modifier = Modifier.padding(horizontal = 40.dp)
+            color = Color(0xFFE8E0D8), modifier = Modifier.padding(horizontal = 40.dp)
         )
 
         // ======= Content Area =======
@@ -268,7 +254,6 @@ fun NoteEditorScreen(
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = ManropeFontFamily,
-                    // التعديل هنا: إذا كان النص فارغاً يبقى فاتحاً، وإذا بدأ المستخدم بالكتابة يصبح أسود
                     color = if (title.isEmpty()) Color(0xFFCEC0B0) else Color.Black,
                     textAlign = TextAlign.Start
                 ),
@@ -282,15 +267,14 @@ fun NoteEditorScreen(
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = MansalvaFontFamily,
-                                color = Color(0xFFCEC0B0), // لون الـ Hint
+                                color = Color(0xFFCEC0B0),
                                 textAlign = TextAlign.Start,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
                         innerTextField()
                     }
-                }
-            )
+                })
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -378,9 +362,52 @@ fun NoteEditorScreen(
                                     }
                                     innerTextField()
                                 }
-                            }
+                            })
+                    }is ContentBlock.BulletBlock -> {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        // أيقونة النقطة
+                        Text(
+                            text = "•",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = BrownCard,
+                            modifier = Modifier.padding(horizontal = 8.dp)
                         )
+
+                        BasicTextField(
+                            value = block.text,
+                            onValueChange = { newText ->
+                                // إذا وجدنا أن النص يحتوي على سطر جديد (يعني ضغط Enter)
+                                if (newText.endsWith("\n")) {
+                                    // إضافة نقطة جديدة بعد الحالية
+                                    contentBlocks.add(index + 1, ContentBlock.BulletBlock())
+                                } else {
+                                    // تحديث نص النقطة الحالية
+                                    contentBlocks[index] = block.copy(text = newText)
+                                }
+                            },
+                            textStyle = TextStyle(
+                                fontSize = 16.sp,
+                                fontFamily = ManropeFontFamily,
+                                color = TextPrimary,
+                                lineHeight = 24.sp
+                            ),
+                            cursorBrush = SolidColor(BrownCard),
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        // زر لحذف النقطة إذا كانت فارغة
+                        IconButton(
+                            onClick = { contentBlocks.removeAt(index) },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(Icons.Default.Close, null, tint = Color.LightGray, modifier = Modifier.size(14.dp))
+                        }
                     }
+                }
 
                     // ← Image Block
                     is ContentBlock.ImageBlock -> {
@@ -482,9 +509,7 @@ fun NoteEditorScreen(
 
         // ======= Bottom Toolbar =======
         Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFF5F0EB),
-            shadowElevation = 8.dp
+            modifier = Modifier.fillMaxWidth(), color = Color(0xFFF5F0EB), shadowElevation = 8.dp
         ) {
             Row(
                 modifier = Modifier
@@ -494,27 +519,19 @@ fun NoteEditorScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 EditorToolbarButton(
-                    icon = Icons.Outlined.AutoAwesome,
-                    tint = BrownCard,
-                    onClick = {}
-                )
+                    icon = Icons.Outlined.AutoAwesome, tint = BrownCard, onClick = {})
 
                 // ← فتح ملفات الصوت
                 EditorToolbarButton(
-                    icon = Icons.Outlined.Mic,
-                    onClick = { audioPickerLauncher.launch("audio/*") }
-                )
+                    icon = Icons.Outlined.Mic, onClick = { audioPickerLauncher.launch("audio/*") })
 
                 EditorToolbarButton(
-                    icon = Icons.Outlined.Link,
-                    onClick = {}
-                )
+                    icon = Icons.Outlined.Link, onClick = {})
 
                 // ← فتح الصور
                 EditorToolbarButton(
                     icon = Icons.Outlined.Image,
-                    onClick = { imagePickerLauncher.launch("image/*") }
-                )
+                    onClick = { imagePickerLauncher.launch("image/*") })
 
                 Box(
                     modifier = Modifier
@@ -533,7 +550,9 @@ fun NoteEditorScreen(
 
                 EditorToolbarButton(
                     icon = Icons.AutoMirrored.Outlined.FormatListBulleted,
-                    onClick = {}
+                    onClick = {
+                        contentBlocks.add(ContentBlock.BulletBlock())
+                    }
                 )
 
                 // ← Italic
@@ -543,12 +562,10 @@ fun NoteEditorScreen(
                         .clip(RoundedCornerShape(8.dp))
                         .background(
                             if (isItalic) BrownCard.copy(alpha = 0.15f) else Color.Transparent
-                        ),
-                    contentAlignment = Alignment.Center
+                        ), contentAlignment = Alignment.Center
                 ) {
                     IconButton(
-                        onClick = { isItalic = !isItalic },
-                        modifier = Modifier.size(36.dp)
+                        onClick = { isItalic = !isItalic }, modifier = Modifier.size(36.dp)
                     ) {
                         Text(
                             text = "I",
@@ -567,12 +584,10 @@ fun NoteEditorScreen(
                         .clip(RoundedCornerShape(8.dp))
                         .background(
                             if (isBold) BrownCard.copy(alpha = 0.15f) else Color.Transparent
-                        ),
-                    contentAlignment = Alignment.Center
+                        ), contentAlignment = Alignment.Center
                 ) {
                     IconButton(
-                        onClick = { isBold = !isBold },
-                        modifier = Modifier.size(36.dp)
+                        onClick = { isBold = !isBold }, modifier = Modifier.size(36.dp)
                     ) {
                         Text(
                             text = "B",
@@ -590,9 +605,7 @@ fun NoteEditorScreen(
 // ======= Toolbar Button =======
 @Composable
 fun EditorToolbarButton(
-    icon: ImageVector,
-    tint: Color = TextSecondary,
-    onClick: () -> Unit
+    icon: ImageVector, tint: Color = TextSecondary, onClick: () -> Unit
 ) {
     IconButton(onClick = onClick, modifier = Modifier.size(36.dp)) {
         Icon(
