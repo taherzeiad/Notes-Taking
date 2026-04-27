@@ -267,8 +267,9 @@ fun NoteEditorScreen(
                 textStyle = TextStyle(
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    fontFamily = MansalvaFontFamily,
-                    color = Color(0xFFB8A898),
+                    fontFamily = ManropeFontFamily,
+                    // التعديل هنا: إذا كان النص فارغاً يبقى فاتحاً، وإذا بدأ المستخدم بالكتابة يصبح أسود
+                    color = if (title.isEmpty()) Color(0xFFCEC0B0) else Color.Black,
                     textAlign = TextAlign.Start
                 ),
                 cursorBrush = SolidColor(BrownCard),
@@ -281,7 +282,7 @@ fun NoteEditorScreen(
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = MansalvaFontFamily,
-                                color = Color(0xFFCEC0B0),
+                                color = Color(0xFFCEC0B0), // لون الـ Hint
                                 textAlign = TextAlign.Start,
                                 modifier = Modifier.fillMaxWidth()
                             )
