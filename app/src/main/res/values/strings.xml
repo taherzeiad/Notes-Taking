@@ -138,5 +138,7 @@
     <string name="editor_title_hint">Title of reflection...</string>
     <string name="editor_content_hint">Start capturing your thoughts here... let the words flow in silence.</string>
     <string name="editor_reading_time">%1$d min read</string>
+    <string name="audio_file">Audio Recording</string>
+
 </resources>
 

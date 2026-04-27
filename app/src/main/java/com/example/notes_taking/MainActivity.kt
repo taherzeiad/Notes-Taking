@@ -35,10 +35,8 @@ class MainActivity : ComponentActivity() {
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreate(savedInstanceState: Bundle?) {
-        // 1. تفعيل العرض بكامل الشاشة لإخفاء الفجوات
         enableEdgeToEdge()
 
-        // 2. إعادة الثيم الأصلي للتطبيق (بدل ثيم الـ Splash الشفاف)
         setTheme(R.style.Theme_NotesTaking)
 
         super.onCreate(savedInstanceState)
