@@ -225,14 +225,20 @@ fun OnboardingActions(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = if (isLastPage) stringResource(R.string.get_started) else stringResource(R.string.next),
+                    text = if (isLastPage) stringResource(R.string.get_started) else stringResource(
+                        R.string.next
+                    ),
                     fontSize = 18.sp,
                     fontFamily = MansalvaFontFamily,
                     color = Color.White
                 )
                 if (!isLastPage) {
                     Spacer(modifier = Modifier.width(8.dp))
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        null,
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
             }
         }
@@ -253,7 +259,9 @@ fun OnboardingActions(
 @Composable
 fun LoadingOverlay() {
     Box(
-        modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.2f)),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.2f)),
         contentAlignment = Alignment.Center
     ) {
         Card(
