@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -72,6 +73,7 @@ import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
 import com.example.notes_taking.ui.theme.TextPrimary
 import com.example.notes_taking.ui.theme.TextSecondary
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -115,12 +117,19 @@ fun NoteEditorScreen(
     val readingMinutes = maxOf(1, wordCount / 200)
 
     // ======= Image Picker =======
+    val context = LocalContext.current
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            contentBlocks.add(ContentBlock.ImageBlock(uri = it))
-            contentBlocks.add(ContentBlock.TextBlock())
+            val permanentPath = viewModel.saveImageToInternalStorage(context, it)
+
+            permanentPath?.let { path ->
+                // 2. تحويل المسار إلى Uri ليتم عرضه في الـ Block
+                val fileUri = Uri.fromFile(File(path))
+                contentBlocks.add(ContentBlock.ImageBlock(uri = fileUri))
+                contentBlocks.add(ContentBlock.TextBlock())
+            }
         }
     }
 
@@ -143,6 +152,13 @@ fun NoteEditorScreen(
                 title = it.title
                 contentBlocks.clear()
                 contentBlocks.add(ContentBlock.TextBlock(text = it.content))
+
+                it.imageUri?.let { path ->
+                    val imageFile = File(path)
+                    if (imageFile.exists()) {
+                        contentBlocks.add(ContentBlock.ImageBlock(uri = Uri.fromFile(imageFile)))
+                    }
+                }
             }
         }
     }
@@ -191,14 +207,28 @@ fun NoteEditorScreen(
             ) {
                 Button(
                     onClick = {
+                        val firstImageBlock =
+                            contentBlocks.filterIsInstance<ContentBlock.ImageBlock>().firstOrNull()
+                        val imagePathToSave = firstImageBlock?.uri?.path
                         val fullContent = contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
                             .joinToString("\n") { it.text }
                         if (noteId > 0) {
                             viewModel.updateNote(
-                                noteId, title, fullContent, null, currentDate, onSave
+                                noteId,
+                                title,
+                                fullContent,
+                                imagePathToSave,
+                                currentDate,
+                                onSave
                             )
                         } else {
-                            viewModel.saveNote(title, fullContent, null, currentDate, onSave)
+                            viewModel.saveNote(
+                                title,
+                                fullContent,
+                                imagePathToSave,
+                                currentDate,
+                                onSave
+                            )
                         }
                     },
                     shape = RoundedCornerShape(20.dp),
@@ -363,51 +393,60 @@ fun NoteEditorScreen(
                                     innerTextField()
                                 }
                             })
-                    }is ContentBlock.BulletBlock -> {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        // أيقونة النقطة
-                        Text(
-                            text = "•",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = BrownCard,
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        )
+                    }
 
-                        BasicTextField(
-                            value = block.text,
-                            onValueChange = { newText ->
-                                // إذا وجدنا أن النص يحتوي على سطر جديد (يعني ضغط Enter)
-                                if (newText.endsWith("\n")) {
-                                    // إضافة نقطة جديدة بعد الحالية
-                                    contentBlocks.add(index + 1, ContentBlock.BulletBlock())
-                                } else {
-                                    // تحديث نص النقطة الحالية
-                                    contentBlocks[index] = block.copy(text = newText)
-                                }
-                            },
-                            textStyle = TextStyle(
-                                fontSize = 16.sp,
-                                fontFamily = ManropeFontFamily,
-                                color = TextPrimary,
-                                lineHeight = 24.sp
-                            ),
-                            cursorBrush = SolidColor(BrownCard),
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        // زر لحذف النقطة إذا كانت فارغة
-                        IconButton(
-                            onClick = { contentBlocks.removeAt(index) },
-                            modifier = Modifier.size(24.dp)
+                    is ContentBlock.BulletBlock -> {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.Top
                         ) {
-                            Icon(Icons.Default.Close, null, tint = Color.LightGray, modifier = Modifier.size(14.dp))
+                            // أيقونة النقطة
+                            Text(
+                                text = "•",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = BrownCard,
+                                modifier = Modifier.padding(horizontal = 8.dp)
+                            )
+
+                            BasicTextField(
+                                value = block.text,
+                                onValueChange = { newText ->
+                                    // إذا وجدنا أن النص يحتوي على سطر جديد (يعني ضغط Enter)
+                                    if (newText.endsWith("\n")) {
+                                        // إضافة نقطة جديدة بعد الحالية
+                                        contentBlocks.add(index + 1, ContentBlock.BulletBlock())
+                                    } else {
+                                        // تحديث نص النقطة الحالية
+                                        contentBlocks[index] = block.copy(text = newText)
+                                    }
+                                },
+                                textStyle = TextStyle(
+                                    fontSize = 16.sp,
+                                    fontFamily = ManropeFontFamily,
+                                    color = TextPrimary,
+                                    lineHeight = 24.sp
+                                ),
+                                cursorBrush = SolidColor(BrownCard),
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            // زر لحذف النقطة إذا كانت فارغة
+                            IconButton(
+                                onClick = { contentBlocks.removeAt(index) },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    null,
+                                    tint = Color.LightGray,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
                         }
                     }
-                }
 
                     // ← Image Block
                     is ContentBlock.ImageBlock -> {

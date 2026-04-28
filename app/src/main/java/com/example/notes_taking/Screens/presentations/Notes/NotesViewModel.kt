@@ -1,5 +1,7 @@
 package com.example.notes_taking.Screens.presentations.Notes
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.notes_taking.Repository.NoteRepository
@@ -8,6 +10,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import java.io.File
+import java.io.FileOutputStream
 
 class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
 
