@@ -48,6 +48,7 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
+import com.example.notes_taking.RoomDatabase.Note
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.BrownCard
 import com.example.notes_taking.ui.theme.ManropeFontFamily
@@ -60,7 +61,7 @@ import com.example.notes_taking.ui.theme.TextSecondary
 fun NotesScreen(
     viewModel: NotesViewModel, navController: NavHostController
 ) {
-    // مراقبة البيانات من الـ ViewModel
+
     val notes by viewModel.notesState.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
 
@@ -107,9 +108,19 @@ fun NotesScreen(
                     }
                 }
 
-                // 4. Notes List (جلب البيانات الفعلية)
-                items(notes) { note ->
-                    NoteDispatcher(note, navController)
+                if (notes.isEmpty()) {
+                    item {
+                        EmptyNotesState()
+                    }
+                } else {
+                    items(notes) { note ->
+                        RoomNoteCard(
+                            note = note,
+                            onClick = {
+                                navController.navigate(Route.NoteEditor.createRoute(note.id))
+                            }
+                        )
+                    }
                 }
 
                 item { Spacer(modifier = Modifier.height(80.dp)) }
@@ -452,6 +463,158 @@ fun AddNoteFAB(onAddClick: () -> Unit, modifier: Modifier = Modifier) {
     ) {
         Icon(
             imageVector = Icons.Default.Add, contentDescription = null, tint = Color.White
+        )
+    }
+}
+// ======= Room Note Card =======
+@Composable
+fun RoomNoteCard(note: Note, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+
+            // Date + Tag
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = note.date,
+                    fontSize = 12.sp,
+                    fontFamily = ManropeFontFamily,
+                    color = TextSecondary
+                )
+                if (note.isPinned) {
+                    Box(
+                        modifier = Modifier
+                            .background(Color(0xFFF0EBE6), RoundedCornerShape(20.dp))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.pinned),
+                            fontSize = 12.sp,
+                            fontFamily = ManropeFontFamily,
+                            color = BrownCard,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Title
+            Text(
+                text = note.title.ifBlank { stringResource(R.string.editor_title_hint) },
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = ManropeFontFamily,
+                color = TextPrimary,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Content
+            if (note.content.isNotBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = note.content,
+                    fontSize = 14.sp,
+                    fontFamily = ManropeFontFamily,
+                    color = TextPrimary.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Start,
+                    lineHeight = 22.sp,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            // Image
+            if (!note.imageUri.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(10.dp))
+                AsyncImage(
+                    model = note.imageUri,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                )
+            }
+
+            // Read More
+            if (note.content.isNotBlank()) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.read_more),
+                        fontSize = 13.sp,
+                        fontFamily = ManropeFontFamily,
+                        color = BrownCard,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                        contentDescription = null,
+                        tint = BrownCard,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ======= Empty State =======
+@Composable
+fun EmptyNotesState() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 60.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .background(Color(0xFFF5F0EB), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                contentDescription = null,
+                tint = BrownCard.copy(alpha = 0.5f),
+                modifier = Modifier.size(36.dp)
+            )
+        }
+        Text(
+            text = stringResource(R.string.empty_notes_title),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = MansalvaFontFamily,
+            color = TextPrimary
+        )
+        Text(
+            text = stringResource(R.string.empty_notes_subtitle),
+            fontSize = 14.sp,
+            fontFamily = ManropeFontFamily,
+            color = TextSecondary,
+            textAlign = TextAlign.Center,
+            lineHeight = 22.sp,
+            modifier = Modifier.padding(horizontal = 32.dp)
         )
     }
 }

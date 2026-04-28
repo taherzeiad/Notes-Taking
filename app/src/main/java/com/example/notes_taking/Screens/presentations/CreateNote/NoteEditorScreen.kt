@@ -1,5 +1,8 @@
 package com.example.notes_taking.Screens.presentations.Editor
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +26,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Close
@@ -33,6 +37,8 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,6 +47,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -50,6 +57,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -57,6 +65,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.notes_taking.R
 import com.example.notes_taking.ui.theme.BrownCard
 import com.example.notes_taking.ui.theme.ManropeFontFamily
@@ -66,33 +75,74 @@ import com.example.notes_taking.ui.theme.TextSecondary
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 
+// ======= Content Block Types =======
+sealed class ContentBlock {
+    data class TextBlock(
+        val id: String = UUID.randomUUID().toString(), var text: String = ""
+    ) : ContentBlock()
+
+    data class ImageBlock(
+        val id: String = UUID.randomUUID().toString(), val uri: Uri
+    ) : ContentBlock()
+
+    data class AudioBlock(
+        val id: String = UUID.randomUUID().toString(), val uri: Uri, val name: String
+    ) : ContentBlock()
+
+    data class BulletBlock(
+        val id: String = UUID.randomUUID().toString(),
+        var text: String = ""
+    ) : ContentBlock()
+}
 
 @Composable
 fun NoteEditorScreen(
-    noteId: Int = 0,
-    viewModel: NoteViewModel,
-    onClose: () -> Unit = {},
-    onSave: () -> Unit = {}
+    noteId: Int = 0, viewModel: NoteViewModel, onClose: () -> Unit = {}, onSave: () -> Unit = {}
 ) {
     val sdf = remember { SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()) }
     val currentDate = remember { sdf.format(Date()) }
 
     var title by remember { mutableStateOf("") }
-    var content by remember { mutableStateOf("") }
     var isBold by remember { mutableStateOf(false) }
     var isItalic by remember { mutableStateOf(false) }
 
-    // حساب وقت القراءة
-    val wordCount = content.trim().split("\\s+".toRegex()).filter { it.isNotEmpty() }.size
+    val contentBlocks = remember { mutableStateListOf<ContentBlock>(ContentBlock.TextBlock()) }
+
+    val wordCount = contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
+        .sumOf { it.text.trim().split("\\s+".toRegex()).filter { w -> w.isNotEmpty() }.size }
     val readingMinutes = maxOf(1, wordCount / 200)
 
+    // ======= Image Picker =======
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            contentBlocks.add(ContentBlock.ImageBlock(uri = it))
+            contentBlocks.add(ContentBlock.TextBlock())
+        }
+    }
+
+// ======= Audio Picker =======
+    val audioPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            val name = it.lastPathSegment ?: "audio_${System.currentTimeMillis()}"
+            // 1. إضافة التسجيل
+            contentBlocks.add(ContentBlock.AudioBlock(uri = it, name = name))
+            // 2. إضافة Block نصي جديد تحت التسجيل مباشرة
+            contentBlocks.add(ContentBlock.TextBlock())
+        }
+    }
     LaunchedEffect(noteId) {
         if (noteId > 0) {
             val note = viewModel.getNoteById(noteId)
             note?.let {
                 title = it.title
-                content = it.content
+                contentBlocks.clear()
+                contentBlocks.add(ContentBlock.TextBlock(text = it.content))
             }
         }
     }
@@ -114,23 +164,18 @@ fun NoteEditorScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Start: X + App Name ← ينعكس تلقائياً
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                IconButton(
-                    onClick = onClose,
-                    modifier = Modifier.size(36.dp)
-                ) {
+                IconButton(onClick = onClose, modifier = Modifier.size(36.dp)) {
                     Icon(
                         imageVector = Icons.Outlined.Close,
-                        contentDescription = "Close",
+                        contentDescription = null,
                         tint = TextPrimary,
                         modifier = Modifier.size(22.dp)
                     )
                 }
-
                 Text(
                     text = stringResource(R.string.notes_screen_title_bar),
                     fontSize = 16.sp,
@@ -140,38 +185,24 @@ fun NoteEditorScreen(
                 )
             }
 
-            // End: Avatar + Save ← ينعكس تلقائياً
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Save Button
                 Button(
                     onClick = {
+                        val fullContent = contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
+                            .joinToString("\n") { it.text }
                         if (noteId > 0) {
-                            // تحديث ملاحظة موجودة
                             viewModel.updateNote(
-                                id = noteId,
-                                title = title,
-                                content = content,
-                                imagePath = null,
-                                date = currentDate,
-                                onSuccess = onSave
+                                noteId, title, fullContent, null, currentDate, onSave
                             )
                         } else {
-                            viewModel.saveNote(
-                                title = title,
-                                content = content,
-                                imagePath = null,
-                                date = currentDate,
-                                onSuccess = onSave
-                            )
+                            viewModel.saveNote(title, fullContent, null, currentDate, onSave)
                         }
                     },
                     shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = BrownCard
-                    ),
+                    colors = ButtonDefaults.buttonColors(containerColor = BrownCard),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     modifier = Modifier.height(36.dp)
                 ) {
@@ -184,7 +215,6 @@ fun NoteEditorScreen(
                     )
                 }
 
-                // Avatar
                 Box(
                     modifier = Modifier
                         .size(36.dp)
@@ -202,10 +232,8 @@ fun NoteEditorScreen(
             }
         }
 
-        // ======= Divider =======
         HorizontalDivider(
-            color = Color(0xFFE8E0D8),
-            modifier = Modifier.padding(horizontal = 40.dp)
+            color = Color(0xFFE8E0D8), modifier = Modifier.padding(horizontal = 40.dp)
         )
 
         // ======= Content Area =======
@@ -216,20 +244,17 @@ fun NoteEditorScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
-
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ======= Title Field =======
+            // ======= Title =======
             BasicTextField(
                 value = title,
                 onValueChange = { title = it },
                 textStyle = TextStyle(
-                    fontSize = 25.sp,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
                     fontFamily = ManropeFontFamily,
-                    fontStyle = if (isItalic) FontStyle.Italic else FontStyle.Normal,
-                    fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
-                    color = if (content.isNotEmpty()) Color.Black else TextPrimary,
-                    lineHeight = 26.sp,
+                    color = if (title.isEmpty()) Color(0xFFCEC0B0) else Color.Black,
                     textAlign = TextAlign.Start
                 ),
                 cursorBrush = SolidColor(BrownCard),
@@ -244,14 +269,12 @@ fun NoteEditorScreen(
                                 fontFamily = MansalvaFontFamily,
                                 color = Color(0xFFCEC0B0),
                                 textAlign = TextAlign.Start,
-                                modifier = Modifier.fillMaxWidth(),
-
-                                )
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
                         innerTextField()
                     }
-                }
-            )
+                })
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -260,7 +283,6 @@ fun NoteEditorScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Date ← Start ينعكس تلقائياً
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -278,8 +300,6 @@ fun NoteEditorScreen(
                         color = Color(0xFFB8A898)
                     )
                 }
-
-                // Reading Time
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -301,47 +321,195 @@ fun NoteEditorScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ======= Content Field =======
-            BasicTextField(
-                value = content,
-                onValueChange = { content = it },
-                textStyle = TextStyle(
-                    fontSize = 16.sp,
-                    fontFamily = ManropeFontFamily,
-                    fontStyle = if (isItalic) FontStyle.Italic else FontStyle.Normal,
-                    fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
-                    color = TextPrimary,
-                    lineHeight = 26.sp,
-                    textAlign = TextAlign.Start
-                ),
-                cursorBrush = SolidColor(BrownCard),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 300.dp),
-                decorationBox = { innerTextField ->
-                    Box {
-                        if (content.isEmpty()) {
-                            Text(
-                                text = stringResource(R.string.editor_content_hint),
-                                fontSize = 15.sp,
+            // ======= Content Blocks =======
+            contentBlocks.forEachIndexed { index, block ->
+                when (block) {
+
+                    // ← Text Block
+                    is ContentBlock.TextBlock -> {
+                        BasicTextField(
+                            value = block.text,
+                            onValueChange = { newText ->
+                                contentBlocks[index] = block.copy(text = newText)
+                            },
+                            textStyle = TextStyle(
+                                fontSize = 16.sp,
                                 fontFamily = ManropeFontFamily,
-                                color = Color(0xFFCEC0B0),
-                                textAlign = TextAlign.Start,
+                                fontStyle = if (isItalic) FontStyle.Italic else FontStyle.Normal,
+                                fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
+                                color = TextPrimary,
                                 lineHeight = 26.sp,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                                textAlign = TextAlign.Start
+                            ),
+                            cursorBrush = SolidColor(BrownCard),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .defaultMinSize(
+                                    minHeight = if (contentBlocks.size == 1) 300.dp else 48.dp
+                                ),
+                            decorationBox = { innerTextField ->
+                                Box {
+                                    if (block.text.isEmpty() && contentBlocks.size == 1) {
+                                        Text(
+                                            text = stringResource(R.string.editor_content_hint),
+                                            fontSize = 15.sp,
+                                            fontFamily = ManropeFontFamily,
+                                            color = Color(0xFFCEC0B0),
+                                            textAlign = TextAlign.Start,
+                                            lineHeight = 26.sp,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            })
+                    }is ContentBlock.BulletBlock -> {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        // أيقونة النقطة
+                        Text(
+                            text = "•",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = BrownCard,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+
+                        BasicTextField(
+                            value = block.text,
+                            onValueChange = { newText ->
+                                // إذا وجدنا أن النص يحتوي على سطر جديد (يعني ضغط Enter)
+                                if (newText.endsWith("\n")) {
+                                    // إضافة نقطة جديدة بعد الحالية
+                                    contentBlocks.add(index + 1, ContentBlock.BulletBlock())
+                                } else {
+                                    // تحديث نص النقطة الحالية
+                                    contentBlocks[index] = block.copy(text = newText)
+                                }
+                            },
+                            textStyle = TextStyle(
+                                fontSize = 16.sp,
+                                fontFamily = ManropeFontFamily,
+                                color = TextPrimary,
+                                lineHeight = 24.sp
+                            ),
+                            cursorBrush = SolidColor(BrownCard),
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        // زر لحذف النقطة إذا كانت فارغة
+                        IconButton(
+                            onClick = { contentBlocks.removeAt(index) },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(Icons.Default.Close, null, tint = Color.LightGray, modifier = Modifier.size(14.dp))
                         }
-                        innerTextField()
                     }
                 }
-            )
+
+                    // ← Image Block
+                    is ContentBlock.ImageBlock -> {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(220.dp)
+                        ) {
+                            AsyncImage(
+                                model = block.uri,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(16.dp))
+                            )
+                            IconButton(
+                                onClick = { contentBlocks.removeAt(index) },
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(8.dp)
+                                    .size(28.dp)
+                                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    // ← Audio Block
+                    is ContentBlock.AudioBlock -> {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F0EB)),
+                            elevation = CardDefaults.cardElevation(0.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .background(BrownCard, CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Mic,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = block.name,
+                                        fontSize = 13.sp,
+                                        fontFamily = ManropeFontFamily,
+                                        color = TextPrimary,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.audio_file),
+                                        fontSize = 11.sp,
+                                        fontFamily = ManropeFontFamily,
+                                        color = TextSecondary
+                                    )
+                                }
+                                IconButton(
+                                    onClick = { contentBlocks.removeAt(index) },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = null,
+                                        tint = TextSecondary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+            }
         }
 
         // ======= Bottom Toolbar =======
         Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFF5F0EB),
-            shadowElevation = 8.dp
+            modifier = Modifier.fillMaxWidth(), color = Color(0xFFF5F0EB), shadowElevation = 8.dp
         ) {
             Row(
                 modifier = Modifier
@@ -350,25 +518,21 @@ fun NoteEditorScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // AI ← Start ينعكس تلقائياً
                 EditorToolbarButton(
-                    icon = Icons.Outlined.AutoAwesome,
-                    tint = BrownCard,
-                    onClick = {}
-                )
+                    icon = Icons.Outlined.AutoAwesome, tint = BrownCard, onClick = {})
+
+                // ← فتح ملفات الصوت
                 EditorToolbarButton(
-                    icon = Icons.Outlined.Mic,
-                    onClick = {}
-                )
+                    icon = Icons.Outlined.Mic, onClick = { audioPickerLauncher.launch("audio/*") })
+
                 EditorToolbarButton(
-                    icon = Icons.Outlined.Link,
-                    onClick = {}
-                )
+                    icon = Icons.Outlined.Link, onClick = {})
+
+                // ← فتح الصور
                 EditorToolbarButton(
                     icon = Icons.Outlined.Image,
-                    onClick = {}
-                )
-                // Quote button
+                    onClick = { imagePickerLauncher.launch("image/*") })
+
                 Box(
                     modifier = Modifier
                         .size(36.dp)
@@ -383,21 +547,25 @@ fun NoteEditorScreen(
                         color = TextSecondary
                     )
                 }
+
                 EditorToolbarButton(
                     icon = Icons.AutoMirrored.Outlined.FormatListBulleted,
-                    onClick = {}
+                    onClick = {
+                        contentBlocks.add(ContentBlock.BulletBlock())
+                    }
                 )
-                // Italic
+
+                // ← Italic
                 Box(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(if (isItalic) BrownCard.copy(alpha = 0.15f) else Color.Transparent),
-                    contentAlignment = Alignment.Center
+                        .background(
+                            if (isItalic) BrownCard.copy(alpha = 0.15f) else Color.Transparent
+                        ), contentAlignment = Alignment.Center
                 ) {
                     IconButton(
-                        onClick = { isItalic = !isItalic },
-                        modifier = Modifier.size(36.dp)
+                        onClick = { isItalic = !isItalic }, modifier = Modifier.size(36.dp)
                     ) {
                         Text(
                             text = "I",
@@ -408,17 +576,18 @@ fun NoteEditorScreen(
                         )
                     }
                 }
-                // Bold
+
+                // ← Bold
                 Box(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(if (isBold) BrownCard.copy(alpha = 0.15f) else Color.Transparent),
-                    contentAlignment = Alignment.Center
+                        .background(
+                            if (isBold) BrownCard.copy(alpha = 0.15f) else Color.Transparent
+                        ), contentAlignment = Alignment.Center
                 ) {
                     IconButton(
-                        onClick = { isBold = !isBold },
-                        modifier = Modifier.size(36.dp)
+                        onClick = { isBold = !isBold }, modifier = Modifier.size(36.dp)
                     ) {
                         Text(
                             text = "B",
@@ -436,14 +605,9 @@ fun NoteEditorScreen(
 // ======= Toolbar Button =======
 @Composable
 fun EditorToolbarButton(
-    icon: ImageVector,
-    tint: Color = TextSecondary,
-    onClick: () -> Unit
+    icon: ImageVector, tint: Color = TextSecondary, onClick: () -> Unit
 ) {
-    IconButton(
-        onClick = onClick,
-        modifier = Modifier.size(36.dp)
-    ) {
+    IconButton(onClick = onClick, modifier = Modifier.size(36.dp)) {
         Icon(
             imageVector = icon,
             contentDescription = null,

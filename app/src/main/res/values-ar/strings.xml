@@ -139,4 +139,6 @@
     <string name="editor_title_hint">عنوان التأمل...</string>
     <string name="editor_content_hint">ابدأ في تدوين أفكارك هنا... دع الكلمات تتدفق في صمت.</string>
     <string name="editor_reading_time">%1$d دقائق قراءة</string>
+    <string name="audio_file">تسجيل صوتي</string>
+
 </resources>
