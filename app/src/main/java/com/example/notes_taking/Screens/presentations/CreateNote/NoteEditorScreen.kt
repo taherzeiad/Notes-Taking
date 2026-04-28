@@ -212,13 +212,16 @@ fun NoteEditorScreen(
                             contentBlocks.filterIsInstance<ContentBlock.ImageBlock>().firstOrNull()
                         val imagePathToSave = firstImageBlock?.uri?.path
 
-                        // 2. تجميع كل النصوص من الـ Blocks المختلفة
-                        val fullContent = contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
-                            .joinToString("\n") { it.text }
+                        val fullContent = contentBlocks.joinToString("\n") { block ->
+                            when (block) {
+                                is ContentBlock.TextBlock -> block.text
+                                is ContentBlock.BulletBlock -> "• ${block.text}"
+                                else -> ""
+                            }
+                        }
 
-                        // 3. استدعاء دالة الحفظ الذكية من الـ ViewModel
                         viewModel.saveNoteWithAI(
-                            id = if (noteId > 0) noteId else 0,
+                            id = noteId,
                             title = title,
                             content = fullContent,
                             imageUri = imagePathToSave,
