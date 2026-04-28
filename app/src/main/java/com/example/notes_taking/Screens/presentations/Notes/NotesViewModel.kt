@@ -2,15 +2,12 @@ package com.example.notes_taking.Screens.presentations.Notes
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.notes_taking.API.GroqService
 import com.example.notes_taking.Repository.NoteRepository
-import com.example.notes_taking.RoomDatabase.Note
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
@@ -20,16 +17,16 @@ class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
     val selectedCategory = _selectedCategory.asStateFlow()
 
     private val _dbNotes = repository.getAllNotes()
+    // داخل NotesViewModel
     val notesState = combine(_dbNotes, _searchQuery, _selectedCategory) { notes, query, category ->
         notes.filter { note ->
             val matchesSearch = if (query.isBlank()) true
-            else note.title.contains(query, ignoreCase = true) || note.content.contains(
-                query,
-                ignoreCase = true
-            )
+            else note.title.contains(query, ignoreCase = true) ||
+                    note.content.contains(query, ignoreCase = true)
 
-            val matchesCategory = if (category == "All" || category == "الكل") true
-            else note.category.equals(category, ignoreCase = true)
+            // مقارنة ذكية: إذا كان التصنيف "All" اعرض الكل، وإلا قارن النصوص مع تجاهل حالة الأحرف
+            val matchesCategory = if (category == "All") true
+            else note.category.trim().equals(category.trim(), ignoreCase = true)
 
             matchesSearch && matchesCategory
         }

@@ -65,12 +65,14 @@ fun NotesScreen(
     val notes by viewModel.notesState.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
 
-    val categories = listOf(
-        stringResource(R.string.note_cat_all),
-        stringResource(R.string.note_cat_philosophy),
-        stringResource(R.string.note_cat_literature),
-        stringResource(R.string.note_cat_self_dev)
+    val categoryMapping = mapOf(
+        stringResource(R.string.note_cat_all) to "All",
+        stringResource(R.string.note_cat_philosophy) to "Philosophy",
+        stringResource(R.string.note_cat_literature) to "Literature",
+        stringResource(R.string.note_cat_self_dev) to "Self-Development"
     )
+
+    val categoryLabels = categoryMapping.keys.toList()
 
     Scaffold(
         containerColor = PageBackground,
@@ -98,12 +100,14 @@ fun NotesScreen(
                 // 3. Category Tabs (الديناميكية الآن من الـ ViewModel)
                 item {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(categories) { category ->
-                            val isSelected = selectedCategory == category
+                        items(categoryLabels) { label ->
+                            val isSelected = selectedCategory == categoryMapping[label]
                             CategoryTab(
-                                label = category,
+                                label = label,
                                 isSelected = isSelected,
-                                onClick = { viewModel.onCategoryChange(category) })
+                                onClick = {
+                                    viewModel.onCategoryChange(categoryMapping[label] ?: "All")
+                                })
                         }
                     }
                 }
