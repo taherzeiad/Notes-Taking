@@ -1,7 +1,5 @@
 package com.example.notes_taking.Screens.presentations.Notes
 
-import android.content.Context
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.notes_taking.Repository.NoteRepository
@@ -10,11 +8,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import java.io.File
-import java.io.FileOutputStream
 
 class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
-
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
@@ -22,14 +17,18 @@ class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
     val selectedCategory = _selectedCategory.asStateFlow()
 
     private val _dbNotes = repository.getAllNotes()
-
+    // داخل NotesViewModel
     val notesState = combine(_dbNotes, _searchQuery, _selectedCategory) { notes, query, category ->
         notes.filter { note ->
             val matchesSearch = if (query.isBlank()) true
             else note.title.contains(query, ignoreCase = true) ||
                     note.content.contains(query, ignoreCase = true)
 
-            matchesSearch
+            // مقارنة ذكية: إذا كان التصنيف "All" اعرض الكل، وإلا قارن النصوص مع تجاهل حالة الأحرف
+            val matchesCategory = if (category == "All") true
+            else note.category.trim().equals(category.trim(), ignoreCase = true)
+
+            matchesSearch && matchesCategory
         }
     }.stateIn(
         scope = viewModelScope,

@@ -28,6 +28,22 @@ object GroqService {
         return makeRequest(request)
     }
 
+    // داخل GroqService.kt
+    suspend fun classifyNoteContent(text: String): String {
+        val request = ChatRequest(
+            model = "llama-3.3-70b-versatile",
+            messages = listOf(
+                ChatMessage("system", "You are a professional organizer. Categorize the user's note into one of these: [Philosophy, Literature, Self-Development, Personal, Work]. Return only the category name in English."),
+                ChatMessage("user", "Categorize this: $text")
+            )
+        )
+        return try {
+            makeRequest(request).trim()
+        } catch (e: Exception) {
+            "General" // تصنيف افتراضي عند حدوث خطأ
+        }
+    }
+
     private suspend fun makeRequest(request: ChatRequest): String {
         val authHeader = "Bearer $API_KEY"
         val response = RetrofitClient.instance.generateChatCompletion(authHeader, request)

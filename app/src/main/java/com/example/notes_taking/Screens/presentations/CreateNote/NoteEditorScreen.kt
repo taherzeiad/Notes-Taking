@@ -207,29 +207,30 @@ fun NoteEditorScreen(
             ) {
                 Button(
                     onClick = {
+                        // 1. استخراج المسار لأول صورة (إذا وجدت)
                         val firstImageBlock =
                             contentBlocks.filterIsInstance<ContentBlock.ImageBlock>().firstOrNull()
                         val imagePathToSave = firstImageBlock?.uri?.path
-                        val fullContent = contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
-                            .joinToString("\n") { it.text }
-                        if (noteId > 0) {
-                            viewModel.updateNote(
-                                noteId,
-                                title,
-                                fullContent,
-                                imagePathToSave,
-                                currentDate,
-                                onSave
-                            )
-                        } else {
-                            viewModel.saveNote(
-                                title,
-                                fullContent,
-                                imagePathToSave,
-                                currentDate,
-                                onSave
-                            )
+
+                        val fullContent = contentBlocks.joinToString("\n") { block ->
+                            when (block) {
+                                is ContentBlock.TextBlock -> block.text
+                                is ContentBlock.BulletBlock -> "• ${block.text}"
+                                else -> ""
+                            }
                         }
+
+                        viewModel.saveNoteWithAI(
+                            id = noteId,
+                            title = title,
+                            content = fullContent,
+                            imageUri = imagePathToSave,
+                            date = currentDate,
+                            onComplete = onSave
+                        )
+
+                        // 4. تنفيذ الأكشن بعد الحفظ (إغلاق الشاشة مثلاً)
+                        onSave()
                     },
                     shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = BrownCard),

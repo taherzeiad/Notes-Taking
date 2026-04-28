@@ -8,6 +8,7 @@ data class Note(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val title: String,
     val content: String,
+    val category: String = "General",
     val date: String,
     val imageUri: String? = null,
     val isPinned: Boolean = false

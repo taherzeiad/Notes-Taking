@@ -54,7 +54,6 @@ class TasksViewModel : ViewModel() {
                     task.copy(status = newStatus)
                 } else task
             }
-            // إعادة الفلترة لتحديث الواجهة
             filterTasksByTab(selectedTab)
             updateAiProgress()
         }
