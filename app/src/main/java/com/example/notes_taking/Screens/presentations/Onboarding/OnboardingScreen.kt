@@ -241,6 +241,7 @@ fun OnboardingActions(
             TextButton(onClick = onSkip, enabled = !isLoading) {
                 Text(
                     stringResource(R.string.skip),
+                    fontSize = 16.sp,
                     fontFamily = ManropeFontFamily,
                     color = OnboardingBrown.copy(alpha = 0.6f)
                 )
