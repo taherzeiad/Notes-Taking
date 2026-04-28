@@ -207,29 +207,27 @@ fun NoteEditorScreen(
             ) {
                 Button(
                     onClick = {
+                        // 1. استخراج المسار لأول صورة (إذا وجدت)
                         val firstImageBlock =
                             contentBlocks.filterIsInstance<ContentBlock.ImageBlock>().firstOrNull()
                         val imagePathToSave = firstImageBlock?.uri?.path
+
+                        // 2. تجميع كل النصوص من الـ Blocks المختلفة
                         val fullContent = contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
                             .joinToString("\n") { it.text }
-                        if (noteId > 0) {
-                            viewModel.updateNote(
-                                noteId,
-                                title,
-                                fullContent,
-                                imagePathToSave,
-                                currentDate,
-                                onSave
-                            )
-                        } else {
-                            viewModel.saveNote(
-                                title,
-                                fullContent,
-                                imagePathToSave,
-                                currentDate,
-                                onSave
-                            )
-                        }
+
+                        // 3. استدعاء دالة الحفظ الذكية من الـ ViewModel
+                        viewModel.saveNoteWithAI(
+                            id = if (noteId > 0) noteId else 0,
+                            title = title,
+                            content = fullContent,
+                            imageUri = imagePathToSave,
+                            date = currentDate,
+                            onComplete = onSave
+                        )
+
+                        // 4. تنفيذ الأكشن بعد الحفظ (إغلاق الشاشة مثلاً)
+                        onSave()
                     },
                     shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = BrownCard),

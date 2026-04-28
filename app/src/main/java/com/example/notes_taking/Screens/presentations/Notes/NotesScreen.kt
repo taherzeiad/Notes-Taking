@@ -128,7 +128,9 @@ fun NotesScreen(
 
             // 5. FAB
             AddNoteFAB(
-                onAddClick = { navController.navigate(Route.NoteEditor.createRoute(0)) },
+                onAddClick = {
+                    navController.navigate(Route.NoteEditor.createRoute(0))
+                },
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(start = 24.dp, bottom = 24.dp)
@@ -466,6 +468,7 @@ fun AddNoteFAB(onAddClick: () -> Unit, modifier: Modifier = Modifier) {
         )
     }
 }
+
 // ======= Room Note Card =======
 @Composable
 fun RoomNoteCard(note: Note, onClick: () -> Unit) {

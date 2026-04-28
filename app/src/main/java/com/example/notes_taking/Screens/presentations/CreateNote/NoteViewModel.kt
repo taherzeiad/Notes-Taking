@@ -2,8 +2,10 @@ package com.example.notes_taking.Screens.presentations.Editor
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.notes_taking.API.GroqService
 import com.example.notes_taking.Repository.NoteRepository
 import com.example.notes_taking.RoomDatabase.Note
 import kotlinx.coroutines.Dispatchers
@@ -45,6 +47,32 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
 
             withContext(Dispatchers.Main) {
                 onSuccess()
+            }
+        }
+    }
+    fun saveNoteWithAI(id: Int, title: String, content: String, imageUri: String?, date: String, onComplete: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                // استدعاء الذكاء الاصطناعي للتصنيف
+                val autoCategory = GroqService.classifyNoteContent(content)
+
+                val noteToSave = Note(
+                    id = id, // إذا كان 0 سينشئ جديد، إذا > 0 سيحدث القديم
+                    title = title,
+                    content = content,
+                    category = autoCategory,
+                    imageUri = imageUri,
+                    date = date
+                )
+
+                repository.insertNote(noteToSave) // أو repository.update حسب الـ DAO لديك
+
+                // العودة للخيط الرئيسي لإغلاق الشاشة
+                withContext(Dispatchers.Main) {
+                    onComplete()
+                }
+            } catch (e: Exception) {
+                Log.e("AI_SAVE", "Error: ${e.message}")
             }
         }
     }

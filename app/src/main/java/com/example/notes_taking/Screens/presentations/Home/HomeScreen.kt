@@ -108,7 +108,9 @@ fun HomeScreen(
             item {
                 LastEditedNoteSection(
                     note = lastNote,
-                    onEditClick = { id -> onEditNote(id) },
+                    onEditClick = { id ->
+                        navController.navigate(Route.NoteEditor.createRoute(id))
+                    },
                     onAddNote = onAddNote  
                 )
             }

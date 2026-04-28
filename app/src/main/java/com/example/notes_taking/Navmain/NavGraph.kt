@@ -78,13 +78,18 @@ fun NavGraph(navController: NavHostController) {
                 onAddNote = { navController.navigate(Route.NoteEditor.createRoute(0)) },
                 onEditNote = { id -> navController.navigate(Route.NoteEditor.createRoute(id)) },
                 onNavigateToTasks = { navController.navigate(Route.Tasks.route) },
-              )
+            )
         }
 
         // ======= Note Editor =======
         composable(
             route = Route.NoteEditor.route,
-            arguments = listOf(navArgument("noteId") { type = NavType.IntType; defaultValue = 0 })
+            arguments = listOf(
+                navArgument("noteId") {
+                    type = NavType.IntType
+                    defaultValue = 0
+                }
+            )
         ) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getInt("noteId") ?: 0
             val editorViewModel: NoteViewModel = viewModel(factory = factory)
@@ -93,15 +98,15 @@ fun NavGraph(navController: NavHostController) {
                 noteId = noteId,
                 viewModel = editorViewModel,
                 onClose = { navController.popBackStack() },
-                onSave = { navController.popBackStack() })
+                onSave = { navController.popBackStack() }
+            )
         }
 
         // ======= Notes =======
         composable(route = Route.Notes.route) {
             val notesViewModel: NotesViewModel = viewModel(factory = factory)
             NotesScreen(
-                viewModel = notesViewModel,
-                navController = navController
+                viewModel = notesViewModel, navController = navController
             )
         }
 
@@ -114,8 +119,7 @@ fun NavGraph(navController: NavHostController) {
         composable(route = Route.Tasks.route) {
             val tasksViewModel: TasksViewModel = viewModel()
             TasksScreen(
-                viewModel = tasksViewModel,
-                navController = navController
+                viewModel = tasksViewModel, navController = navController
             )
         }
     }

@@ -1,20 +1,18 @@
 package com.example.notes_taking.Screens.presentations.Notes
 
-import android.content.Context
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.notes_taking.API.GroqService
 import com.example.notes_taking.Repository.NoteRepository
+import com.example.notes_taking.RoomDatabase.Note
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import java.io.File
-import java.io.FileOutputStream
+import kotlinx.coroutines.launch
 
 class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
-
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
@@ -22,14 +20,18 @@ class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
     val selectedCategory = _selectedCategory.asStateFlow()
 
     private val _dbNotes = repository.getAllNotes()
-
     val notesState = combine(_dbNotes, _searchQuery, _selectedCategory) { notes, query, category ->
         notes.filter { note ->
             val matchesSearch = if (query.isBlank()) true
-            else note.title.contains(query, ignoreCase = true) ||
-                    note.content.contains(query, ignoreCase = true)
+            else note.title.contains(query, ignoreCase = true) || note.content.contains(
+                query,
+                ignoreCase = true
+            )
 
-            matchesSearch
+            val matchesCategory = if (category == "All" || category == "الكل") true
+            else note.category.equals(category, ignoreCase = true)
+
+            matchesSearch && matchesCategory
         }
     }.stateIn(
         scope = viewModelScope,
