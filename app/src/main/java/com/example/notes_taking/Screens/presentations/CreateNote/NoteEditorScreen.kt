@@ -35,10 +35,14 @@ import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Spellcheck
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,6 +54,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,12 +72,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.notes_taking.API.GroqService
 import com.example.notes_taking.R
 import com.example.notes_taking.ui.theme.BrownCard
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
 import com.example.notes_taking.ui.theme.TextPrimary
 import com.example.notes_taking.ui.theme.TextSecondary
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -82,15 +89,19 @@ import java.util.UUID
 // ======= Content Block Types =======
 sealed class ContentBlock {
     data class TextBlock(
-        val id: String = UUID.randomUUID().toString(), var text: String = ""
+        val id: String = UUID.randomUUID().toString(),
+        var text: String = ""
     ) : ContentBlock()
 
     data class ImageBlock(
-        val id: String = UUID.randomUUID().toString(), val uri: Uri
+        val id: String = UUID.randomUUID().toString(),
+        val uri: Uri
     ) : ContentBlock()
 
     data class AudioBlock(
-        val id: String = UUID.randomUUID().toString(), val uri: Uri, val name: String
+        val id: String = UUID.randomUUID().toString(),
+        val uri: Uri,
+        val name: String
     ) : ContentBlock()
 
     data class BulletBlock(
@@ -101,31 +112,36 @@ sealed class ContentBlock {
 
 @Composable
 fun NoteEditorScreen(
-    noteId: Int = 0, viewModel: NoteViewModel, onClose: () -> Unit = {}, onSave: () -> Unit = {}
+    noteId: Int = 0,
+    viewModel: NoteViewModel,
+    onClose: () -> Unit = {},
+    onSave: () -> Unit = {}
 ) {
     val sdf = remember { SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()) }
     val currentDate = remember { sdf.format(Date()) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     var title by remember { mutableStateOf("") }
     var isBold by remember { mutableStateOf(false) }
     var isItalic by remember { mutableStateOf(false) }
+    var aiMenuExpanded by remember { mutableStateOf(false) }
+    var isAiLoading by remember { mutableStateOf(false) }
 
     val contentBlocks = remember { mutableStateListOf<ContentBlock>(ContentBlock.TextBlock()) }
 
-    val wordCount = contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
+    val wordCount = contentBlocks
+        .filterIsInstance<ContentBlock.TextBlock>()
         .sumOf { it.text.trim().split("\\s+".toRegex()).filter { w -> w.isNotEmpty() }.size }
     val readingMinutes = maxOf(1, wordCount / 200)
 
     // ======= Image Picker =======
-    val context = LocalContext.current
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
             val permanentPath = viewModel.saveImageToInternalStorage(context, it)
-
             permanentPath?.let { path ->
-                // 2. تحويل المسار إلى Uri ليتم عرضه في الـ Block
                 val fileUri = Uri.fromFile(File(path))
                 contentBlocks.add(ContentBlock.ImageBlock(uri = fileUri))
                 contentBlocks.add(ContentBlock.TextBlock())
@@ -133,18 +149,18 @@ fun NoteEditorScreen(
         }
     }
 
-// ======= Audio Picker =======
+    // ======= Audio Picker =======
     val audioPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
             val name = it.lastPathSegment ?: "audio_${System.currentTimeMillis()}"
-            // 1. إضافة التسجيل
             contentBlocks.add(ContentBlock.AudioBlock(uri = it, name = name))
-            // 2. إضافة Block نصي جديد تحت التسجيل مباشرة
             contentBlocks.add(ContentBlock.TextBlock())
         }
     }
+
+    // ======= Load Note =======
     LaunchedEffect(noteId) {
         if (noteId > 0) {
             val note = viewModel.getNoteById(noteId)
@@ -152,7 +168,6 @@ fun NoteEditorScreen(
                 title = it.title
                 contentBlocks.clear()
                 contentBlocks.add(ContentBlock.TextBlock(text = it.content))
-
                 it.imageUri?.let { path ->
                     val imageFile = File(path)
                     if (imageFile.exists()) {
@@ -207,9 +222,9 @@ fun NoteEditorScreen(
             ) {
                 Button(
                     onClick = {
-                        // 1. استخراج المسار لأول صورة (إذا وجدت)
-                        val firstImageBlock =
-                            contentBlocks.filterIsInstance<ContentBlock.ImageBlock>().firstOrNull()
+                        val firstImageBlock = contentBlocks
+                            .filterIsInstance<ContentBlock.ImageBlock>()
+                            .firstOrNull()
                         val imagePathToSave = firstImageBlock?.uri?.path
 
                         val fullContent = contentBlocks.joinToString("\n") { block ->
@@ -228,8 +243,6 @@ fun NoteEditorScreen(
                             date = currentDate,
                             onComplete = onSave
                         )
-
-                        // 4. تنفيذ الأكشن بعد الحفظ (إغلاق الشاشة مثلاً)
                         onSave()
                     },
                     shape = RoundedCornerShape(20.dp),
@@ -264,7 +277,8 @@ fun NoteEditorScreen(
         }
 
         HorizontalDivider(
-            color = Color(0xFFE8E0D8), modifier = Modifier.padding(horizontal = 40.dp)
+            color = Color(0xFFE8E0D8),
+            modifier = Modifier.padding(horizontal = 40.dp)
         )
 
         // ======= Content Area =======
@@ -305,7 +319,8 @@ fun NoteEditorScreen(
                         }
                         innerTextField()
                     }
-                })
+                }
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -393,9 +408,11 @@ fun NoteEditorScreen(
                                     }
                                     innerTextField()
                                 }
-                            })
+                            }
+                        )
                     }
 
+                    // ← Bullet Block
                     is ContentBlock.BulletBlock -> {
                         Row(
                             modifier = Modifier
@@ -403,7 +420,6 @@ fun NoteEditorScreen(
                                 .padding(vertical = 4.dp),
                             verticalAlignment = Alignment.Top
                         ) {
-                            // أيقونة النقطة
                             Text(
                                 text = "•",
                                 fontSize = 20.sp,
@@ -411,16 +427,12 @@ fun NoteEditorScreen(
                                 color = BrownCard,
                                 modifier = Modifier.padding(horizontal = 8.dp)
                             )
-
                             BasicTextField(
                                 value = block.text,
                                 onValueChange = { newText ->
-                                    // إذا وجدنا أن النص يحتوي على سطر جديد (يعني ضغط Enter)
                                     if (newText.endsWith("\n")) {
-                                        // إضافة نقطة جديدة بعد الحالية
                                         contentBlocks.add(index + 1, ContentBlock.BulletBlock())
                                     } else {
-                                        // تحديث نص النقطة الحالية
                                         contentBlocks[index] = block.copy(text = newText)
                                     }
                                 },
@@ -433,8 +445,6 @@ fun NoteEditorScreen(
                                 cursorBrush = SolidColor(BrownCard),
                                 modifier = Modifier.weight(1f)
                             )
-
-                            // زر لحذف النقطة إذا كانت فارغة
                             IconButton(
                                 onClick = { contentBlocks.removeAt(index) },
                                 modifier = Modifier.size(24.dp)
@@ -549,7 +559,9 @@ fun NoteEditorScreen(
 
         // ======= Bottom Toolbar =======
         Surface(
-            modifier = Modifier.fillMaxWidth(), color = Color(0xFFF5F0EB), shadowElevation = 8.dp
+            modifier = Modifier.fillMaxWidth(),
+            color = Color(0xFFF5F0EB),
+            shadowElevation = 8.dp
         ) {
             Row(
                 modifier = Modifier
@@ -558,21 +570,154 @@ fun NoteEditorScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                EditorToolbarButton(
-                    icon = Icons.Outlined.AutoAwesome, tint = BrownCard, onClick = {})
 
-                // ← فتح ملفات الصوت
-                EditorToolbarButton(
-                    icon = Icons.Outlined.Mic, onClick = { audioPickerLauncher.launch("audio/*") })
+                // ======= AI Button + DropdownMenu =======
+                Box {
+                    IconButton(
+                        onClick = { aiMenuExpanded = true },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        if (isAiLoading) {
+                            CircularProgressIndicator(
+                                color = BrownCard,
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Outlined.AutoAwesome,
+                                contentDescription = null,
+                                tint = BrownCard,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    }
 
-                EditorToolbarButton(
-                    icon = Icons.Outlined.Link, onClick = {})
+                    DropdownMenu(
+                        expanded = aiMenuExpanded,
+                        onDismissRequest = { aiMenuExpanded = false },
+                        modifier = Modifier.background(Color.White)
+                    ) {
 
-                // ← فتح الصور
+                        // ← إعادة صياغة
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = BrownCard,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = "إعادة صياغة",
+                                        fontFamily = ManropeFontFamily,
+                                        fontSize = 14.sp,
+                                        color = TextPrimary
+                                    )
+                                }
+                            },
+                            onClick = {
+                                aiMenuExpanded = false
+                                val currentText = contentBlocks
+                                    .filterIsInstance<ContentBlock.TextBlock>()
+                                    .joinToString("\n") { it.text }
+
+                                if (currentText.isBlank()) return@DropdownMenuItem
+
+                                scope.launch {
+                                    isAiLoading = true
+                                    try {
+                                        val result = GroqService.rephraseText(currentText)
+                                        val firstTextIndex = contentBlocks
+                                            .indexOfFirst { it is ContentBlock.TextBlock }
+                                        if (firstTextIndex != -1) {
+                                            contentBlocks[firstTextIndex] =
+                                                ContentBlock.TextBlock(text = result)
+                                        }
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    } finally {
+                                        isAiLoading = false
+                                    }
+                                }
+                            }
+                        )
+
+                        HorizontalDivider(color = Color(0xFFF0EBE6))
+
+                        // ← تشكيل النص
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Spellcheck,
+                                        contentDescription = null,
+                                        tint = BrownCard,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = "تشكيل النص",
+                                        fontFamily = ManropeFontFamily,
+                                        fontSize = 14.sp,
+                                        color = TextPrimary
+                                    )
+                                }
+                            },
+                            onClick = {
+                                aiMenuExpanded = false
+                                val currentText = contentBlocks
+                                    .filterIsInstance<ContentBlock.TextBlock>()
+                                    .joinToString("\n") { it.text }
+
+                                if (currentText.isBlank()) return@DropdownMenuItem
+
+                                scope.launch {
+                                    isAiLoading = true
+                                    try {
+                                        val result = GroqService.diacritizeText(currentText)
+                                        val firstTextIndex = contentBlocks
+                                            .indexOfFirst { it is ContentBlock.TextBlock }
+                                        if (firstTextIndex != -1) {
+                                            contentBlocks[firstTextIndex] =
+                                                ContentBlock.TextBlock(text = result)
+                                        }
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    } finally {
+                                        isAiLoading = false
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
+
+                // ← Mic
+                EditorToolbarButton(
+                    icon = Icons.Outlined.Mic,
+                    onClick = { audioPickerLauncher.launch("audio/*") }
+                )
+
+                // ← Link
+                EditorToolbarButton(
+                    icon = Icons.Outlined.Link,
+                    onClick = {}
+                )
+
+                // ← Image
                 EditorToolbarButton(
                     icon = Icons.Outlined.Image,
-                    onClick = { imagePickerLauncher.launch("image/*") })
+                    onClick = { imagePickerLauncher.launch("image/*") }
+                )
 
+                // ← Quote
                 Box(
                     modifier = Modifier
                         .size(36.dp)
@@ -588,11 +733,10 @@ fun NoteEditorScreen(
                     )
                 }
 
+                // ← Bullets
                 EditorToolbarButton(
                     icon = Icons.AutoMirrored.Outlined.FormatListBulleted,
-                    onClick = {
-                        contentBlocks.add(ContentBlock.BulletBlock())
-                    }
+                    onClick = { contentBlocks.add(ContentBlock.BulletBlock()) }
                 )
 
                 // ← Italic
@@ -602,10 +746,12 @@ fun NoteEditorScreen(
                         .clip(RoundedCornerShape(8.dp))
                         .background(
                             if (isItalic) BrownCard.copy(alpha = 0.15f) else Color.Transparent
-                        ), contentAlignment = Alignment.Center
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
                     IconButton(
-                        onClick = { isItalic = !isItalic }, modifier = Modifier.size(36.dp)
+                        onClick = { isItalic = !isItalic },
+                        modifier = Modifier.size(36.dp)
                     ) {
                         Text(
                             text = "I",
@@ -624,10 +770,12 @@ fun NoteEditorScreen(
                         .clip(RoundedCornerShape(8.dp))
                         .background(
                             if (isBold) BrownCard.copy(alpha = 0.15f) else Color.Transparent
-                        ), contentAlignment = Alignment.Center
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
                     IconButton(
-                        onClick = { isBold = !isBold }, modifier = Modifier.size(36.dp)
+                        onClick = { isBold = !isBold },
+                        modifier = Modifier.size(36.dp)
                     ) {
                         Text(
                             text = "B",
@@ -645,7 +793,9 @@ fun NoteEditorScreen(
 // ======= Toolbar Button =======
 @Composable
 fun EditorToolbarButton(
-    icon: ImageVector, tint: Color = TextSecondary, onClick: () -> Unit
+    icon: ImageVector,
+    tint: Color = TextSecondary,
+    onClick: () -> Unit
 ) {
     IconButton(onClick = onClick, modifier = Modifier.size(36.dp)) {
         Icon(
