@@ -89,33 +89,25 @@ import java.util.UUID
 // ======= Content Block Types =======
 sealed class ContentBlock {
     data class TextBlock(
-        val id: String = UUID.randomUUID().toString(),
-        var text: String = ""
+        val id: String = UUID.randomUUID().toString(), var text: String = ""
     ) : ContentBlock()
 
     data class ImageBlock(
-        val id: String = UUID.randomUUID().toString(),
-        val uri: Uri
+        val id: String = UUID.randomUUID().toString(), val uri: Uri
     ) : ContentBlock()
 
     data class AudioBlock(
-        val id: String = UUID.randomUUID().toString(),
-        val uri: Uri,
-        val name: String
+        val id: String = UUID.randomUUID().toString(), val uri: Uri, val name: String
     ) : ContentBlock()
 
     data class BulletBlock(
-        val id: String = UUID.randomUUID().toString(),
-        var text: String = ""
+        val id: String = UUID.randomUUID().toString(), var text: String = ""
     ) : ContentBlock()
 }
 
 @Composable
 fun NoteEditorScreen(
-    noteId: Int = 0,
-    viewModel: NoteViewModel,
-    onClose: () -> Unit = {},
-    onSave: () -> Unit = {}
+    noteId: Int = 0, viewModel: NoteViewModel, onClose: () -> Unit = {}, onSave: () -> Unit = {}
 ) {
     val sdf = remember { SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()) }
     val currentDate = remember { sdf.format(Date()) }
@@ -130,8 +122,7 @@ fun NoteEditorScreen(
 
     val contentBlocks = remember { mutableStateListOf<ContentBlock>(ContentBlock.TextBlock()) }
 
-    val wordCount = contentBlocks
-        .filterIsInstance<ContentBlock.TextBlock>()
+    val wordCount = contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
         .sumOf { it.text.trim().split("\\s+".toRegex()).filter { w -> w.isNotEmpty() }.size }
     val readingMinutes = maxOf(1, wordCount / 200)
 
@@ -222,9 +213,8 @@ fun NoteEditorScreen(
             ) {
                 Button(
                     onClick = {
-                        val firstImageBlock = contentBlocks
-                            .filterIsInstance<ContentBlock.ImageBlock>()
-                            .firstOrNull()
+                        val firstImageBlock =
+                            contentBlocks.filterIsInstance<ContentBlock.ImageBlock>().firstOrNull()
                         val imagePathToSave = firstImageBlock?.uri?.path
 
                         val fullContent = contentBlocks.joinToString("\n") { block ->
@@ -277,8 +267,7 @@ fun NoteEditorScreen(
         }
 
         HorizontalDivider(
-            color = Color(0xFFE8E0D8),
-            modifier = Modifier.padding(horizontal = 40.dp)
+            color = Color(0xFFE8E0D8), modifier = Modifier.padding(horizontal = 40.dp)
         )
 
         // ======= Content Area =======
@@ -319,8 +308,7 @@ fun NoteEditorScreen(
                         }
                         innerTextField()
                     }
-                }
-            )
+                })
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -408,8 +396,7 @@ fun NoteEditorScreen(
                                     }
                                     innerTextField()
                                 }
-                            }
-                        )
+                            })
                     }
 
                     // ← Bullet Block
@@ -559,9 +546,7 @@ fun NoteEditorScreen(
 
         // ======= Bottom Toolbar =======
         Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFF5F0EB),
-            shadowElevation = 8.dp
+            modifier = Modifier.fillMaxWidth(), color = Color(0xFFF5F0EB), shadowElevation = 8.dp
         ) {
             Row(
                 modifier = Modifier
@@ -574,8 +559,7 @@ fun NoteEditorScreen(
                 // ======= AI Button + DropdownMenu =======
                 Box {
                     IconButton(
-                        onClick = { aiMenuExpanded = true },
-                        modifier = Modifier.size(36.dp)
+                        onClick = { aiMenuExpanded = true }, modifier = Modifier.size(36.dp)
                     ) {
                         if (isAiLoading) {
                             CircularProgressIndicator(
@@ -600,122 +584,111 @@ fun NoteEditorScreen(
                     ) {
 
                         // ← إعادة صياغة
-                        DropdownMenuItem(
-                            text = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.AutoAwesome,
-                                        contentDescription = null,
-                                        tint = BrownCard,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.rephrase_text),
-                                        fontFamily = ManropeFontFamily,
-                                        fontSize = 14.sp,
-                                        color = TextPrimary
-                                    )
-                                }
-                            },
-                            onClick = {
-                                aiMenuExpanded = false
-                                val currentText = contentBlocks
-                                    .filterIsInstance<ContentBlock.TextBlock>()
+                        DropdownMenuItem(text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = BrownCard,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.rephrase_text),
+                                    fontFamily = ManropeFontFamily,
+                                    fontSize = 14.sp,
+                                    color = TextPrimary
+                                )
+                            }
+                        }, onClick = {
+                            aiMenuExpanded = false
+                            val currentText =
+                                contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
                                     .joinToString("\n") { it.text }
 
-                                if (currentText.isBlank()) return@DropdownMenuItem
+                            if (currentText.isBlank()) return@DropdownMenuItem
 
-                                scope.launch {
-                                    isAiLoading = true
-                                    try {
-                                        val result = GroqService.rephraseText(currentText)
-                                        val firstTextIndex = contentBlocks
-                                            .indexOfFirst { it is ContentBlock.TextBlock }
-                                        if (firstTextIndex != -1) {
-                                            contentBlocks[firstTextIndex] =
-                                                ContentBlock.TextBlock(text = result)
-                                        }
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                    } finally {
-                                        isAiLoading = false
+                            scope.launch {
+                                isAiLoading = true
+                                try {
+                                    val result = GroqService.rephraseText(currentText)
+                                    val firstTextIndex =
+                                        contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
+                                    if (firstTextIndex != -1) {
+                                        contentBlocks[firstTextIndex] =
+                                            ContentBlock.TextBlock(text = result)
                                     }
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                } finally {
+                                    isAiLoading = false
                                 }
                             }
-                        )
+                        })
 
                         HorizontalDivider(color = Color(0xFFF0EBE6))
 
                         // ← تشكيل النص
-                        DropdownMenuItem(
-                            text = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Spellcheck,
-                                        contentDescription = null,
-                                        tint = BrownCard,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.diacritize_text),
-                                        fontFamily = ManropeFontFamily,
-                                        fontSize = 14.sp,
-                                        color = TextPrimary
-                                    )
-                                }
-                            },
-                            onClick = {
-                                aiMenuExpanded = false
-                                val currentText = contentBlocks
-                                    .filterIsInstance<ContentBlock.TextBlock>()
+                        DropdownMenuItem(text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Spellcheck,
+                                    contentDescription = null,
+                                    tint = BrownCard,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.diacritize_text),
+                                    fontFamily = ManropeFontFamily,
+                                    fontSize = 14.sp,
+                                    color = TextPrimary
+                                )
+                            }
+                        }, onClick = {
+                            aiMenuExpanded = false
+                            val currentText =
+                                contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
                                     .joinToString("\n") { it.text }
 
-                                if (currentText.isBlank()) return@DropdownMenuItem
+                            if (currentText.isBlank()) return@DropdownMenuItem
 
-                                scope.launch {
-                                    isAiLoading = true
-                                    try {
-                                        val result = GroqService.diacritizeText(currentText)
-                                        val firstTextIndex = contentBlocks
-                                            .indexOfFirst { it is ContentBlock.TextBlock }
-                                        if (firstTextIndex != -1) {
-                                            contentBlocks[firstTextIndex] =
-                                                ContentBlock.TextBlock(text = result)
-                                        }
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                    } finally {
-                                        isAiLoading = false
+                            scope.launch {
+                                isAiLoading = true
+                                try {
+                                    val result = GroqService.diacritizeText(currentText)
+                                    val firstTextIndex =
+                                        contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
+                                    if (firstTextIndex != -1) {
+                                        contentBlocks[firstTextIndex] =
+                                            ContentBlock.TextBlock(text = result)
                                     }
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                } finally {
+                                    isAiLoading = false
                                 }
                             }
-                        )
+                        })
                     }
                 }
 
                 // ← Mic
                 EditorToolbarButton(
-                    icon = Icons.Outlined.Mic,
-                    onClick = { audioPickerLauncher.launch("audio/*") }
-                )
+                    icon = Icons.Outlined.Mic, onClick = { audioPickerLauncher.launch("audio/*") })
 
                 // ← Link
                 EditorToolbarButton(
-                    icon = Icons.Outlined.Link,
-                    onClick = {}
-                )
+                    icon = Icons.Outlined.Link, onClick = {})
 
                 // ← Image
                 EditorToolbarButton(
                     icon = Icons.Outlined.Image,
-                    onClick = { imagePickerLauncher.launch("image/*") }
-                )
+                    onClick = { imagePickerLauncher.launch("image/*") })
 
                 // ← Quote
                 Box(
@@ -736,8 +709,7 @@ fun NoteEditorScreen(
                 // ← Bullets
                 EditorToolbarButton(
                     icon = Icons.AutoMirrored.Outlined.FormatListBulleted,
-                    onClick = { contentBlocks.add(ContentBlock.BulletBlock()) }
-                )
+                    onClick = { contentBlocks.add(ContentBlock.BulletBlock()) })
 
                 // ← Italic
                 Box(
@@ -746,12 +718,10 @@ fun NoteEditorScreen(
                         .clip(RoundedCornerShape(8.dp))
                         .background(
                             if (isItalic) BrownCard.copy(alpha = 0.15f) else Color.Transparent
-                        ),
-                    contentAlignment = Alignment.Center
+                        ), contentAlignment = Alignment.Center
                 ) {
                     IconButton(
-                        onClick = { isItalic = !isItalic },
-                        modifier = Modifier.size(36.dp)
+                        onClick = { isItalic = !isItalic }, modifier = Modifier.size(36.dp)
                     ) {
                         Text(
                             text = "I",
@@ -770,12 +740,10 @@ fun NoteEditorScreen(
                         .clip(RoundedCornerShape(8.dp))
                         .background(
                             if (isBold) BrownCard.copy(alpha = 0.15f) else Color.Transparent
-                        ),
-                    contentAlignment = Alignment.Center
+                        ), contentAlignment = Alignment.Center
                 ) {
                     IconButton(
-                        onClick = { isBold = !isBold },
-                        modifier = Modifier.size(36.dp)
+                        onClick = { isBold = !isBold }, modifier = Modifier.size(36.dp)
                     ) {
                         Text(
                             text = "B",
@@ -793,9 +761,7 @@ fun NoteEditorScreen(
 // ======= Toolbar Button =======
 @Composable
 fun EditorToolbarButton(
-    icon: ImageVector,
-    tint: Color = TextSecondary,
-    onClick: () -> Unit
+    icon: ImageVector, tint: Color = TextSecondary, onClick: () -> Unit
 ) {
     IconButton(onClick = onClick, modifier = Modifier.size(36.dp)) {
         Icon(
