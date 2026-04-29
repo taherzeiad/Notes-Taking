@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,6 +51,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -103,6 +105,12 @@ sealed class ContentBlock {
     data class BulletBlock(
         val id: String = UUID.randomUUID().toString(), var text: String = ""
     ) : ContentBlock()
+
+    data class LinkBlock(
+        val id: String = UUID.randomUUID().toString(),
+        var url: String = "",
+        var description: String = ""
+    ) : ContentBlock()
 }
 
 @Composable
@@ -125,6 +133,27 @@ fun NoteEditorScreen(
     val wordCount = contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
         .sumOf { it.text.trim().split("\\s+".toRegex()).filter { w -> w.isNotEmpty() }.size }
     val readingMinutes = maxOf(1, wordCount / 200)
+
+    var showLinkDialog by remember { mutableStateOf(false) }
+    var linkUrl by remember { mutableStateOf("") }
+
+    if (showLinkDialog) {
+        // يمكنك هنا بناء AlertDialog بسيط يحتوي على TextField لإدخال الرابط
+        // وعند الضغط على Save تقوم بإضافة الـ Block:
+        // contentBlocks.add(ContentBlock.LinkBlock(url = linkUrl))
+    }
+
+    val characterCount by remember {
+        derivedStateOf {
+            contentBlocks.sumOf { block ->
+                when (block) {
+                    is ContentBlock.TextBlock -> block.text.length
+                    is ContentBlock.BulletBlock -> block.text.length
+                    else -> 0
+                }
+            }
+        }
+    }
 
     // ======= Image Picker =======
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -221,6 +250,7 @@ fun NoteEditorScreen(
                             when (block) {
                                 is ContentBlock.TextBlock -> block.text
                                 is ContentBlock.BulletBlock -> "• ${block.text}"
+
                                 else -> ""
                             }
                         }
@@ -540,6 +570,31 @@ fun NoteEditorScreen(
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                     }
+                    is ContentBlock.LinkBlock -> {
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)) // لون أزرق خفيف للروابط
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Outlined.Link, contentDescription = null, tint = Color.Blue)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = block.url,
+                                    color = Color.Blue,
+                                    fontSize = 14.sp,
+                                    fontFamily = ManropeFontFamily,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                IconButton(onClick = { contentBlocks.removeAt(index) }) {
+                                    Icon(Icons.Default.Close, null, modifier = Modifier.size(16.dp))
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -683,8 +738,20 @@ fun NoteEditorScreen(
 
                 // ← Link
                 EditorToolbarButton(
-                    icon = Icons.Outlined.Link, onClick = {})
+                    icon = Icons.Outlined.Link,
+                    onClick = { showLinkDialog = true }
+                )
 
+                if (showLinkDialog) {
+                    AddLinkDialog(
+                        onDismiss = { showLinkDialog = false },
+                        onConfirm = { url ->
+                            contentBlocks.add(ContentBlock.LinkBlock(url = url))
+                            contentBlocks.add(ContentBlock.TextBlock()) // إضافة سطر نصي تحت الرابط دائماً
+                            showLinkDialog = false
+                        }
+                    )
+                }
                 // ← Image
                 EditorToolbarButton(
                     icon = Icons.Outlined.Image,
@@ -698,8 +765,8 @@ fun NoteEditorScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "99",
-                        fontSize = 16.sp,
+                        text = characterCount.toString(),
+                        fontSize = 14.sp,
                         fontFamily = ManropeFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = TextSecondary
@@ -770,5 +837,79 @@ fun EditorToolbarButton(
             tint = tint,
             modifier = Modifier.size(22.dp)
         )
+    }
+}
+@Composable
+fun AddLinkDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var text by remember { mutableStateOf("") }
+
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = Color.White,
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "إضافة رابط",
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = TextPrimary
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // حقل إدخال الرابط بتصميم يشبه تطبيقك
+                BasicTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFF5F0EB), RoundedCornerShape(12.dp))
+                        .padding(16.dp),
+                    textStyle = TextStyle(fontFamily = ManropeFontFamily, color = TextPrimary),
+                    decorationBox = { innerTextField ->
+                        if (text.isEmpty()) {
+                            Text("https://example.com", color = Color.Gray.copy(alpha = 0.5f))
+                        }
+                        innerTextField()
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // زر الإلغاء
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        elevation = null
+                    ) {
+                        Text("إلغاء", color = TextSecondary, fontFamily = ManropeFontFamily)
+                    }
+
+                    // زر الإضافة
+                    Button(
+                        onClick = { if (text.isNotBlank()) onConfirm(text) },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = BrownCard),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("إضافة", color = Color.White, fontFamily = ManropeFontFamily)
+                    }
+                }
+            }
+        }
     }
 }
