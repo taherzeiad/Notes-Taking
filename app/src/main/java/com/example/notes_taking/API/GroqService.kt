@@ -5,7 +5,7 @@ import com.example.notes_taking.BuildConfig
 
 object GroqService {
     private const val API_KEY = BuildConfig.GROQ_API_KEY
-    suspend fun raseText(text: String): String {
+    suspend fun rephraseText(text: String): String {
         val request = ChatRequest(
             model = "llama-3.3-70b-versatile", messages = listOf(
                 ChatMessage(

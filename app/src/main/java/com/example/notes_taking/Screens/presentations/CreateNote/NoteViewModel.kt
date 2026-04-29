@@ -51,7 +51,7 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
         }
     }
     fun saveNoteWithAI(id: Int, title: String, content: String, imageUri: String?, date: String, onComplete: () -> Unit) {
-        viewModelScope.launch(Dispatchers.IO) { // نستخدم IO للعمليات الثقيلة
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 // 1. تنظيف النص لضمان أفضل نتيجة من الـ AI
                 val cleanContent = content.trim()

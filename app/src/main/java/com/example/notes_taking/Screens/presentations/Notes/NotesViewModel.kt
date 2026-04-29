@@ -17,6 +17,7 @@ class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
     val selectedCategory = _selectedCategory.asStateFlow()
 
     private val _dbNotes = repository.getAllNotes()
+
     // داخل NotesViewModel
     val notesState = combine(_dbNotes, _searchQuery, _selectedCategory) { notes, query, category ->
         notes.filter { note ->
@@ -24,9 +25,28 @@ class NotesViewModel(private val repository: NoteRepository) : ViewModel() {
             else note.title.contains(query, ignoreCase = true) ||
                     note.content.contains(query, ignoreCase = true)
 
-            // مقارنة ذكية: إذا كان التصنيف "All" اعرض الكل، وإلا قارن النصوص مع تجاهل حالة الأحرف
-            val matchesCategory = if (category == "All") true
-            else note.category.trim().equals(category.trim(), ignoreCase = true)
+            // 1. إذا كان الاختيار "الكل"، اعرض كل شيء فوراً
+            if (category == "All" || category == "الكل") return@filter matchesSearch
+
+            // 2. منطق المقارنة المرن
+            val matchesCategory = when (category) {
+                "Philosophy" -> note.category.equals(
+                    "Philosophy",
+                    true
+                ) || note.category.contains("فلسفة")
+
+                "Literature" -> note.category.equals(
+                    "Literature",
+                    true
+                ) || note.category.contains("أدب")
+
+                "Self-Development" -> note.category.equals(
+                    "Self-Development",
+                    true
+                ) || note.category.contains("تطوير")
+
+                else -> note.category.equals(category, ignoreCase = true)
+            }
 
             matchesSearch && matchesCategory
         }
