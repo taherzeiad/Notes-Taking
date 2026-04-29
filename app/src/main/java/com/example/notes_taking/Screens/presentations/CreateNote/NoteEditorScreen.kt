@@ -613,7 +613,7 @@ fun NoteEditorScreen(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
-                                        text = "إعادة صياغة",
+                                        text = stringResource(R.string.rephrase_text),
                                         fontFamily = ManropeFontFamily,
                                         fontSize = 14.sp,
                                         color = TextPrimary
@@ -663,7 +663,7 @@ fun NoteEditorScreen(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
-                                        text = "تشكيل النص",
+                                        text = stringResource(R.string.diacritize_text),
                                         fontFamily = ManropeFontFamily,
                                         fontSize = 14.sp,
                                         color = TextPrimary
