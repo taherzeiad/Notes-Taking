@@ -150,7 +150,9 @@ fun NoteEditorScreen(
     val wordCount = remember(contentBlocks) {
         derivedStateOf {
             contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
-                .sumOf { it.text.trim().split("\\s+".toRegex()).filter { w -> w.isNotEmpty() }.size }
+                .sumOf {
+                    it.text.trim().split("\\s+".toRegex()).filter { w -> w.isNotEmpty() }.size
+                }
         }
     }
     val readingMinutes = derivedStateOf { maxOf(1, wordCount.value / 200) }
@@ -215,7 +217,8 @@ fun NoteEditorScreen(
     ) { uri: Uri? ->
         uri?.let {
             try {
-                val name = uri.lastPathSegment?.substringAfterLast("/") ?: "تسجيل_${System.currentTimeMillis()}"
+                val name = uri.lastPathSegment?.substringAfterLast("/")
+                    ?: "تسجيل_${System.currentTimeMillis()}"
                 contentBlocks.add(ContentBlock.AudioBlock(uri = it, name = name))
                 contentBlocks.add(ContentBlock.TextBlock())
             } catch (e: Exception) {
@@ -479,7 +482,9 @@ fun NoteEditorScreen(
             // عرض مؤشر التحميل
             if (isLoading) {
                 Box(
-                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(color = BrownCard)
@@ -824,8 +829,7 @@ fun NoteEditorScreen(
                                         color = TextPrimary
                                     )
                                 }
-                            },
-                            onClick = {
+                            }, onClick = {
                                 aiMenuExpanded = false
                                 val currentText = contentBlocks
                                     .filterIsInstance<ContentBlock.TextBlock>()
