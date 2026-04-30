@@ -121,9 +121,7 @@ fun NotesScreen(
                         items(categoryLabels) { label ->
                             val isSelected = selectedCategory == categoryMapping[label]
                             CategoryTab(
-                                label = label,
-                                isSelected = isSelected,
-                                onClick = {
+                                label = label, isSelected = isSelected, onClick = {
                                     viewModel.onCategoryChange(categoryMapping[label] ?: "All")
                                 })
                         }
@@ -137,11 +135,9 @@ fun NotesScreen(
                 } else {
                     items(notes) { note ->
                         RoomNoteCard(
-                            note = note,
-                            onClick = {
+                            note = note, onClick = {
                                 navController.navigate(Route.NoteEditor.createRoute(note.id))
-                            }
-                        )
+                            })
                     }
                 }
 
@@ -440,10 +436,7 @@ fun PageTitleSection() {
 @Composable
 fun AddNoteFAB(onAddClick: () -> Unit, modifier: Modifier = Modifier) {
     FloatingActionButton(
-        onClick = onAddClick,
-        containerColor = BrownCard,
-        shape = CircleShape,
-        modifier = modifier
+        onClick = onAddClick, containerColor = BrownCard, shape = CircleShape, modifier = modifier
     ) {
         Icon(
             imageVector = Icons.Default.Add, contentDescription = null, tint = Color.White

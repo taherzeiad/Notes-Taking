@@ -14,10 +14,10 @@ class SettingsViewModel : ViewModel() {
         private set
 
     // بيانات المستخدم - يفضل جلبها من الـ Repository لاحقاً
-    var userName by mutableStateOf("طاهر قديح")
+    var userName by mutableStateOf("UserName")
         private set
 
-    var userEmail by mutableStateOf("taherqudeih@gmail.com")
+    var userEmail by mutableStateOf("qwerazxc@gmail.com")
         private set
 
     fun toggleDarkMode(enabled: Boolean) {
