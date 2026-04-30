@@ -28,6 +28,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -48,11 +49,8 @@ import com.example.notes_taking.R
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.BrownCard
 import com.example.notes_taking.ui.theme.CardBorder
-import com.example.notes_taking.ui.theme.IconBg
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
-import com.example.notes_taking.ui.theme.PageBackground
-import com.example.notes_taking.ui.theme.SectionTitle
 import com.example.notes_taking.ui.theme.TextPrimary
 import com.example.notes_taking.ui.theme.TextSecondary
 
@@ -62,7 +60,7 @@ fun SettingsScreen(
     navController: NavHostController
 ) {
     Scaffold(
-        containerColor = PageBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             BottomNavBar(navController = navController, selectedTab = 0)
         }
@@ -96,6 +94,7 @@ fun SettingsScreen(
         }
     }
 }
+
 // ======= مكونات فرعية (UI Components) =======
 @Composable
 fun CustomizationSection(isDarkMode: Boolean, onDarkModeChange: (Boolean) -> Unit) {
@@ -136,6 +135,7 @@ fun ProfileAvatar(
         )
     }
 }
+
 @Composable
 fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -143,15 +143,16 @@ fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) 
             text = title,
             fontSize = 13.sp,
             fontFamily = ManropeFontFamily,
-            color = SectionTitle,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
             textAlign = TextAlign.Start,
             modifier = Modifier.fillMaxWidth()
         )
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(0.dp)
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ), elevation = CardDefaults.cardElevation(0.dp)
         ) {
             Column(content = content)
         }
@@ -174,14 +175,14 @@ fun SettingsItem(label: String, icon: ImageVector, onClick: () -> Unit = {}) {
                 .padding(horizontal = 12.dp),
             fontSize = 15.sp,
             fontFamily = ManropeFontFamily,
-            color = TextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Start
         )
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
-            tint = TextSecondary,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
             modifier = Modifier.size(20.dp)
         )
     }
@@ -232,13 +233,15 @@ fun SettingsIconBox(icon: ImageVector) {
     Box(
         modifier = Modifier
             .size(36.dp)
-            .background(IconBg, CircleShape),
-        contentAlignment = Alignment.Center
+            .background(
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                shape = CircleShape
+            ), contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = BrownCard,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(18.dp)
         )
     }
