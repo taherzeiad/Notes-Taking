@@ -33,7 +33,10 @@ import com.example.notes_taking.Screens.presentations.Tasks.TasksViewModel
 @SuppressLint("NewApi")
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
-fun NavGraph(navController: NavHostController) {
+fun NavGraph(
+    navController: NavHostController,
+    settingsViewModel: SettingsViewModel
+) {
     val context = LocalContext.current
 
     // 1. إعداد الـ Repository والـ DAO مرة واحدة فقط
@@ -111,7 +114,6 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable(route = Route.Settings.route) {
-            val settingsViewModel: SettingsViewModel = viewModel()
             SettingsScreen(
                 viewModel = settingsViewModel, navController = navController
             )

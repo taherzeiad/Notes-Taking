@@ -37,6 +37,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -65,7 +66,6 @@ import com.example.notes_taking.RoomDatabase.Note
 import com.example.notes_taking.ui.theme.BrownCard
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
-import com.example.notes_taking.ui.theme.PageBackground
 import com.example.notes_taking.ui.theme.TagBg
 import com.example.notes_taking.ui.theme.TagText
 import com.example.notes_taking.ui.theme.TextPrimary
@@ -84,9 +84,8 @@ fun HomeScreen(
     val lastNote by viewModel.lastEditedNote.collectAsStateWithLifecycle()
 
     Scaffold(
-        containerColor = PageBackground,
-        bottomBar = { BottomNavBar(navController = navController, selectedTab = 3) }
-    ) { padding ->
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = { BottomNavBar(navController = navController, selectedTab = 3) }) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -96,7 +95,7 @@ fun HomeScreen(
         ) {
             // 1. الترويسة والترحيب
             item { HomeTopBarSection() }
-            item { WelcomeSection(userName = "طاهر") }
+            item { WelcomeSection() }
 
             // 2. بطاقة الذكاء الاصطناعي
             item { AICardSection() }
@@ -107,11 +106,9 @@ fun HomeScreen(
             // 4. آخر ملاحظة (البيانات تأتي من الـ ViewModel)
             item {
                 LastEditedNoteSection(
-                    note = lastNote,
-                    onEditClick = { id ->
+                    note = lastNote, onEditClick = { id ->
                         navController.navigate(Route.NoteEditor.createRoute(id))
-                    },
-                    onAddNote = onAddNote  
+                    }, onAddNote = onAddNote
                 )
             }
 
@@ -136,8 +133,7 @@ fun HomeTopBarSection() {
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(BrownCard),
-            contentAlignment = Alignment.Center
+                .background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center
         ) {
             Icon(Icons.Default.Person, null, tint = Color.White, modifier = Modifier.size(24.dp))
         }
@@ -146,22 +142,22 @@ fun HomeTopBarSection() {
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = ManropeFontFamily,
-            color = TextPrimary
+            color = MaterialTheme.colorScheme.onBackground
         )
         Icon(
             Icons.AutoMirrored.Outlined.MenuBook,
             null,
-            tint = TextPrimary,
+            tint = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.size(26.dp)
         )
     }
 }
 
 @Composable
-fun WelcomeSection(userName: String) {
+fun WelcomeSection() {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = stringResource(R.string.welcome_user, userName),
+            text = stringResource(R.string.welcome_user),
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = MansalvaFontFamily,
@@ -209,7 +205,7 @@ fun LastEditedNoteSection(note: Note?, onEditClick: (Int) -> Unit, onAddNote: ()
             text = stringResource(R.string.last_edited_note),
             fontSize = 15.sp,
             fontFamily = ManropeFontFamily,
-            color = TextSecondary
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
         )
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -223,29 +219,35 @@ fun LastEditedNoteSection(note: Note?, onEditClick: (Int) -> Unit, onAddNote: ()
                     .fillMaxWidth()
                     .clickable { onEditClick(note.id) },
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column {
-                    WaveChart(modifier = Modifier.fillMaxWidth().height(100.dp))
+                    WaveChart(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp)
+                    )
                     Column(modifier = Modifier.padding(16.dp)) {
-                        NoteTagsRow(tags = listOf(
-                            stringResource(R.string.tag_philosophy),
-                            stringResource(R.string.tag_readings)
-                        ))
+                        NoteTagsRow(
+                            tags = listOf(
+                                stringResource(R.string.tag_philosophy),
+                                stringResource(R.string.tag_readings)
+                            )
+                        )
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
                             text = note.title,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = MansalvaFontFamily,
-                            color = TextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = note.content,
                             fontSize = 14.sp,
                             fontFamily = ManropeFontFamily,
-                            color = TextPrimary.copy(alpha = 0.7f),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             maxLines = 3,
                             overflow = TextOverflow.Ellipsis,
                             lineHeight = 22.sp
@@ -378,9 +380,7 @@ fun NoteCardFooter(onContinueClick: () -> Unit) {
             )
         }
         Text(
-            stringResource(R.string.edited_time_ago, "15"),
-            fontSize = 12.sp,
-            color = TextSecondary
+            stringResource(R.string.edited_time_ago, "15"), fontSize = 12.sp, color = TextSecondary
         )
     }
 }
@@ -423,7 +423,7 @@ fun WaveChart(modifier: Modifier = Modifier) {
 // ======= Bottom Navigation =======
 @Composable
 fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
-    NavigationBar(containerColor = Color.White, tonalElevation = 0.dp) {
+    NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
         val tabs = listOf(
             Triple(
                 stringResource(R.string.nav_settings), Icons.Outlined.Settings, Route.Settings.route
@@ -458,7 +458,7 @@ fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = BrownCard,
                     selectedTextColor = BrownCard,
-                    unselectedIconColor = TextSecondary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     unselectedTextColor = TextSecondary,
                     indicatorColor = Color.Transparent
                 )
@@ -518,29 +518,36 @@ fun UpcomingTaskSection(onViewAll: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(stringResource(R.string.important_task), fontWeight = FontWeight.Bold)
-                Icon(Icons.Outlined.CheckCircle, null, tint = TextSecondary)
+                Text(
+                    stringResource(R.string.important_task),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Icon(Icons.Outlined.CheckCircle, null, tint = MaterialTheme.colorScheme.primary)
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "مراجعة متطلبات المشروع", fontSize = 17.sp, fontFamily = ManropeFontFamily)
+            Text(
+                text = "مراجعة متطلبات المشروع",
+                fontSize = 17.sp,
+                fontFamily = ManropeFontFamily,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = Color(0xFFF0EBE6))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Text(
                 text = stringResource(R.string.view_all_tasks),
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onViewAll() }
                     .padding(top = 12.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                color = BrownCard
-            )
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.primary)
         }
     }
 }
@@ -557,7 +564,11 @@ fun QuickActionButton(
             .height(52.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F2EF))
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                alpha = 0.5f
+            )
+        )
     ) {
         Row(
             modifier = Modifier
@@ -565,9 +576,19 @@ fun QuickActionButton(
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(icon, null, tint = BrownCard, modifier = Modifier.size(20.dp))
+            Icon(
+                icon,
+                null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(label, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Text(
+                label,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }

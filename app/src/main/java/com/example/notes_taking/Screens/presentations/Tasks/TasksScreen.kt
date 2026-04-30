@@ -109,7 +109,6 @@ fun TasksScreen(
 
             // ======= 1. Top Bar =======
             item {
-                Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,

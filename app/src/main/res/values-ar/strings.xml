@@ -46,7 +46,7 @@
     //////////////////////////////////////////////
 
     <string name="app_name_styled">واحتك الفكرية</string>
-    <string name="welcome_user">أهلاً بك، %1$s</string>
+    <string name="welcome_user">أهلاً بك</string>
     <string name="welcome_subtitle">نظرة سريعة على واحتك الفكرية اليوم.</string>
     <string name="ai_suggestion">اقتراح ذكي من الـ AI</string>
     <string name="ai_prompt_text">هل تريد تلخيص ملاحظات الأمس؟ لقد رصدنا ٤ أفكار مترابطة.</string>
@@ -77,7 +77,6 @@
     <string name="btn_edit">تعديل</string>
     <string name="section_account">الحساب والأمان</string>
     <string name="item_account_info">معلومات الحساب</string>
-    <string name="item_security">كلمة المرور والأمان</string>
     <string name="section_customization">التخصيص</string>
     <string name="item_dark_mode">المظهر الداكن</string>
     <string name="sub_dark_mode">تحويل الواجهة إلى الوضع الليلي المريح</string>
@@ -137,6 +136,9 @@
     <!-- Edit Notes Screen -->
     <string name="editor_save">حفظ</string>
     <string name="editor_title_hint">عنوان التأمل...</string>
+    <string name="add_link">اضافة رابط</string>
+    <string name="cancel">الغاء</string>
+    <string name="add">اضافة</string>
     <string name="editor_content_hint">ابدأ في تدوين أفكارك هنا... دع الكلمات تتدفق في صمت.</string>
     <string name="editor_reading_time">%1$d دقائق قراءة</string>
     <string name="audio_file">تسجيل صوتي</string>

@@ -45,7 +45,7 @@
 
     /////////////////////////////
     <string name="app_name_styled">Intellectual Sanctuary</string>
-    <string name="welcome_user">Welcome, %1$s</string>
+    <string name="welcome_user">Welcome</string>
     <string name="welcome_subtitle">A quick look at your sanctuary today.</string>
     <string name="ai_suggestion">Smart AI Suggestion</string>
     <string name="ai_prompt_text">Want to summarize yesterday\'s notes? We found 4 related ideas.</string>
@@ -76,7 +76,6 @@
     <string name="btn_edit">Edit</string>
     <string name="section_account">Account &amp; Security</string>
     <string name="item_account_info">Account Information</string>
-    <string name="item_security">Password &amp; Security</string>
     <string name="section_customization">Customization</string>
     <string name="item_dark_mode">Dark Mode</string>
     <string name="sub_dark_mode">Switch to a comfortable night interface</string>
@@ -135,6 +134,9 @@
     //////////////////////////
     <!-- Edit Notes Screen -->
     <string name="editor_save">Save</string>
+    <string name="add_link">Add Link</string>
+    <string name="cancel">Cancel</string>
+    <string name="add">Add</string>
     <string name="editor_title_hint">Title of reflection...</string>
     <string name="editor_content_hint">Start capturing your thoughts here... let the words flow in silence.</string>
     <string name="editor_reading_time">%1$d min read</string>
