@@ -48,11 +48,8 @@ import androidx.navigation.NavHostController
 import com.example.notes_taking.R
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.BrownCard
-import com.example.notes_taking.ui.theme.CardBorder
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
-import com.example.notes_taking.ui.theme.TextPrimary
-import com.example.notes_taking.ui.theme.TextSecondary
 
 @Composable
 fun SettingsScreen(
@@ -60,6 +57,7 @@ fun SettingsScreen(
     navController: NavHostController
 ) {
     Scaffold(
+        // ✅ لون الخلفية يتغير تلقائياً
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             BottomNavBar(navController = navController, selectedTab = 0)
@@ -72,30 +70,19 @@ fun SettingsScreen(
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-
-            // 1. الترويسة (Top Bar)
             item { SettingsTopBar() }
-
-            // 2. عنوان الصفحة
             item { SettingsHeader() }
-
-
             item {
                 CustomizationSection(
                     isDarkMode = viewModel.isDarkModeEnabled,
                     onDarkModeChange = { viewModel.toggleDarkMode(it) }
                 )
             }
-
-            item {
-                PrivacySection()
-            }
-
+            item { PrivacySection() }
         }
     }
 }
 
-// ======= مكونات فرعية (UI Components) =======
 @Composable
 fun CustomizationSection(isDarkMode: Boolean, onDarkModeChange: (Boolean) -> Unit) {
     SettingsSection(title = stringResource(R.string.section_customization)) {
@@ -106,7 +93,11 @@ fun CustomizationSection(isDarkMode: Boolean, onDarkModeChange: (Boolean) -> Uni
             checked = isDarkMode,
             onCheckedChange = onDarkModeChange
         )
-        HorizontalDivider(color = CardBorder, modifier = Modifier.padding(horizontal = 16.dp))
+        // ✅ استخدام لون outlineVariant للخط الفاصل ليتناسب مع الوضع المظلم
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outlineVariant,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
         SettingsItem(
             label = stringResource(R.string.item_notifications),
             icon = Icons.Outlined.Notifications
@@ -114,8 +105,120 @@ fun CustomizationSection(isDarkMode: Boolean, onDarkModeChange: (Boolean) -> Uni
     }
 }
 
+@Composable
+fun SettingsItemWithToggle(
+    label: String,
+    subLabel: String,
+    icon: ImageVector,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        SettingsIconBox(icon)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 12.dp)
+        ) {
+            Text(
+                text = label,
+                fontSize = 15.sp,
+                fontFamily = ManropeFontFamily,
+                // ✅ تغيير اللون ليصبح ديناميكياً
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = subLabel,
+                fontSize = 12.sp,
+                fontFamily = ManropeFontFamily,
+                // ✅ استخدام لون فرعي (رمادي في الفاتح، رمادي فاتح في المظلم)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = switchColors()
+        )
+    }
+}
 
-// ======= Helper UI Components (Clean & Automated) =======
+@Composable
+fun SettingsTopBar() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        ProfileAvatar()
+        Text(
+            text = stringResource(R.string.app_name_styled),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = ManropeFontFamily,
+            // ✅ تم التصحيح هنا
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Icon(
+            imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+            contentDescription = null,
+            // ✅ تم التصحيح هنا
+            tint = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.size(26.dp)
+        )
+    }
+}
+
+@Composable
+fun SettingsHeader() {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.settings_title),
+            fontSize = 36.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = MansalvaFontFamily,
+            // ✅ تم التصحيح هنا
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = stringResource(R.string.settings_subtitle),
+            fontSize = 14.sp,
+            fontFamily = ManropeFontFamily,
+            // ✅ تم التصحيح هنا
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+fun PrivacySection() {
+    SettingsSection(title = stringResource(R.string.section_privacy)) {
+        SettingsItem(
+            label = stringResource(R.string.item_privacy_center),
+            icon = Icons.Outlined.Shield
+        )
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outlineVariant,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+        SettingsItem(
+            label = stringResource(R.string.item_about),
+            icon = Icons.Outlined.Info
+        )
+    }
+}
+
 @Composable
 fun ProfileAvatar(
     size: androidx.compose.ui.unit.Dp = 40.dp, iconSize: androidx.compose.ui.unit.Dp = 24.dp
@@ -124,7 +227,8 @@ fun ProfileAvatar(
         modifier = Modifier
             .size(size)
             .clip(CircleShape)
-            .background(BrownCard),
+            // ✅ الأفاتار يفضل أن يبقى بلونه المميز أو يأخذ لون primary
+            .background(MaterialTheme.colorScheme.primary),
         contentAlignment = Alignment.Center
     ) {
         Icon(
@@ -189,46 +293,6 @@ fun SettingsItem(label: String, icon: ImageVector, onClick: () -> Unit = {}) {
 }
 
 @Composable
-fun SettingsItemWithToggle(
-    label: String,
-    subLabel: String,
-    icon: ImageVector,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        SettingsIconBox(icon)
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 12.dp)
-        ) {
-            Text(
-                text = label,
-                fontSize = 15.sp,
-                fontFamily = ManropeFontFamily,
-                color = TextPrimary,
-                fontWeight = FontWeight.Medium
-            )
-            Text(
-                text = subLabel,
-                fontSize = 12.sp,
-                fontFamily = ManropeFontFamily,
-                color = TextSecondary
-            )
-        }
-        Switch(
-            checked = checked, onCheckedChange = onCheckedChange, colors = switchColors()
-        )
-    }
-}
-
-@Composable
 fun SettingsIconBox(icon: ImageVector) {
     Box(
         modifier = Modifier
@@ -236,12 +300,13 @@ fun SettingsIconBox(icon: ImageVector) {
             .background(
                 color = MaterialTheme.colorScheme.secondaryContainer,
                 shape = CircleShape
-            ), contentAlignment = Alignment.Center
+            ),
+        contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier.size(18.dp)
         )
     }
@@ -254,64 +319,3 @@ fun switchColors() = SwitchDefaults.colors(
     uncheckedThumbColor = Color.White,
     uncheckedTrackColor = Color(0xFFD0C8C0)
 )
-
-@Composable
-fun SettingsTopBar() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ProfileAvatar()
-        Text(
-            text = stringResource(R.string.app_name_styled),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = ManropeFontFamily,
-            color = TextPrimary
-        )
-        Icon(
-            imageVector = Icons.AutoMirrored.Outlined.MenuBook,
-            contentDescription = null,
-            tint = TextPrimary,
-            modifier = Modifier.size(26.dp)
-        )
-    }
-}
-
-@Composable
-fun SettingsHeader() {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = stringResource(R.string.settings_title),
-            fontSize = 36.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = MansalvaFontFamily,
-            color = TextPrimary,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = stringResource(R.string.settings_subtitle),
-            fontSize = 14.sp,
-            fontFamily = ManropeFontFamily,
-            color = TextSecondary,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
-@Composable
-fun PrivacySection() {
-    SettingsSection(title = stringResource(R.string.section_privacy)) {
-        SettingsItem(
-            label = stringResource(R.string.item_privacy_center),
-            icon = Icons.Outlined.Shield
-        )
-        HorizontalDivider(color = CardBorder, modifier = Modifier.padding(horizontal = 16.dp))
-        SettingsItem(
-            label = stringResource(R.string.item_about),
-            icon = Icons.Outlined.Info
-        )
-    }
-}
