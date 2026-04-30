@@ -167,7 +167,6 @@ fun SettingsTopBar() {
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.MenuBook,
             contentDescription = null,
-            // ✅ استخدام اللون الأساسي للنص لضمان الوضوح
             tint = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.size(26.dp)
         )
@@ -182,7 +181,6 @@ fun SettingsHeader() {
             fontSize = 36.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = MansalvaFontFamily,
-            // ✅ تم التصحيح هنا
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.fillMaxWidth()
         )
@@ -191,7 +189,6 @@ fun SettingsHeader() {
             text = stringResource(R.string.settings_subtitle),
             fontSize = 14.sp,
             fontFamily = ManropeFontFamily,
-            // ✅ تم التصحيح هنا
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
             modifier = Modifier.fillMaxWidth()
         )
@@ -224,7 +221,6 @@ fun ProfileAvatar(
         modifier = Modifier
             .size(size)
             .clip(CircleShape)
-            // ✅ الأفاتار يفضل أن يبقى بلونه المميز أو يأخذ لون primary
             .background(MaterialTheme.colorScheme.primary),
         contentAlignment = Alignment.Center
     ) {
