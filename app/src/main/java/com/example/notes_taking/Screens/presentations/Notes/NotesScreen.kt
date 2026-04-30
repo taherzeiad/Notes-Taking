@@ -29,6 +29,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -60,7 +61,6 @@ import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.BrownCard
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
-import com.example.notes_taking.ui.theme.PageBackground
 import com.example.notes_taking.ui.theme.TextPrimary
 import com.example.notes_taking.ui.theme.TextSecondary
 
@@ -68,7 +68,6 @@ import com.example.notes_taking.ui.theme.TextSecondary
 fun NotesScreen(
     viewModel: NotesViewModel, navController: NavHostController
 ) {
-
     val notes by viewModel.notesState.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
@@ -84,8 +83,9 @@ fun NotesScreen(
     val categoryLabels = categoryMapping.keys.toList()
 
     Scaffold(
-        containerColor = PageBackground,
-        bottomBar = { BottomNavBar(navController = navController, selectedTab = 2) }) { padding ->
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = { BottomNavBar(navController = navController, selectedTab = 2) }
+    ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -97,7 +97,6 @@ fun NotesScreen(
                     .padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // 1. Top Bar (Search + Profile)
                 item {
                     TopBarSection(
                         isSearchActive = isSearchActive,
@@ -109,14 +108,16 @@ fun NotesScreen(
                             viewModel.onSearchQueryChange("")
                         })
                 }
-                // 2. Page Title
+
                 if (!isSearchActive) {
                     item { PageTitleSection() }
                 }
 
-                // 3. Category Tabs (الديناميكية الآن من الـ ViewModel)
+                // 3. Category Tabs
                 item {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         items(categoryLabels) { label ->
                             val isSelected = selectedCategory == categoryMapping[label]
                             CategoryTab(
@@ -128,9 +129,7 @@ fun NotesScreen(
                 }
 
                 if (notes.isEmpty()) {
-                    item {
-                        EmptyNotesState()
-                    }
+                    item { EmptyNotesState() }
                 } else {
                     items(notes) { note ->
                         RoomNoteCard(
@@ -143,11 +142,8 @@ fun NotesScreen(
                 item { Spacer(modifier = Modifier.height(80.dp)) }
             }
 
-            // 5. FAB
             AddNoteFAB(
-                onAddClick = {
-                    navController.navigate(Route.NoteEditor.createRoute(0))
-                },
+                onAddClick = { navController.navigate(Route.NoteEditor.createRoute(0)) },
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(start = 24.dp, bottom = 24.dp)
@@ -156,20 +152,262 @@ fun NotesScreen(
     }
 }
 
+// ======= Room Note Card المحدثة =======
+@Composable
+fun RoomNoteCard(note: Note, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            // ✅ استخدام surface بدلاً من الأبيض الثابت
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = note.date,
+                    fontSize = 12.sp,
+                    fontFamily = ManropeFontFamily,
+                    // ✅ استخدام onSurfaceVariant للنصوص الثانوية
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (note.isPinned) {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.secondaryContainer,
+                                RoundedCornerShape(20.dp)
+                            )
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.pinned),
+                            fontSize = 12.sp,
+                            fontFamily = ManropeFontFamily,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = note.title.ifBlank { stringResource(R.string.editor_title_hint) },
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = ManropeFontFamily,
+                // ✅ استخدام onSurface للنصوص الأساسية
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (note.content.isNotBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = note.content,
+                    fontSize = 14.sp,
+                    fontFamily = ManropeFontFamily,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    lineHeight = 22.sp,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            if (!note.imageUri.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(10.dp))
+                AsyncImage(
+                    model = note.imageUri,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                )
+            }
+
+            if (note.content.isNotBlank()) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.read_more),
+                        fontSize = 13.sp,
+                        fontFamily = ManropeFontFamily,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ======= Top Bar Section المحدثة =======
+@Composable
+fun TopBarSection(
+    isSearchActive: Boolean,
+    searchQuery: String,
+    onSearchClick: () -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onSearchClose: () -> Unit
+) {
+    if (isSearchActive) {
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = onSearchQueryChange,
+            placeholder = {
+                Text(
+                    text = stringResource(R.string.search),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Outlined.Search,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            trailingIcon = {
+                IconButton(onClick = { onSearchQueryChange(""); onSearchClose() }) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = Color.Transparent,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+            ),
+            singleLine = true
+        )
+    } else {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onSearchClick) {
+                Icon(
+                    Icons.Outlined.Search,
+                    null,
+                    tint = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.size(26.dp)
+                )
+            }
+            Text(
+                text = stringResource(R.string.notes_screen_title_bar),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = ManropeFontFamily,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Person,
+                    null,
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
+}
+
+// ======= Category Tab المحدثة =======
 @Composable
 fun CategoryTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(if (isSelected) BrownCard else Color(0xFFEDE8E3))
+            .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer)
             .clickable { onClick() }
-            .padding(horizontal = 18.dp, vertical = 10.dp)) {
+            .padding(horizontal = 18.dp, vertical = 10.dp)
+    ) {
         Text(
             text = label,
             fontSize = 14.sp,
             fontFamily = ManropeFontFamily,
-            color = if (isSelected) Color.White else TextSecondary,
+            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+        )
+    }
+}
+
+// ======= Empty State المحدثة =======
+@Composable
+fun EmptyNotesState() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 60.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                modifier = Modifier.size(36.dp)
+            )
+        }
+        Text(
+            text = stringResource(R.string.empty_notes_title),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = MansalvaFontFamily,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Text(
+            text = stringResource(R.string.empty_notes_subtitle),
+            fontSize = 14.sp,
+            fontFamily = ManropeFontFamily,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 32.dp)
         )
     }
 }
@@ -439,257 +677,6 @@ fun AddNoteFAB(onAddClick: () -> Unit, modifier: Modifier = Modifier) {
     ) {
         Icon(
             imageVector = Icons.Default.Add, contentDescription = null, tint = Color.White
-        )
-    }
-}
-
-// ======= Top Bar Section =======
-@Composable
-fun TopBarSection(
-    isSearchActive: Boolean,
-    searchQuery: String,
-    onSearchClick: () -> Unit,
-    onSearchQueryChange: (String) -> Unit,
-    onSearchClose: () -> Unit
-) {
-    if (isSearchActive) {
-        // ======= Search Bar =======
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChange,
-                placeholder = {
-                    Text(
-                        text = stringResource(R.string.search),
-                        fontFamily = ManropeFontFamily,
-                        color = TextSecondary
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Outlined.Search,
-                        contentDescription = null,
-                        tint = TextSecondary
-                    )
-                },
-                trailingIcon = {
-                    IconButton(onClick = {
-                        onSearchQueryChange("")
-                        onSearchClose()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Outlined.Close,
-                            contentDescription = null,
-                            tint = TextSecondary
-                        )
-                    }
-                },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = BrownCard.copy(alpha = 0.5f),
-                    unfocusedContainerColor = Color(0xFFF5F0EB),
-                    focusedContainerColor = Color(0xFFF5F0EB)
-                ),
-                singleLine = true
-            )
-        }
-    } else {
-        // ======= Normal Top Bar =======
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onSearchClick) {
-                Icon(
-                    imageVector = Icons.Outlined.Search,
-                    contentDescription = null,
-                    tint = TextPrimary,
-                    modifier = Modifier.size(26.dp)
-                )
-            }
-
-            Text(
-                text = stringResource(R.string.notes_screen_title_bar),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = ManropeFontFamily,
-                color = TextPrimary
-            )
-
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(BrownCard),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-    }
-}
-
-// ======= Room Note Card =======
-@Composable
-fun RoomNoteCard(note: Note, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(0.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-
-            // Date + Tag
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = note.date,
-                    fontSize = 12.sp,
-                    fontFamily = ManropeFontFamily,
-                    color = TextSecondary
-                )
-                if (note.isPinned) {
-                    Box(
-                        modifier = Modifier
-                            .background(Color(0xFFF0EBE6), RoundedCornerShape(20.dp))
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.pinned),
-                            fontSize = 12.sp,
-                            fontFamily = ManropeFontFamily,
-                            color = BrownCard,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Title
-            Text(
-                text = note.title.ifBlank { stringResource(R.string.editor_title_hint) },
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = ManropeFontFamily,
-                color = TextPrimary,
-                textAlign = TextAlign.Start,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            // Content
-            if (note.content.isNotBlank()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = note.content,
-                    fontSize = 14.sp,
-                    fontFamily = ManropeFontFamily,
-                    color = TextPrimary.copy(alpha = 0.7f),
-                    textAlign = TextAlign.Start,
-                    lineHeight = 22.sp,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // Image
-            if (!note.imageUri.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(10.dp))
-                AsyncImage(
-                    model = note.imageUri,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(160.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                )
-            }
-
-            // Read More
-            if (note.content.isNotBlank()) {
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.read_more),
-                        fontSize = 13.sp,
-                        fontFamily = ManropeFontFamily,
-                        color = BrownCard,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.MenuBook,
-                        contentDescription = null,
-                        tint = BrownCard,
-                        modifier = Modifier.size(14.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-// ======= Empty State =======
-@Composable
-fun EmptyNotesState() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 60.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(72.dp)
-                .background(Color(0xFFF5F0EB), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.MenuBook,
-                contentDescription = null,
-                tint = BrownCard.copy(alpha = 0.5f),
-                modifier = Modifier.size(36.dp)
-            )
-        }
-        Text(
-            text = stringResource(R.string.empty_notes_title),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = MansalvaFontFamily,
-            color = TextPrimary
-        )
-        Text(
-            text = stringResource(R.string.empty_notes_subtitle),
-            fontSize = 14.sp,
-            fontFamily = ManropeFontFamily,
-            color = TextSecondary,
-            textAlign = TextAlign.Center,
-            lineHeight = 22.sp,
-            modifier = Modifier.padding(horizontal = 32.dp)
         )
     }
 }
