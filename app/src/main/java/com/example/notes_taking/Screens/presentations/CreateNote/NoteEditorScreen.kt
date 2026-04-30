@@ -85,7 +85,9 @@ import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
 import com.example.notes_taking.ui.theme.TextPrimary
 import com.example.notes_taking.ui.theme.TextSecondary
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -95,24 +97,19 @@ import java.util.UUID
 // ======= Content Block Types =======
 sealed class ContentBlock {
     data class TextBlock(
-        val id: String = UUID.randomUUID().toString(),
-        var text: String = ""
+        val id: String = UUID.randomUUID().toString(), var text: String = ""
     ) : ContentBlock()
 
     data class ImageBlock(
-        val id: String = UUID.randomUUID().toString(),
-        val uri: Uri
+        val id: String = UUID.randomUUID().toString(), val uri: Uri
     ) : ContentBlock()
 
     data class AudioBlock(
-        val id: String = UUID.randomUUID().toString(),
-        val uri: Uri,
-        val name: String
+        val id: String = UUID.randomUUID().toString(), val uri: Uri, val name: String
     ) : ContentBlock()
 
     data class BulletBlock(
-        val id: String = UUID.randomUUID().toString(),
-        var text: String = ""
+        val id: String = UUID.randomUUID().toString(), var text: String = ""
     ) : ContentBlock()
 
     data class LinkBlock(
@@ -125,15 +122,11 @@ sealed class ContentBlock {
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun NoteEditorScreen(
-    noteId: Int = 0,
-    viewModel: NoteViewModel,
-    onClose: () -> Unit = {},
-    onSave: () -> Unit = {}
+    noteId: Int = 0, viewModel: NoteViewModel, onClose: () -> Unit = {}, onSave: () -> Unit = {}
 ) {
     val sdf = remember { SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()) }
     val currentDate = remember { sdf.format(Date()) }
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
     var title by remember { mutableStateOf("") }
@@ -144,22 +137,23 @@ fun NoteEditorScreen(
     var isLoading by remember { mutableStateOf(false) }
     var showLinkDialog by remember { mutableStateOf(false) }
     var linkUrl by remember { mutableStateOf("") }
+    var isSaving by remember { mutableStateOf(false) }
 
     val contentBlocks = remember { mutableStateListOf<ContentBlock>(ContentBlock.TextBlock()) }
 
     // حساب عدد الكلمات ووقت القراءة
     val wordCount = remember(contentBlocks) {
         derivedStateOf {
-            contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
-                .sumOf {
-                    it.text.trim().split("\\s+".toRegex()).filter { w -> w.isNotEmpty() }.size
-                }
+            contentBlocks.filterIsInstance<ContentBlock.TextBlock>().sumOf {
+                it.text.trim().split("\\s+".toRegex()).filter { w -> w.isNotEmpty() }.size
+            }
         }
     }
     val readingMinutes = derivedStateOf { maxOf(1, wordCount.value / 200) }
 
+
     // حساب عدد الأحرف
-    val characterCount = remember(contentBlocks) {
+    val characterCount = remember {
         derivedStateOf {
             contentBlocks.sumOf { block ->
                 when (block) {
@@ -170,6 +164,7 @@ fun NoteEditorScreen(
             }
         }
     }
+    var isSavingInternally by remember { mutableStateOf(false) }
 
     // التحقق من وجود محتوى للحفظ
     val hasContent = derivedStateOf {
@@ -185,33 +180,24 @@ fun NoteEditorScreen(
     }
 
     // ======= Image Picker =======
+    val scope = rememberCoroutineScope()
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            isLoading = true
-            try {
+            // تشغيل في الخلفية فوراً لكي لا يشعر المستخدم ببطء عند اختيار الصورة
+            scope.launch(Dispatchers.IO) {
                 val permanentPath = viewModel.saveImageToInternalStorage(context, it)
-                permanentPath?.let { path ->
-                    val fileUri = Uri.fromFile(File(path))
-                    contentBlocks.add(ContentBlock.ImageBlock(uri = fileUri))
-                    contentBlocks.add(ContentBlock.TextBlock())
-                } ?: run {
-                    scope.launch {
-                        snackbarHostState.showSnackbar("فشل في حفظ الصورة")
+                withContext(Dispatchers.Main) {
+                    permanentPath?.let { path ->
+                        contentBlocks.add(ContentBlock.ImageBlock(uri = Uri.fromFile(File(path))))
+                        contentBlocks.add(ContentBlock.TextBlock())
                     }
                 }
-            } catch (e: Exception) {
-                scope.launch {
-                    snackbarHostState.showSnackbar("حدث خطأ أثناء حفظ الصورة")
-                }
-                e.printStackTrace()
-            } finally {
-                isLoading = false
             }
         }
     }
-
     // ======= Audio Picker =======
     val audioPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -311,16 +297,20 @@ fun NoteEditorScreen(
             ) {
                 Button(
                     onClick = {
-                        if (!hasContent.value) {
-                            scope.launch {
-                                snackbarHostState.showSnackbar("لا يوجد محتوى لحفظه")
-                            }
+                        // التحقق من وجود محتوى قبل البدء
+                        val hasContent = title.isNotBlank() || contentBlocks.any {
+                            (it is ContentBlock.TextBlock && it.text.isNotBlank()) || it is ContentBlock.ImageBlock
+                        }
+
+                        if (!hasContent) {
+                            scope.launch { snackbarHostState.showSnackbar("لا يوجد محتوى لحفظه") }
                             return@Button
                         }
 
-                        val firstImageBlock = contentBlocks
-                            .filterIsInstance<ContentBlock.ImageBlock>()
-                            .firstOrNull()
+                        // تشغيل الحفظ
+                        isSavingInternally = true
+
+                        val firstImageBlock = contentBlocks.filterIsInstance<ContentBlock.ImageBlock>().firstOrNull()
                         val imagePathToSave = firstImageBlock?.uri?.path
 
                         val fullContent = contentBlocks.joinToString("\n") { block ->
@@ -338,15 +328,13 @@ fun NoteEditorScreen(
                             imageUri = imagePathToSave,
                             date = currentDate,
                             onComplete = {
+                                isSavingInternally = false
                                 onSave()
-                                scope.launch {
-                                    snackbarHostState.showSnackbar("تم حفظ الملاحظة بنجاح")
-                                }
+                                scope.launch { snackbarHostState.showSnackbar("تم حفظ الملاحظة بنجاح") }
                             },
                             onError = { error ->
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(error)
-                                }
+                                isSavingInternally = false
+                                scope.launch { snackbarHostState.showSnackbar(error) }
                             }
                         )
                     },
@@ -358,9 +346,7 @@ fun NoteEditorScreen(
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp
+                            color = Color.White, modifier = Modifier.size(16.dp), strokeWidth = 2.dp
                         )
                     } else {
                         Text(
@@ -391,8 +377,7 @@ fun NoteEditorScreen(
         }
 
         HorizontalDivider(
-            color = Color(0xFFE8E0D8),
-            modifier = Modifier.padding(horizontal = 40.dp)
+            color = Color(0xFFE8E0D8), modifier = Modifier.padding(horizontal = 40.dp)
         )
 
         // ======= Content Area =======
@@ -433,8 +418,7 @@ fun NoteEditorScreen(
                         }
                         innerTextField()
                     }
-                }
-            )
+                })
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -532,8 +516,7 @@ fun NoteEditorScreen(
                                     }
                                     innerTextField()
                                 }
-                            }
-                        )
+                            })
                     }
 
                     is ContentBlock.BulletBlock -> {
@@ -716,9 +699,7 @@ fun NoteEditorScreen(
 
         // ======= Bottom Toolbar =======
         Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFF5F0EB),
-            shadowElevation = 8.dp
+            modifier = Modifier.fillMaxWidth(), color = Color(0xFFF5F0EB), shadowElevation = 8.dp
         ) {
             Row(
                 modifier = Modifier
@@ -755,133 +736,121 @@ fun NoteEditorScreen(
                         onDismissRequest = { aiMenuExpanded = false },
                         modifier = Modifier.background(Color.White)
                     ) {
-                        DropdownMenuItem(
-                            text = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.AutoAwesome,
-                                        contentDescription = "إعادة صياغة",
-                                        tint = BrownCard,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.rephrase_text),
-                                        fontFamily = ManropeFontFamily,
-                                        fontSize = 14.sp,
-                                        color = TextPrimary
-                                    )
-                                }
-                            },
-                            onClick = {
-                                aiMenuExpanded = false
-                                val currentText = contentBlocks
-                                    .filterIsInstance<ContentBlock.TextBlock>()
-                                    .joinToString("\n") { it.text }
-                                    .trim()
+                        DropdownMenuItem(text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.AutoAwesome,
+                                    contentDescription = "إعادة صياغة",
+                                    tint = BrownCard,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.rephrase_text),
+                                    fontFamily = ManropeFontFamily,
+                                    fontSize = 14.sp,
+                                    color = TextPrimary
+                                )
+                            }
+                        }, onClick = {
+                            aiMenuExpanded = false
+                            val currentText =
+                                contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
+                                    .joinToString("\n") { it.text }.trim()
 
-                                if (currentText.isBlank()) {
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar("لا يوجد نص لإعادة صياغته")
-                                    }
-                                    return@DropdownMenuItem
-                                }
-
+                            if (currentText.isBlank()) {
                                 scope.launch {
-                                    isAiLoading = true
-                                    try {
-                                        val result = GroqService.rephraseText(currentText)
-                                        val firstTextIndex = contentBlocks
-                                            .indexOfFirst { it is ContentBlock.TextBlock }
-                                        if (firstTextIndex != -1) {
-                                            contentBlocks[firstTextIndex] =
-                                                ContentBlock.TextBlock(text = result)
-                                            snackbarHostState.showSnackbar("تمت إعادة الصياغة بنجاح")
-                                        }
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                        snackbarHostState.showSnackbar("فشل في إعادة الصياغة")
-                                    } finally {
-                                        isAiLoading = false
+                                    snackbarHostState.showSnackbar("لا يوجد نص لإعادة صياغته")
+                                }
+                                return@DropdownMenuItem
+                            }
+
+                            scope.launch {
+                                isAiLoading = true
+                                try {
+                                    val result = GroqService.rephraseText(currentText)
+                                    val firstTextIndex =
+                                        contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
+                                    if (firstTextIndex != -1) {
+                                        contentBlocks[firstTextIndex] =
+                                            ContentBlock.TextBlock(text = result)
+                                        snackbarHostState.showSnackbar("تمت إعادة الصياغة بنجاح")
                                     }
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                    snackbarHostState.showSnackbar("فشل في إعادة الصياغة")
+                                } finally {
+                                    isAiLoading = false
                                 }
                             }
-                        )
+                        })
 
                         HorizontalDivider(color = Color(0xFFF0EBE6))
 
-                        DropdownMenuItem(
-                            text = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Spellcheck,
-                                        contentDescription = "تشكيل النص",
-                                        tint = BrownCard,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.diacritize_text),
-                                        fontFamily = ManropeFontFamily,
-                                        fontSize = 14.sp,
-                                        color = TextPrimary
-                                    )
-                                }
-                            }, onClick = {
-                                aiMenuExpanded = false
-                                val currentText = contentBlocks
-                                    .filterIsInstance<ContentBlock.TextBlock>()
-                                    .joinToString("\n") { it.text }
-                                    .trim()
+                        DropdownMenuItem(text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Spellcheck,
+                                    contentDescription = "تشكيل النص",
+                                    tint = BrownCard,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.diacritize_text),
+                                    fontFamily = ManropeFontFamily,
+                                    fontSize = 14.sp,
+                                    color = TextPrimary
+                                )
+                            }
+                        }, onClick = {
+                            aiMenuExpanded = false
+                            val currentText =
+                                contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
+                                    .joinToString("\n") { it.text }.trim()
 
-                                if (currentText.isBlank()) {
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar("لا يوجد نص لتشكيله")
-                                    }
-                                    return@DropdownMenuItem
-                                }
-
+                            if (currentText.isBlank()) {
                                 scope.launch {
-                                    isAiLoading = true
-                                    try {
-                                        val result = GroqService.diacritizeText(currentText)
-                                        val firstTextIndex = contentBlocks
-                                            .indexOfFirst { it is ContentBlock.TextBlock }
-                                        if (firstTextIndex != -1) {
-                                            contentBlocks[firstTextIndex] =
-                                                ContentBlock.TextBlock(text = result)
-                                            snackbarHostState.showSnackbar("تم تشكيل النص بنجاح")
-                                        }
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                        snackbarHostState.showSnackbar("فشل في تشكيل النص")
-                                    } finally {
-                                        isAiLoading = false
+                                    snackbarHostState.showSnackbar("لا يوجد نص لتشكيله")
+                                }
+                                return@DropdownMenuItem
+                            }
+
+                            scope.launch {
+                                isAiLoading = true
+                                try {
+                                    val result = GroqService.diacritizeText(currentText)
+                                    val firstTextIndex =
+                                        contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
+                                    if (firstTextIndex != -1) {
+                                        contentBlocks[firstTextIndex] =
+                                            ContentBlock.TextBlock(text = result)
+                                        snackbarHostState.showSnackbar("تم تشكيل النص بنجاح")
                                     }
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                    snackbarHostState.showSnackbar("فشل في تشكيل النص")
+                                } finally {
+                                    isAiLoading = false
                                 }
                             }
-                        )
+                        })
                     }
                 }
 
                 EditorToolbarButton(
-                    icon = Icons.Outlined.Mic,
-                    onClick = { audioPickerLauncher.launch("audio/*") }
-                )
+                    icon = Icons.Outlined.Mic, onClick = { audioPickerLauncher.launch("audio/*") })
 
                 EditorToolbarButton(
-                    icon = Icons.Outlined.Link,
-                    onClick = { showLinkDialog = true }
-                )
+                    icon = Icons.Outlined.Link, onClick = { showLinkDialog = true })
 
                 EditorToolbarButton(
                     icon = Icons.Outlined.Image,
-                    onClick = { imagePickerLauncher.launch("image/*") }
-                )
+                    onClick = { imagePickerLauncher.launch("image/*") })
 
                 Box(
                     modifier = Modifier
@@ -900,8 +869,7 @@ fun NoteEditorScreen(
 
                 EditorToolbarButton(
                     icon = Icons.AutoMirrored.Outlined.FormatListBulleted,
-                    onClick = { contentBlocks.add(ContentBlock.BulletBlock()) }
-                )
+                    onClick = { contentBlocks.add(ContentBlock.BulletBlock()) })
 
                 Box(
                     modifier = Modifier
@@ -909,12 +877,10 @@ fun NoteEditorScreen(
                         .clip(RoundedCornerShape(8.dp))
                         .background(
                             if (isItalic) BrownCard.copy(alpha = 0.15f) else Color.Transparent
-                        ),
-                    contentAlignment = Alignment.Center
+                        ), contentAlignment = Alignment.Center
                 ) {
                     IconButton(
-                        onClick = { isItalic = !isItalic },
-                        modifier = Modifier.size(36.dp)
+                        onClick = { isItalic = !isItalic }, modifier = Modifier.size(36.dp)
                     ) {
                         Text(
                             text = "I",
@@ -932,12 +898,10 @@ fun NoteEditorScreen(
                         .clip(RoundedCornerShape(8.dp))
                         .background(
                             if (isBold) BrownCard.copy(alpha = 0.15f) else Color.Transparent
-                        ),
-                    contentAlignment = Alignment.Center
+                        ), contentAlignment = Alignment.Center
                 ) {
                     IconButton(
-                        onClick = { isBold = !isBold },
-                        modifier = Modifier.size(36.dp)
+                        onClick = { isBold = !isBold }, modifier = Modifier.size(36.dp)
                     ) {
                         Text(
                             text = "B",
@@ -953,25 +917,20 @@ fun NoteEditorScreen(
 
     // ======= Link Dialog =======
     if (showLinkDialog) {
-        AddLinkDialog(
-            onDismiss = { showLinkDialog = false },
-            onConfirm = { url ->
-                if (url.isNotBlank()) {
-                    contentBlocks.add(ContentBlock.LinkBlock(url = url))
-                    contentBlocks.add(ContentBlock.TextBlock())
-                }
-                showLinkDialog = false
+        AddLinkDialog(onDismiss = { showLinkDialog = false }, onConfirm = { url ->
+            if (url.isNotBlank()) {
+                contentBlocks.add(ContentBlock.LinkBlock(url = url))
+                contentBlocks.add(ContentBlock.TextBlock())
             }
-        )
+            showLinkDialog = false
+        })
     }
 }
 
 // ======= Toolbar Button =======
 @Composable
 fun EditorToolbarButton(
-    icon: ImageVector,
-    tint: Color = TextSecondary,
-    onClick: () -> Unit
+    icon: ImageVector, tint: Color = TextSecondary, onClick: () -> Unit
 ) {
     IconButton(onClick = onClick, modifier = Modifier.size(36.dp)) {
         Icon(
@@ -986,8 +945,7 @@ fun EditorToolbarButton(
 // ======= Add Link Dialog =======
 @Composable
 fun AddLinkDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
+    onDismiss: () -> Unit, onConfirm: (String) -> Unit
 ) {
     var text by remember { mutableStateOf("") }
 
@@ -1021,9 +979,7 @@ fun AddLinkDialog(
                         .background(Color(0xFFF5F0EB), RoundedCornerShape(12.dp))
                         .padding(16.dp),
                     textStyle = TextStyle(
-                        fontFamily = ManropeFontFamily,
-                        color = TextPrimary,
-                        fontSize = 14.sp
+                        fontFamily = ManropeFontFamily, color = TextPrimary, fontSize = 14.sp
                     ),
                     decorationBox = { innerTextField ->
                         if (text.isEmpty()) {
@@ -1035,8 +991,7 @@ fun AddLinkDialog(
                             )
                         }
                         innerTextField()
-                    }
-                )
+                    })
 
                 Spacer(modifier = Modifier.height(24.dp))
 
