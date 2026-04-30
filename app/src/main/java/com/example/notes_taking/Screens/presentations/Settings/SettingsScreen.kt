@@ -1,7 +1,6 @@
 package com.example.notes_taking.Screens.presentations.Settings
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -137,24 +136,6 @@ fun ProfileAvatar(
         )
     }
 }
-
-@Composable
-fun EditButton() {
-    Box(
-        modifier = Modifier
-            .border(1.dp, CardBorder, RoundedCornerShape(20.dp))
-            .clip(RoundedCornerShape(20.dp))
-            .clickable { }
-            .padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Text(
-            text = stringResource(R.string.btn_edit),
-            fontSize = 14.sp,
-            fontFamily = ManropeFontFamily,
-            color = TextPrimary
-        )
-    }
-}
-
 @Composable
 fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

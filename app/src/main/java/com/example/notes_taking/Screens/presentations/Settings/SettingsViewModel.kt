@@ -13,6 +13,5 @@ class SettingsViewModel : ViewModel() {
 
     fun toggleDarkMode(enabled: Boolean) {
         isDarkModeEnabled = enabled
-        // TODO: Save to DataStore so the theme persists
     }
 }
