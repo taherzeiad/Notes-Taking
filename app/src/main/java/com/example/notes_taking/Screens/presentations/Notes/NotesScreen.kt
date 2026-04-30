@@ -99,7 +99,6 @@ fun NotesScreen(
             ) {
                 // 1. Top Bar (Search + Profile)
                 item {
-                    Spacer(modifier = Modifier.height(12.dp))
                     TopBarSection(
                         isSearchActive = isSearchActive,
                         searchQuery = searchQuery,
