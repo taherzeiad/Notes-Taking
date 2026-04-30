@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.notes_taking.R
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
-import com.example.notes_taking.ui.theme.BrownCard
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
 
@@ -148,7 +147,6 @@ fun SettingsItemWithToggle(
         )
     }
 }
-
 @Composable
 fun SettingsTopBar() {
     Row(
@@ -164,13 +162,12 @@ fun SettingsTopBar() {
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = ManropeFontFamily,
-            // ✅ تم التصحيح هنا
             color = MaterialTheme.colorScheme.onBackground
         )
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.MenuBook,
             contentDescription = null,
-            // ✅ تم التصحيح هنا
+            // ✅ استخدام اللون الأساسي للنص لضمان الوضوح
             tint = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.size(26.dp)
         )
@@ -314,8 +311,8 @@ fun SettingsIconBox(icon: ImageVector) {
 
 @Composable
 fun switchColors() = SwitchDefaults.colors(
-    checkedThumbColor = Color.White,
-    checkedTrackColor = BrownCard,
-    uncheckedThumbColor = Color.White,
-    uncheckedTrackColor = Color(0xFFD0C8C0)
+    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+    checkedTrackColor = MaterialTheme.colorScheme.primary,
+    uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
 )
