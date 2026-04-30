@@ -24,7 +24,6 @@ import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Shield
@@ -48,7 +47,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.BrownCard
@@ -87,18 +85,6 @@ fun SettingsScreen(
             // 2. عنوان الصفحة
             item { SettingsHeader() }
 
-            // 3. بطاقة الملف الشخصي (Profile Card)
-            item {
-                ProfileCard(
-                    name = viewModel.userName,
-                    email = viewModel.userEmail
-                )
-            }
-
-            // 4. أقسام الإعدادات
-            item {
-                AccountSection()
-            }
 
             item {
                 CustomizationSection(
@@ -111,39 +97,10 @@ fun SettingsScreen(
                 PrivacySection()
             }
 
-            // 5. زر تسجيل الخروج
-            item {
-                LogoutButton(onLogout = {
-                    viewModel.logout {
-                        navController.navigate(Route.Onboarding.route) {
-                            popUpTo(0)
-                        }
-                    }
-                })
-            }
-
-            item { Spacer(modifier = Modifier.height(12.dp)) }
         }
     }
 }
-
 // ======= مكونات فرعية (UI Components) =======
-
-@Composable
-fun AccountSection() {
-    SettingsSection(title = stringResource(R.string.section_account)) {
-        SettingsItem(
-            label = stringResource(R.string.item_account_info),
-            icon = Icons.Outlined.Person
-        )
-        HorizontalDivider(color = CardBorder, modifier = Modifier.padding(horizontal = 16.dp))
-        SettingsItem(
-            label = stringResource(R.string.item_security),
-            icon = Icons.Outlined.Lock
-        )
-    }
-}
-
 @Composable
 fun CustomizationSection(isDarkMode: Boolean, onDarkModeChange: (Boolean) -> Unit) {
     SettingsSection(title = stringResource(R.string.section_customization)) {
@@ -162,41 +119,6 @@ fun CustomizationSection(isDarkMode: Boolean, onDarkModeChange: (Boolean) -> Uni
     }
 }
 
-@Composable
-fun ProfileCard(name: String, email: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(0.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            ProfileAvatar(size = 64.dp, iconSize = 36.dp)
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = name,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = MansalvaFontFamily,
-                    color = TextPrimary
-                )
-                Text(
-                    text = email,
-                    fontSize = 13.sp,
-                    fontFamily = ManropeFontFamily,
-                    color = TextSecondary
-                )
-            }
-            EditButton()
-        }
-    }
-}
 
 // ======= Helper UI Components (Clean & Automated) =======
 @Composable

@@ -77,7 +77,6 @@
     <string name="btn_edit">تعديل</string>
     <string name="section_account">الحساب والأمان</string>
     <string name="item_account_info">معلومات الحساب</string>
-    <string name="item_security">كلمة المرور والأمان</string>
     <string name="section_customization">التخصيص</string>
     <string name="item_dark_mode">المظهر الداكن</string>
     <string name="sub_dark_mode">تحويل الواجهة إلى الوضع الليلي المريح</string>

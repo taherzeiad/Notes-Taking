@@ -76,7 +76,6 @@
     <string name="btn_edit">Edit</string>
     <string name="section_account">Account &amp; Security</string>
     <string name="item_account_info">Account Information</string>
-    <string name="item_security">Password &amp; Security</string>
     <string name="section_customization">Customization</string>
     <string name="item_dark_mode">Dark Mode</string>
     <string name="sub_dark_mode">Switch to a comfortable night interface</string>
