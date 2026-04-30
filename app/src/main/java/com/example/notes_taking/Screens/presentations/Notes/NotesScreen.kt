@@ -286,7 +286,7 @@ fun TopBarSection(
                 Icon(
                     imageVector = Icons.Outlined.Search,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
             },
             trailingIcon = {
@@ -357,16 +357,20 @@ fun CategoryTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer)
+            .background(
+                if (isSelected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.secondaryContainer
+            )
             .clickable { onClick() }
             .padding(horizontal = 18.dp, vertical = 10.dp)
     ) {
         Text(
             text = label,
             fontSize = 14.sp,
-            fontFamily = ManropeFontFamily,
-            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+            color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+            else MaterialTheme.colorScheme.onSecondaryContainer,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            maxLines = 1
         )
     }
 }
@@ -653,7 +657,7 @@ fun PageTitleSection() {
             fontSize = 36.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = MansalvaFontFamily,
-            color = TextPrimary,
+            color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Start,
             modifier = Modifier.fillMaxWidth()
         )
@@ -662,7 +666,7 @@ fun PageTitleSection() {
             text = stringResource(R.string.notes_subtitle),
             fontSize = 14.sp,
             fontFamily = ManropeFontFamily,
-            color = TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Start,
             modifier = Modifier.fillMaxWidth()
         )
