@@ -22,15 +22,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,6 +71,8 @@ fun NotesScreen(
 
     val notes by viewModel.notesState.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    var isSearchActive by remember { mutableStateOf(false) }
 
     val categoryMapping = mapOf(
         stringResource(R.string.note_cat_all) to "All",
@@ -91,11 +100,20 @@ fun NotesScreen(
                 // 1. Top Bar (Search + Profile)
                 item {
                     Spacer(modifier = Modifier.height(12.dp))
-                    TopBarSection()
+                    TopBarSection(
+                        isSearchActive = isSearchActive,
+                        searchQuery = searchQuery,
+                        onSearchClick = { isSearchActive = true },
+                        onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
+                        onSearchClose = {
+                            isSearchActive = false
+                            viewModel.onSearchQueryChange("")
+                        })
                 }
-
                 // 2. Page Title
-                item { PageTitleSection() }
+                if (!isSearchActive) {
+                    item { PageTitleSection() }
+                }
 
                 // 3. Category Tabs (الديناميكية الآن من الـ ViewModel)
                 item {
@@ -393,46 +411,6 @@ fun NoteTag(tagRes: Int) {
     }
 }
 
-// ======= Top Bar Section =======
-@Composable
-fun TopBarSection() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Search,
-            contentDescription = null,
-            tint = TextPrimary,
-            modifier = Modifier.size(26.dp)
-        )
-
-        Text(
-            text = stringResource(R.string.notes_screen_title_bar),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = ManropeFontFamily,
-            color = TextPrimary
-        )
-
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(BrownCard),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-    }
-}
-
 // ======= Page Title Section =======
 @Composable
 fun PageTitleSection() {
@@ -470,6 +448,104 @@ fun AddNoteFAB(onAddClick: () -> Unit, modifier: Modifier = Modifier) {
         Icon(
             imageVector = Icons.Default.Add, contentDescription = null, tint = Color.White
         )
+    }
+}
+
+// ======= Top Bar Section =======
+@Composable
+fun TopBarSection(
+    isSearchActive: Boolean,
+    searchQuery: String,
+    onSearchClick: () -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onSearchClose: () -> Unit
+) {
+    if (isSearchActive) {
+        // ======= Search Bar =======
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = onSearchQueryChange,
+                placeholder = {
+                    Text(
+                        text = stringResource(R.string.search),
+                        fontFamily = ManropeFontFamily,
+                        color = TextSecondary
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Search,
+                        contentDescription = null,
+                        tint = TextSecondary
+                    )
+                },
+                trailingIcon = {
+                    IconButton(onClick = {
+                        onSearchQueryChange("")
+                        onSearchClose()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Close,
+                            contentDescription = null,
+                            tint = TextSecondary
+                        )
+                    }
+                },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = BrownCard.copy(alpha = 0.5f),
+                    unfocusedContainerColor = Color(0xFFF5F0EB),
+                    focusedContainerColor = Color(0xFFF5F0EB)
+                ),
+                singleLine = true
+            )
+        }
+    } else {
+        // ======= Normal Top Bar =======
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onSearchClick) {
+                Icon(
+                    imageVector = Icons.Outlined.Search,
+                    contentDescription = null,
+                    tint = TextPrimary,
+                    modifier = Modifier.size(26.dp)
+                )
+            }
+
+            Text(
+                text = stringResource(R.string.notes_screen_title_bar),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = ManropeFontFamily,
+                color = TextPrimary
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(BrownCard),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
     }
 }
 

@@ -310,7 +310,8 @@ fun NoteEditorScreen(
                         // تشغيل الحفظ
                         isSavingInternally = true
 
-                        val firstImageBlock = contentBlocks.filterIsInstance<ContentBlock.ImageBlock>().firstOrNull()
+                        val firstImageBlock =
+                            contentBlocks.filterIsInstance<ContentBlock.ImageBlock>().firstOrNull()
                         val imagePathToSave = firstImageBlock?.uri?.path
 
                         val fullContent = contentBlocks.joinToString("\n") { block ->
