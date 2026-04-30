@@ -96,7 +96,7 @@ fun HomeScreen(
         ) {
             // 1. الترويسة والترحيب
             item { HomeTopBarSection() }
-            item { WelcomeSection(userName = "طاهر") }
+            item { WelcomeSection() }
 
             // 2. بطاقة الذكاء الاصطناعي
             item { AICardSection() }
@@ -158,10 +158,10 @@ fun HomeTopBarSection() {
 }
 
 @Composable
-fun WelcomeSection(userName: String) {
+fun WelcomeSection( ){
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = stringResource(R.string.welcome_user, userName),
+            text = stringResource(R.string.welcome_user),
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = MansalvaFontFamily,

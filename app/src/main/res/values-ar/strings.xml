@@ -46,7 +46,7 @@
     //////////////////////////////////////////////
 
     <string name="app_name_styled">واحتك الفكرية</string>
-    <string name="welcome_user">أهلاً بك، %1$s</string>
+    <string name="welcome_user">أهلاً بك</string>
     <string name="welcome_subtitle">نظرة سريعة على واحتك الفكرية اليوم.</string>
     <string name="ai_suggestion">اقتراح ذكي من الـ AI</string>
     <string name="ai_prompt_text">هل تريد تلخيص ملاحظات الأمس؟ لقد رصدنا ٤ أفكار مترابطة.</string>

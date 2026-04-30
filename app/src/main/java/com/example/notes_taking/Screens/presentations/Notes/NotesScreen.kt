@@ -518,7 +518,7 @@ fun TopBarSection(
 
             Text(
                 text = stringResource(R.string.notes_screen_title_bar),
-                fontSize = 18.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = ManropeFontFamily,
                 color = TextPrimary
