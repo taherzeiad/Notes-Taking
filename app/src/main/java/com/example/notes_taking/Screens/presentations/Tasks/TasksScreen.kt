@@ -2,6 +2,7 @@ package com.example.notes_taking.Screens.presentations.Tasks
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,9 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -27,6 +28,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
@@ -49,9 +51,6 @@ import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.BrownCard
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
-import com.example.notes_taking.ui.theme.PageBackground
-import com.example.notes_taking.ui.theme.TextPrimary
-import com.example.notes_taking.ui.theme.TextSecondary
 
 data class Task(
     val id: Int,
@@ -66,7 +65,6 @@ enum class TaskStatus { IN_PROGRESS, COMPLETED, SCHEDULED }
 
 data class SourceCategory(val nameRes: Int, val count: Int, val unitRes: Int)
 
-// البيانات التجريبية يجب أن تكون خارج أي دالة لكي يراها الـ ViewModel
 val sampleTasks = listOf(
     Task(1, R.string.task_1_title, R.string.task_1_source, R.string.task_1_time, isUrgent = true),
     Task(2, R.string.task_2_title, R.string.task_2_source, R.string.task_2_time),
@@ -74,6 +72,7 @@ val sampleTasks = listOf(
     Task(4, R.string.task_4_title, R.string.task_4_source, R.string.task_empty_time),
     Task(5, R.string.task_5_title, R.string.task_5_source, R.string.task_empty_time)
 )
+
 @Composable
 fun TasksScreen(
     viewModel: TasksViewModel,
@@ -94,7 +93,7 @@ fun TasksScreen(
     )
 
     Scaffold(
-        containerColor = PageBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             BottomNavBar(navController = navController, selectedTab = 1)
         }
@@ -110,27 +109,31 @@ fun TasksScreen(
             // ======= 1. Top Bar =======
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Search,
                         contentDescription = null,
-                        tint = TextPrimary,
-                        modifier = Modifier.size(26.dp).clickable { /* TODO: Search */ }
+                        tint = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier
+                            .size(26.dp)
+                            .clickable { /* TODO */ }
                     )
                     Text(
                         text = stringResource(R.string.app_name_styled),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = ManropeFontFamily,
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.MenuBook,
                         contentDescription = null,
-                        tint = TextPrimary,
+                        tint = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.size(26.dp)
                     )
                 }
@@ -144,7 +147,7 @@ fun TasksScreen(
                         fontSize = 36.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = MansalvaFontFamily,
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -152,7 +155,7 @@ fun TasksScreen(
                         text = stringResource(R.string.tasks_subtitle),
                         fontSize = 13.sp,
                         fontFamily = ManropeFontFamily,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 20.sp,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -162,8 +165,11 @@ fun TasksScreen(
             // ======= 3. Tabs =======
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Start,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        // تسمح بالتمرير الأفقي إذا كانت النصوص طويلة جداً فلا ينزل السطر
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     tabs.forEachIndexed { index, tab ->
@@ -172,12 +178,11 @@ fun TasksScreen(
                             isSelected = viewModel.selectedTab == index,
                             onClick = { viewModel.onTabSelected(index) }
                         )
-                        if (index < tabs.size - 1) Spacer(modifier = Modifier.width(8.dp))
                     }
                 }
             }
 
-            // ======= 4. AI Insights Card =======
+            // ======= 4. AI Insights Card (تبقى بنية ولكن نعدل الشفافية) =======
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -189,7 +194,12 @@ fun TasksScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Icon(Icons.Outlined.AutoAwesome, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            Icon(
+                                Icons.Outlined.AutoAwesome,
+                                null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
                             Text(
                                 text = stringResource(R.string.ai_insights_title),
                                 fontSize = 16.sp,
@@ -209,7 +219,10 @@ fun TasksScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         LinearProgressIndicator(
                             progress = { viewModel.aiProgress },
-                            modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(CircleShape),
                             color = Color.White,
                             trackColor = Color.White.copy(alpha = 0.3f)
                         )
@@ -222,9 +235,11 @@ fun TasksScreen(
                 item {
                     Text(
                         text = "لا توجد مهام حالياً",
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
                         textAlign = TextAlign.Center,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             } else {
@@ -244,13 +259,15 @@ fun TasksScreen(
                     fontSize = 15.sp,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
                     elevation = CardDefaults.cardElevation(0.dp)
                 ) {
                     Column(
@@ -263,35 +280,42 @@ fun TasksScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(stringResource(category.nameRes), fontSize = 14.sp, color = TextPrimary)
+                                Text(
+                                    stringResource(category.nameRes),
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
                                 Text(
                                     text = "${category.count} ${stringResource(category.unitRes)}",
                                     fontSize = 14.sp,
-                                    color = BrownCard,
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
-                            if (index < categories.size - 1) HorizontalDivider(color = Color(0xFFF0EBE6))
+                            if (index < categories.size - 1) {
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                            }
                         }
                     }
                 }
             }
-
             item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 }
 
-// ======= Helper UI Components =======
-
 @Composable
-fun TaskCard(task: com.example.notes_taking.Screens.presentations.Tasks.Task, onCheck: () -> Unit) {
+fun TaskCard(task: Task, onCheck: () -> Unit) {
     val isCompleted = task.status == TaskStatus.COMPLETED
 
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onCheck() },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheck() },
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -310,15 +334,15 @@ fun TaskCard(task: com.example.notes_taking.Screens.presentations.Tasks.Task, on
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = ManropeFontFamily,
-                        color = if (isCompleted) TextSecondary else TextPrimary
+                        color = if (isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
                     )
                 }
                 RadioButton(
                     selected = isCompleted,
                     onClick = onCheck,
                     colors = RadioButtonDefaults.colors(
-                        selectedColor = BrownCard,
-                        unselectedColor = Color(0xFFD0C8C0)
+                        selectedColor = MaterialTheme.colorScheme.primary,
+                        unselectedColor = MaterialTheme.colorScheme.outline
                     )
                 )
             }
@@ -328,13 +352,25 @@ fun TaskCard(task: com.example.notes_taking.Screens.presentations.Tasks.Task, on
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Icon(Icons.Outlined.Description, null, tint = TextSecondary, modifier = Modifier.size(14.dp))
-                    Text(stringResource(task.sourceRes), fontSize = 12.sp, color = TextSecondary)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.Description,
+                        null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        stringResource(task.sourceRes),
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
                 val time = stringResource(task.timeRes)
                 if (time.isNotEmpty()) {
-                    Text(time, fontSize = 12.sp, color = TextSecondary)
+                    Text(time, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -346,16 +382,24 @@ fun TaskTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(if (isSelected) BrownCard else Color(0xFFEDE8E3))
+            .background(
+                if (isSelected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.secondaryContainer
+            )
             .clickable { onClick() }
-            .padding(horizontal = 18.dp, vertical = 10.dp)
+            .padding(horizontal = 18.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center
     ) {
         Text(
             text = label,
             fontSize = 14.sp,
             fontFamily = ManropeFontFamily,
-            color = if (isSelected) Color.White else TextSecondary,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+            color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+            else MaterialTheme.colorScheme.onSecondaryContainer,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            maxLines = 1,
+            softWrap = false,
+            textAlign = TextAlign.Center
         )
     }
 }

@@ -28,6 +28,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -46,15 +47,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.notes_taking.R
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
-import com.example.notes_taking.ui.theme.BrownCard
-import com.example.notes_taking.ui.theme.CardBorder
-import com.example.notes_taking.ui.theme.IconBg
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
-import com.example.notes_taking.ui.theme.PageBackground
-import com.example.notes_taking.ui.theme.SectionTitle
-import com.example.notes_taking.ui.theme.TextPrimary
-import com.example.notes_taking.ui.theme.TextSecondary
 
 @Composable
 fun SettingsScreen(
@@ -62,7 +56,8 @@ fun SettingsScreen(
     navController: NavHostController
 ) {
     Scaffold(
-        containerColor = PageBackground,
+        // ✅ لون الخلفية يتغير تلقائياً
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             BottomNavBar(navController = navController, selectedTab = 0)
         }
@@ -74,29 +69,19 @@ fun SettingsScreen(
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-
-            // 1. الترويسة (Top Bar)
             item { SettingsTopBar() }
-
-            // 2. عنوان الصفحة
             item { SettingsHeader() }
-
-
             item {
                 CustomizationSection(
                     isDarkMode = viewModel.isDarkModeEnabled,
                     onDarkModeChange = { viewModel.toggleDarkMode(it) }
                 )
             }
-
-            item {
-                PrivacySection()
-            }
-
+            item { PrivacySection() }
         }
     }
 }
-// ======= مكونات فرعية (UI Components) =======
+
 @Composable
 fun CustomizationSection(isDarkMode: Boolean, onDarkModeChange: (Boolean) -> Unit) {
     SettingsSection(title = stringResource(R.string.section_customization)) {
@@ -107,82 +92,14 @@ fun CustomizationSection(isDarkMode: Boolean, onDarkModeChange: (Boolean) -> Uni
             checked = isDarkMode,
             onCheckedChange = onDarkModeChange
         )
-        HorizontalDivider(color = CardBorder, modifier = Modifier.padding(horizontal = 16.dp))
+        // ✅ استخدام لون outlineVariant للخط الفاصل ليتناسب مع الوضع المظلم
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outlineVariant,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
         SettingsItem(
             label = stringResource(R.string.item_notifications),
             icon = Icons.Outlined.Notifications
-        )
-    }
-}
-
-
-// ======= Helper UI Components (Clean & Automated) =======
-@Composable
-fun ProfileAvatar(
-    size: androidx.compose.ui.unit.Dp = 40.dp, iconSize: androidx.compose.ui.unit.Dp = 24.dp
-) {
-    Box(
-        modifier = Modifier
-            .size(size)
-            .clip(CircleShape)
-            .background(BrownCard),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Person,
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.size(iconSize)
-        )
-    }
-}
-@Composable
-fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = title,
-            fontSize = 13.sp,
-            fontFamily = ManropeFontFamily,
-            color = SectionTitle,
-            textAlign = TextAlign.Start,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(0.dp)
-        ) {
-            Column(content = content)
-        }
-    }
-}
-
-@Composable
-fun SettingsItem(label: String, icon: ImageVector, onClick: () -> Unit = {}) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically) {
-        SettingsIconBox(icon)
-        Text(
-            text = label,
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 12.dp),
-            fontSize = 15.sp,
-            fontFamily = ManropeFontFamily,
-            color = TextPrimary,
-            fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Start
-        )
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = null,
-            tint = TextSecondary,
-            modifier = Modifier.size(20.dp)
         )
     }
 }
@@ -211,51 +128,31 @@ fun SettingsItemWithToggle(
                 text = label,
                 fontSize = 15.sp,
                 fontFamily = ManropeFontFamily,
-                color = TextPrimary,
+                // ✅ تغيير اللون ليصبح ديناميكياً
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium
             )
             Text(
                 text = subLabel,
                 fontSize = 12.sp,
                 fontFamily = ManropeFontFamily,
-                color = TextSecondary
+                // ✅ استخدام لون فرعي (رمادي في الفاتح، رمادي فاتح في المظلم)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Switch(
-            checked = checked, onCheckedChange = onCheckedChange, colors = switchColors()
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = switchColors()
         )
     }
 }
-
-@Composable
-fun SettingsIconBox(icon: ImageVector) {
-    Box(
-        modifier = Modifier
-            .size(36.dp)
-            .background(IconBg, CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = BrownCard,
-            modifier = Modifier.size(18.dp)
-        )
-    }
-}
-
-@Composable
-fun switchColors() = SwitchDefaults.colors(
-    checkedThumbColor = Color.White,
-    checkedTrackColor = BrownCard,
-    uncheckedThumbColor = Color.White,
-    uncheckedTrackColor = Color(0xFFD0C8C0)
-)
-
 @Composable
 fun SettingsTopBar() {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -265,12 +162,12 @@ fun SettingsTopBar() {
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = ManropeFontFamily,
-            color = TextPrimary
+            color = MaterialTheme.colorScheme.onBackground
         )
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.MenuBook,
             contentDescription = null,
-            tint = TextPrimary,
+            tint = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.size(26.dp)
         )
     }
@@ -284,7 +181,7 @@ fun SettingsHeader() {
             fontSize = 36.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = MansalvaFontFamily,
-            color = TextPrimary,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(4.dp))
@@ -292,7 +189,7 @@ fun SettingsHeader() {
             text = stringResource(R.string.settings_subtitle),
             fontSize = 14.sp,
             fontFamily = ManropeFontFamily,
-            color = TextSecondary,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -305,10 +202,113 @@ fun PrivacySection() {
             label = stringResource(R.string.item_privacy_center),
             icon = Icons.Outlined.Shield
         )
-        HorizontalDivider(color = CardBorder, modifier = Modifier.padding(horizontal = 16.dp))
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outlineVariant,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
         SettingsItem(
             label = stringResource(R.string.item_about),
             icon = Icons.Outlined.Info
         )
     }
 }
+
+@Composable
+fun ProfileAvatar(
+    size: androidx.compose.ui.unit.Dp = 40.dp, iconSize: androidx.compose.ui.unit.Dp = 24.dp
+) {
+    Box(
+        modifier = Modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Person,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(iconSize)
+        )
+    }
+}
+
+@Composable
+fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = title,
+            fontSize = 13.sp,
+            fontFamily = ManropeFontFamily,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+            textAlign = TextAlign.Start,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ), elevation = CardDefaults.cardElevation(0.dp)
+        ) {
+            Column(content = content)
+        }
+    }
+}
+
+@Composable
+fun SettingsItem(label: String, icon: ImageVector, onClick: () -> Unit = {}) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically) {
+        SettingsIconBox(icon)
+        Text(
+            text = label,
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 12.dp),
+            fontSize = 15.sp,
+            fontFamily = ManropeFontFamily,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Start
+        )
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+@Composable
+fun SettingsIconBox(icon: ImageVector) {
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .background(
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                shape = CircleShape
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier.size(18.dp)
+        )
+    }
+}
+
+@Composable
+fun switchColors() = SwitchDefaults.colors(
+    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+    checkedTrackColor = MaterialTheme.colorScheme.primary,
+    uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+)
