@@ -80,7 +80,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
                 fontSize = 16.sp,
                 fontFamily = ManropeFontFamily,
                 fontWeight = FontWeight.Normal,
-                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
         }

@@ -51,32 +51,28 @@ fun AboutScreen(navController: NavHostController) {
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        stringResource(R.string.about_app),
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                Text(
+                    stringResource(R.string.about_app),
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
                 )
+            }, navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                }
+            }, colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background
             )
-        },
-        containerColor = MaterialTheme.colorScheme.background
+            )
+        }, containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // 1. App Logo Section
             Box(
@@ -134,18 +130,15 @@ fun AboutScreen(navController: NavHostController) {
                 AboutLinkItem(
                     icon = Icons.Default.Language,
                     label = stringResource(R.string.official_website),
-                    onClick = { /* افتح الموقع */ }
-                )
+                    onClick = { /* افتح الموقع */ })
                 AboutLinkItem(
                     icon = Icons.Default.Mail,
                     label = stringResource(R.string.technical_support),
-                    onClick = { /* افتح البريد */ }
-                )
+                    onClick = { /* افتح البريد */ })
                 AboutLinkItem(
                     icon = Icons.Default.PrivacyTip,
                     label = stringResource(R.string.privacy_policy),
-                    onClick = { /* افتح الرابط */ }
-                )
+                    onClick = { /* افتح الرابط */ })
             }
 
             Spacer(modifier = Modifier.weight(1f))
