@@ -86,7 +86,6 @@ fun AboutScreen(navController: NavHostController) {
                     .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
             ) {
-                // استبدل R.drawable.ic_launcher_foreground بأيقونة تطبيقك الفعلية
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = null,
@@ -107,7 +106,7 @@ fun AboutScreen(navController: NavHostController) {
             )
 
             Text(
-                text = "الإصدار 1.0.0", // يمكن جلبها ديناميكياً من BuildConfig
+                text = stringResource(R.string.app_version),
                 fontSize = 14.sp,
                 fontFamily = ManropeFontFamily,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -117,7 +116,7 @@ fun AboutScreen(navController: NavHostController) {
 
             // 3. Description
             Text(
-                text = "تطبيق متكامل لتدوين الملاحظات وإدارة المهام بذكاء، مصمم ليوفر لك مساحة هادئة لترتيب أفكارك وتحقيق أهدافك اليومية.",
+                text = stringResource(R.string.app_description),
                 textAlign = TextAlign.Center,
                 fontSize = 16.sp,
                 lineHeight = 24.sp,
@@ -134,17 +133,17 @@ fun AboutScreen(navController: NavHostController) {
             ) {
                 AboutLinkItem(
                     icon = Icons.Default.Language,
-                    label = "الموقع الرسمي",
+                    label = stringResource(R.string.official_website),
                     onClick = { /* افتح الموقع */ }
                 )
                 AboutLinkItem(
                     icon = Icons.Default.Mail,
-                    label = "الدعم الفني",
+                    label = stringResource(R.string.technical_support),
                     onClick = { /* افتح البريد */ }
                 )
                 AboutLinkItem(
                     icon = Icons.Default.PrivacyTip,
-                    label = "سياسة الخصوصية",
+                    label = stringResource(R.string.privacy_policy),
                     onClick = { /* افتح الرابط */ }
                 )
             }
@@ -154,7 +153,7 @@ fun AboutScreen(navController: NavHostController) {
 
             // 5. Footer
             Text(
-                text = "صنع بكل حب في 2026",
+                text = stringResource(R.string.made_with_love),
                 fontSize = 12.sp,
                 fontFamily = ManropeFontFamily,
                 color = MaterialTheme.colorScheme.outline

@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.ManropeFontFamily
@@ -56,7 +57,6 @@ fun SettingsScreen(
     navController: NavHostController
 ) {
     Scaffold(
-        // ✅ لون الخلفية يتغير تلقائياً
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             BottomNavBar(navController = navController, selectedTab = 0)
@@ -77,7 +77,7 @@ fun SettingsScreen(
                     onDarkModeChange = { viewModel.toggleDarkMode(it) }
                 )
             }
-            item { PrivacySection() }
+            item { PrivacySection(navController = navController) }
         }
     }
 }
@@ -92,7 +92,6 @@ fun CustomizationSection(isDarkMode: Boolean, onDarkModeChange: (Boolean) -> Uni
             checked = isDarkMode,
             onCheckedChange = onDarkModeChange
         )
-        // ✅ استخدام لون outlineVariant للخط الفاصل ليتناسب مع الوضع المظلم
         HorizontalDivider(
             color = MaterialTheme.colorScheme.outlineVariant,
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -128,7 +127,6 @@ fun SettingsItemWithToggle(
                 text = label,
                 fontSize = 15.sp,
                 fontFamily = ManropeFontFamily,
-                // ✅ تغيير اللون ليصبح ديناميكياً
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium
             )
@@ -136,7 +134,6 @@ fun SettingsItemWithToggle(
                 text = subLabel,
                 fontSize = 12.sp,
                 fontFamily = ManropeFontFamily,
-                // ✅ استخدام لون فرعي (رمادي في الفاتح، رمادي فاتح في المظلم)
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -147,6 +144,7 @@ fun SettingsItemWithToggle(
         )
     }
 }
+
 @Composable
 fun SettingsTopBar() {
     Row(
@@ -196,7 +194,7 @@ fun SettingsHeader() {
 }
 
 @Composable
-fun PrivacySection() {
+fun PrivacySection(navController: NavHostController) {
     SettingsSection(title = stringResource(R.string.section_privacy)) {
         SettingsItem(
             label = stringResource(R.string.item_privacy_center),
@@ -208,7 +206,11 @@ fun PrivacySection() {
         )
         SettingsItem(
             label = stringResource(R.string.item_about),
-            icon = Icons.Outlined.Info
+            icon = Icons.Outlined.Info,
+            onClick = {
+                navController.navigate(Route.AboutApp.route)
+            }
+
         )
     }
 }

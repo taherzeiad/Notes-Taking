@@ -142,5 +142,13 @@
     <string name="editor_reading_time">%1$d min read</string>
     <string name="audio_file">Audio Recording</string>
 
+    ////////////////////////////
+    <string name="about_app">About the App</string>
+    <string name="app_version">Version 1.0.0</string>
+    <string name="app_description">A comprehensive app for smart note-taking and task management, designed to give you a quiet space to organize your thoughts and achieve your daily goals.</string>
+    <string name="official_website">Official Website</string>
+    <string name="technical_support">Technical Support</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="made_with_love">Made with love in 2026</string>
 </resources>
 
