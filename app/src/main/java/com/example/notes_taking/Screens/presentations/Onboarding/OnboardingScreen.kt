@@ -24,6 +24,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -45,9 +47,6 @@ import androidx.compose.ui.unit.sp
 import com.example.notes_taking.R
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
-import com.example.notes_taking.ui.theme.OnboardingBackground
-import com.example.notes_taking.ui.theme.OnboardingBrown
-import com.example.notes_taking.ui.theme.OnboardingDot
 
 // ======= Data =======
 data class OnboardingPage(
@@ -62,9 +61,7 @@ val onboardingPages = listOf(
 
 @Composable
 fun OnboardingScreen(
-    viewModel: OnboardingViewModel,
-    onFinish: () -> Unit,
-    isRtl: Boolean
+    viewModel: OnboardingViewModel, onFinish: () -> Unit, isRtl: Boolean
 ) {
     val page = onboardingPages[viewModel.currentPage]
     val isLastPage = viewModel.currentPage == onboardingPages.size - 1
@@ -74,15 +71,13 @@ fun OnboardingScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(OnboardingBackground)
+                .background(MaterialTheme.colorScheme.background) // خلفية متكيفة
         ) {
-            // محتوى الصفحة
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .alpha(if (viewModel.isLoading) 0.3f else 1f)
-                    .padding(bottom = 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(bottom = 32.dp), horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // ترويسة التطبيق
                 Text(
@@ -91,52 +86,43 @@ fun OnboardingScreen(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = ManropeFontFamily,
-                        color = OnboardingBrown
+                        color = colorScheme.primary
                     ),
                     modifier = Modifier.padding(top = 48.dp)
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // حاوية الصورة بتصميم عصري
                 OnboardingImageSection(imageRes = page.imageRes)
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // مؤشر الصفحات (Dots)
                 OnboardingPagerIndicator(
-                    pageSize = onboardingPages.size,
-                    currentPage = viewModel.currentPage
+                    pageSize = onboardingPages.size, currentPage = viewModel.currentPage
                 )
 
                 Spacer(modifier = Modifier.height(25.dp))
 
-                // النصوص التعريفية
                 OnboardingTextSection(
                     title = stringResource(page.titleRes),
                     description = stringResource(page.descRes)
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
-                // أزرار التحكم
                 OnboardingActions(
                     isLastPage = isLastPage,
                     isLoading = viewModel.isLoading,
                     onNext = { viewModel.nextPage(isLastPage, onFinish) },
-                    onSkip = { viewModel.skip(onFinish) }
-                )
+                    onSkip = { viewModel.skip(onFinish) })
             }
 
-            // غطاء التحميل (Loading Overlay)
             if (viewModel.isLoading) {
                 LoadingOverlay()
             }
         }
     }
 }
-
-// ======= مكونات فرعية لتحسين نظافة الكود =======
 
 @Composable
 fun OnboardingImageSection(imageRes: Int) {
@@ -146,7 +132,7 @@ fun OnboardingImageSection(imageRes: Int) {
             .height(300.dp)
             .padding(horizontal = 24.dp)
             .clip(RoundedCornerShape(32.dp))
-            .background(Color(0xFFF5E6D8).copy(alpha = 0.5f)),
+            .background(colorScheme.surfaceVariant.copy(alpha = 0.5f)),
         contentAlignment = Alignment.Center
     ) {
         Image(
@@ -173,7 +159,10 @@ fun OnboardingPagerIndicator(pageSize: Int, currentPage: Int) {
                     .height(8.dp)
                     .width(width)
                     .clip(CircleShape)
-                    .background(if (isSelected) OnboardingBrown else OnboardingDot)
+                    .background(
+                        if (isSelected) MaterialTheme.colorScheme.primary
+                        else colorScheme.outlineVariant
+                    )
             )
         }
     }
@@ -187,7 +176,7 @@ fun OnboardingTextSection(title: String, description: String) {
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = MansalvaFontFamily,
-            color = OnboardingBrown,
+            color = colorScheme.onBackground,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 32.dp)
         )
@@ -196,7 +185,7 @@ fun OnboardingTextSection(title: String, description: String) {
             text = description,
             fontSize = 15.sp,
             fontFamily = ManropeFontFamily,
-            color = OnboardingBrown.copy(alpha = 0.7f),
+            color = colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             lineHeight = 26.sp,
             modifier = Modifier.padding(horizontal = 40.dp)
@@ -206,10 +195,7 @@ fun OnboardingTextSection(title: String, description: String) {
 
 @Composable
 fun OnboardingActions(
-    isLastPage: Boolean,
-    isLoading: Boolean,
-    onNext: () -> Unit,
-    onSkip: () -> Unit
+    isLastPage: Boolean, isLoading: Boolean, onNext: () -> Unit, onSkip: () -> Unit
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Button(
@@ -220,16 +206,15 @@ fun OnboardingActions(
                 .padding(horizontal = 24.dp)
                 .height(56.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = OnboardingBrown)
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorScheme.primary, contentColor = colorScheme.onPrimary
+            )
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = if (isLastPage) stringResource(R.string.get_started) else stringResource(
                         R.string.next
-                    ),
-                    fontSize = 18.sp,
-                    fontFamily = MansalvaFontFamily,
-                    color = Color.White
+                    ), fontSize = 18.sp, fontFamily = MansalvaFontFamily
                 )
                 if (!isLastPage) {
                     Spacer(modifier = Modifier.width(8.dp))
@@ -248,7 +233,7 @@ fun OnboardingActions(
                     stringResource(R.string.skip),
                     fontSize = 16.sp,
                     fontFamily = ManropeFontFamily,
-                    color = OnboardingBrown.copy(alpha = 0.6f)
+                    color = colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -260,21 +245,25 @@ fun LoadingOverlay() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.2f)),
+            .background(Color.Black.copy(alpha = 0.4f)),
         contentAlignment = Alignment.Center
     ) {
         Card(
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
             elevation = CardDefaults.cardElevation(12.dp)
         ) {
             Column(
                 modifier = Modifier.padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                CircularProgressIndicator(color = OnboardingBrown)
+                CircularProgressIndicator(color = colorScheme.primary)
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(stringResource(R.string.loading), fontFamily = ManropeFontFamily)
+                Text(
+                    text = stringResource(R.string.loading),
+                    fontFamily = ManropeFontFamily,
+                    color = colorScheme.onSurface
+                )
             }
         }
     }

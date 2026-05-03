@@ -32,6 +32,8 @@ import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.NoteAlt
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -48,7 +50,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.res.stringResource
@@ -62,14 +63,8 @@ import androidx.navigation.NavHostController
 import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
 import com.example.notes_taking.RoomDatabase.Note
-import com.example.notes_taking.ui.theme.BrownCard
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
-import com.example.notes_taking.ui.theme.TagBg
-import com.example.notes_taking.ui.theme.TagText
-import com.example.notes_taking.ui.theme.TextPrimary
-import com.example.notes_taking.ui.theme.TextSecondary
-import com.example.notes_taking.ui.theme.WaveColor
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -120,39 +115,6 @@ fun HomeScreen(
 }
 
 @Composable
-fun HomeTopBarSection() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Default.Person, null, tint = Color.White, modifier = Modifier.size(24.dp))
-        }
-        Text(
-            stringResource(R.string.app_name_styled),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = ManropeFontFamily,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Icon(
-            Icons.AutoMirrored.Outlined.MenuBook,
-            null,
-            tint = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.size(26.dp)
-        )
-    }
-}
-
-@Composable
 fun WelcomeSection() {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -160,13 +122,13 @@ fun WelcomeSection() {
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = MansalvaFontFamily,
-            color = TextPrimary
+            color = MaterialTheme.colorScheme.onBackground
         )
         Text(
             text = stringResource(R.string.welcome_subtitle),
             fontSize = 14.sp,
             fontFamily = ManropeFontFamily,
-            color = TextSecondary
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -196,7 +158,6 @@ fun QuickActionsSection(onAddNote: () -> Unit) {
 }
 
 // ======= المكونات المنفصلة (Components) =======
-
 @Composable
 fun LastEditedNoteSection(note: Note?, onEditClick: (Int) -> Unit, onAddNote: () -> Unit) {
     Column {
@@ -209,10 +170,8 @@ fun LastEditedNoteSection(note: Note?, onEditClick: (Int) -> Unit, onAddNote: ()
         Spacer(modifier = Modifier.height(10.dp))
 
         if (note == null) {
-            // ======= Empty State =======
             EmptyNoteCard(onAddNote = onAddNote)
         } else {
-            // ======= Note Card =======
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -246,7 +205,7 @@ fun LastEditedNoteSection(note: Note?, onEditClick: (Int) -> Unit, onAddNote: ()
                             text = note.content,
                             fontSize = 14.sp,
                             fontFamily = ManropeFontFamily,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 3,
                             overflow = TextOverflow.Ellipsis,
                             lineHeight = 22.sp
@@ -265,7 +224,7 @@ fun EmptyNoteCard(onAddNote: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(
@@ -275,63 +234,82 @@ fun EmptyNoteCard(onAddNote: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // أيقونة فارغة
             Box(
                 modifier = Modifier
                     .size(64.dp)
-                    .background(Color(0xFFF5F0EB), CircleShape),
+                    .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Outlined.NoteAlt,
                     contentDescription = null,
-                    tint = BrownCard.copy(alpha = 0.5f),
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                     modifier = Modifier.size(32.dp)
                 )
             }
-
             Text(
                 text = stringResource(R.string.empty_notes_title),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = MansalvaFontFamily,
-                color = TextPrimary,
-                textAlign = TextAlign.Center
+                color = MaterialTheme.colorScheme.onSurface
             )
-
             Text(
                 text = stringResource(R.string.empty_notes_subtitle),
                 fontSize = 14.sp,
                 fontFamily = ManropeFontFamily,
-                color = TextSecondary,
-                textAlign = TextAlign.Center,
-                lineHeight = 22.sp
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
             )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // زر إضافة ملاحظة
-            androidx.compose.material3.Button(
+            Button(
                 onClick = onAddNote,
                 shape = RoundedCornerShape(12.dp),
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                    containerColor = BrownCard
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp)
-                )
+                Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = stringResource(R.string.add_first_note),
-                    fontFamily = ManropeFontFamily,
-                    color = Color.White
-                )
+                Text(stringResource(R.string.add_first_note), fontFamily = ManropeFontFamily)
             }
         }
+    }
+}
+
+@Composable
+fun HomeTopBarSection() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Default.Person,
+                null,
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        Text(
+            stringResource(R.string.app_name_styled),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = ManropeFontFamily,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Icon(
+            Icons.AutoMirrored.Outlined.MenuBook,
+            null,
+            tint = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.size(26.dp)
+        )
     }
 }
 
@@ -341,10 +319,17 @@ fun NoteTagsRow(tags: List<String>) {
         tags.forEach { tag ->
             Box(
                 modifier = Modifier
-                    .background(TagBg, RoundedCornerShape(20.dp))
+                    .background(
+                        MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(20.dp)
+                    )
                     .padding(horizontal = 10.dp, vertical = 4.dp)
             ) {
-                Text(text = tag, fontSize = 12.sp, color = TagText)
+                Text(
+                    text = tag,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontFamily = ManropeFontFamily
+                )
             }
         }
     }
@@ -353,7 +338,7 @@ fun NoteTagsRow(tags: List<String>) {
 @Composable
 fun NoteCardFooter(onContinueClick: () -> Unit) {
     Spacer(modifier = Modifier.height(12.dp))
-    HorizontalDivider(color = Color(0xFFF0EBE6))
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     Spacer(modifier = Modifier.height(12.dp))
 
     Row(
@@ -366,20 +351,24 @@ fun NoteCardFooter(onContinueClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            Text(
+                stringResource(R.string.continue_writing),
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium,
+                fontFamily = ManropeFontFamily
+            )
             Icon(
                 Icons.AutoMirrored.Outlined.ArrowForward,
                 null,
-                tint = BrownCard,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(16.dp)
-            )
-            Text(
-                stringResource(R.string.continue_writing),
-                color = BrownCard,
-                fontWeight = FontWeight.Medium
             )
         }
         Text(
-            stringResource(R.string.edited_time_ago, "15"), fontSize = 12.sp, color = TextSecondary
+            stringResource(R.string.edited_time_ago, "15"),
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontFamily = ManropeFontFamily
         )
     }
 }
@@ -387,6 +376,8 @@ fun NoteCardFooter(onContinueClick: () -> Unit) {
 // ======= Wave Chart =======
 @Composable
 fun WaveChart(modifier: Modifier = Modifier) {
+    // نستخدم لون الـ Secondary للتناسق مع الموجة
+    val waveColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f)
     Canvas(modifier = modifier.clipToBounds()) {
         val width = size.width
         val height = size.height
@@ -415,14 +406,16 @@ fun WaveChart(modifier: Modifier = Modifier) {
             lineTo(0f, height)
             close()
         }
-        drawPath(path = path, color = WaveColor, style = Fill)
+        drawPath(path = path, color = waveColor, style = Fill)
     }
 }
 
 // ======= Bottom Navigation =======
 @Composable
 fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
-    NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 4.dp
+    ) {
         val tabs = listOf(
             Triple(
                 stringResource(R.string.nav_settings), Icons.Outlined.Settings, Route.Settings.route
@@ -436,8 +429,7 @@ fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
 
         tabs.forEachIndexed { index, (label, icon, route) ->
             NavigationBarItem(
-                selected = selectedTab == index,
-                onClick = {
+                selected = selectedTab == index, onClick = {
                     if (selectedTab != index) {
                         navController.navigate(route) {
                             popUpTo(Route.Home.route) { saveState = true }
@@ -445,21 +437,25 @@ fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
                             restoreState = true
                         }
                     }
-                },
-                icon = {
+                }, icon = {
                     Icon(
                         imageVector = icon,
                         contentDescription = label,
                         modifier = Modifier.size(24.dp)
                     )
-                },
-                label = { Text(text = label, fontSize = 10.sp, fontFamily = ManropeFontFamily) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = BrownCard,
-                    selectedTextColor = BrownCard,
+                }, label = {
+                    Text(
+                        text = label,
+                        fontSize = 10.sp,
+                        fontFamily = ManropeFontFamily,
+                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                    )
+                }, colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
                     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    unselectedTextColor = TextSecondary,
-                    indicatorColor = Color.Transparent
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                 )
             )
         }
@@ -471,7 +467,7 @@ fun AICardSection() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = BrownCard)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -481,14 +477,14 @@ fun AICardSection() {
                 Icon(
                     imageVector = Icons.Outlined.AutoAwesome,
                     contentDescription = null,
-                    tint = Color.White.copy(alpha = 0.7f),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
                     text = stringResource(R.string.ai_suggestion),
                     fontSize = 12.sp,
                     fontFamily = ManropeFontFamily,
-                    color = Color.White.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
@@ -497,16 +493,19 @@ fun AICardSection() {
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = MansalvaFontFamily,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
                 lineHeight = 26.sp
             )
             Spacer(modifier = Modifier.height(16.dp))
-            androidx.compose.material3.Button(
-                onClick = { /* TODO: AI Action */ },
+            Button(
+                onClick = { /* AI Action */ },
                 shape = RoundedCornerShape(12.dp),
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color.White)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
-                Text(stringResource(R.string.start_summary), color = BrownCard)
+                Text(stringResource(R.string.start_summary), fontFamily = ManropeFontFamily)
             }
         }
     }
@@ -526,7 +525,8 @@ fun UpcomingTaskSection(onViewAll: () -> Unit) {
                 Text(
                     stringResource(R.string.important_task),
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontFamily = ManropeFontFamily
                 )
                 Icon(Icons.Outlined.CheckCircle, null, tint = MaterialTheme.colorScheme.primary)
             }
@@ -546,7 +546,8 @@ fun UpcomingTaskSection(onViewAll: () -> Unit) {
                     .clickable { onViewAll() }
                     .padding(top = 12.dp),
                 textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.primary)
+                color = MaterialTheme.colorScheme.primary,
+                fontFamily = ManropeFontFamily)
         }
     }
 }
@@ -586,7 +587,8 @@ fun QuickActionButton(
                 label,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                fontFamily = ManropeFontFamily
             )
         }
     }

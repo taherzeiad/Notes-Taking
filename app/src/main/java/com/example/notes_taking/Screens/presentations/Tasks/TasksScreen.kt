@@ -38,7 +38,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -48,10 +47,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.notes_taking.R
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
-import com.example.notes_taking.ui.theme.BrownCard
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
 
+// ======= Data Classes =======
 data class Task(
     val id: Int,
     val titleRes: Int,
@@ -61,17 +60,22 @@ data class Task(
     val status: TaskStatus = TaskStatus.IN_PROGRESS
 )
 
+val sampleTasks = listOf(
+
+    Task(1, R.string.task_1_title, R.string.task_1_source, R.string.task_1_time, isUrgent = true),
+
+    Task(2, R.string.task_2_title, R.string.task_2_source, R.string.task_2_time),
+
+    Task(3, R.string.task_3_title, R.string.task_3_source, R.string.task_3_time),
+
+    Task(4, R.string.task_4_title, R.string.task_4_source, R.string.task_empty_time),
+
+    Task(5, R.string.task_5_title, R.string.task_5_source, R.string.task_empty_time)
+
+)
 enum class TaskStatus { IN_PROGRESS, COMPLETED, SCHEDULED }
 
 data class SourceCategory(val nameRes: Int, val count: Int, val unitRes: Int)
-
-val sampleTasks = listOf(
-    Task(1, R.string.task_1_title, R.string.task_1_source, R.string.task_1_time, isUrgent = true),
-    Task(2, R.string.task_2_title, R.string.task_2_source, R.string.task_2_time),
-    Task(3, R.string.task_3_title, R.string.task_3_source, R.string.task_3_time),
-    Task(4, R.string.task_4_title, R.string.task_4_source, R.string.task_empty_time),
-    Task(5, R.string.task_5_title, R.string.task_5_source, R.string.task_empty_time)
-)
 
 @Composable
 fun TasksScreen(
@@ -121,10 +125,10 @@ fun TasksScreen(
                         tint = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier
                             .size(26.dp)
-                            .clickable { /* TODO */ }
+                            .clickable { /* TODO: Search Logic */ }
                     )
                     Text(
-                        text = stringResource(R.string.app_name_styled),
+                        text = stringResource(R.string.notes_screen_title_bar),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = ManropeFontFamily,
@@ -167,7 +171,6 @@ fun TasksScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        // تسمح بالتمرير الأفقي إذا كانت النصوص طويلة جداً فلا ينزل السطر
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -182,12 +185,14 @@ fun TasksScreen(
                 }
             }
 
-            // ======= 4. AI Insights Card (تبقى بنية ولكن نعدل الشفافية) =======
+            // ======= 4. AI Insights Card =======
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = BrownCard)
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer // بديل لـ BrownCard
+                    )
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Row(
@@ -197,7 +202,7 @@ fun TasksScreen(
                             Icon(
                                 Icons.Outlined.AutoAwesome,
                                 null,
-                                tint = Color.White,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.size(18.dp)
                             )
                             Text(
@@ -205,7 +210,7 @@ fun TasksScreen(
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = MansalvaFontFamily,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
                         Spacer(modifier = Modifier.height(12.dp))
@@ -213,7 +218,7 @@ fun TasksScreen(
                             text = stringResource(R.string.ai_insights_body),
                             fontSize = 14.sp,
                             fontFamily = ManropeFontFamily,
-                            color = Color.White.copy(alpha = 0.9f),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                             lineHeight = 22.sp
                         )
                         Spacer(modifier = Modifier.height(16.dp))
@@ -223,23 +228,24 @@ fun TasksScreen(
                                 .fillMaxWidth()
                                 .height(6.dp)
                                 .clip(CircleShape),
-                            color = Color.White,
-                            trackColor = Color.White.copy(alpha = 0.3f)
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f)
                         )
                     }
                 }
             }
 
-            // ======= 5. Dynamic Tasks List =======
+            // ======= 5. Tasks List =======
             if (tasks.isEmpty()) {
                 item {
                     Text(
-                        text = "لا توجد مهام حالياً",
+                        text = stringResource(R.string.empty_notes_title),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 32.dp),
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = ManropeFontFamily
                     )
                 }
             } else {
@@ -283,13 +289,15 @@ fun TasksScreen(
                                 Text(
                                     stringResource(category.nameRes),
                                     fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontFamily = ManropeFontFamily
                                 )
                                 Text(
                                     text = "${category.count} ${stringResource(category.unitRes)}",
                                     fontSize = 14.sp,
                                     color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = ManropeFontFamily
                                 )
                             }
                             if (index < categories.size - 1) {
@@ -363,14 +371,20 @@ fun TaskCard(task: Task, onCheck: () -> Unit) {
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
-                        stringResource(task.sourceRes),
+                        text = stringResource(task.sourceRes),
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = ManropeFontFamily
                     )
                 }
                 val time = stringResource(task.timeRes)
                 if (time.isNotEmpty()) {
-                    Text(time, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = time,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = ManropeFontFamily
+                    )
                 }
             }
         }
@@ -398,8 +412,7 @@ fun TaskTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
             else MaterialTheme.colorScheme.onSecondaryContainer,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
             maxLines = 1,
-            softWrap = false,
-            textAlign = TextAlign.Center
+            softWrap = false
         )
     }
 }
@@ -408,14 +421,18 @@ fun TaskTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
 fun UrgentBadge() {
     Box(
         modifier = Modifier
-            .background(Color(0xFFFFEBEB), RoundedCornerShape(20.dp))
+            .background(
+                MaterialTheme.colorScheme.errorContainer,
+                RoundedCornerShape(20.dp)
+            )
             .padding(horizontal = 10.dp, vertical = 3.dp)
     ) {
         Text(
             text = stringResource(R.string.tag_urgent),
             fontSize = 11.sp,
-            color = Color(0xFFD94F3D),
-            fontWeight = FontWeight.SemiBold
+            color = MaterialTheme.colorScheme.error,
+            fontWeight = FontWeight.SemiBold,
+            fontFamily = ManropeFontFamily
         )
     }
 }

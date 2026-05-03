@@ -58,11 +58,8 @@ import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
 import com.example.notes_taking.RoomDatabase.Note
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
-import com.example.notes_taking.ui.theme.BrownCard
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
-import com.example.notes_taking.ui.theme.TextPrimary
-import com.example.notes_taking.ui.theme.TextSecondary
 
 @Composable
 fun NotesScreen(
@@ -84,8 +81,7 @@ fun NotesScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = { BottomNavBar(navController = navController, selectedTab = 2) }
-    ) { padding ->
+        bottomBar = { BottomNavBar(navController = navController, selectedTab = 2) }) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -161,7 +157,6 @@ fun RoomNoteCard(note: Note, onClick: () -> Unit) {
             .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            // ✅ استخدام surface بدلاً من الأبيض الثابت
             containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(0.dp)
@@ -176,7 +171,6 @@ fun RoomNoteCard(note: Note, onClick: () -> Unit) {
                     text = note.date,
                     fontSize = 12.sp,
                     fontFamily = ManropeFontFamily,
-                    // ✅ استخدام onSurfaceVariant للنصوص الثانوية
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 if (note.isPinned) {
@@ -206,7 +200,6 @@ fun RoomNoteCard(note: Note, onClick: () -> Unit) {
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = ManropeFontFamily,
-                // ✅ استخدام onSurface للنصوص الأساسية
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -362,8 +355,7 @@ fun CategoryTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
                 else MaterialTheme.colorScheme.secondaryContainer
             )
             .clickable { onClick() }
-            .padding(horizontal = 18.dp, vertical = 10.dp)
-    ) {
+            .padding(horizontal = 18.dp, vertical = 10.dp)) {
         Text(
             text = label,
             fontSize = 14.sp,
@@ -416,238 +408,6 @@ fun EmptyNotesState() {
     }
 }
 
-@Composable
-fun NoteDispatcher(note: NoteCardData, navController: NavHostController) {
-    val onNoteClick = { navController.navigate(Route.NoteEditor.createRoute(note.id)) }
-
-    when (note.type) {
-        NoteCardType.IMAGE -> ImageNoteCard(note = note, onClick = onNoteClick)
-        NoteCardType.BULLETS -> BulletsNoteCard(note = note, onClick = onNoteClick)
-        else -> TextNoteCard(note = note, onClick = onNoteClick)
-    }
-}
-
-// ======= Text Note Card =======
-@Composable
-fun TextNoteCard(note: NoteCardData, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(0.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (note.dateRes != 0) {
-                    Text(
-                        text = stringResource(note.dateRes),
-                        fontSize = 12.sp,
-                        fontFamily = ManropeFontFamily,
-                        color = TextSecondary
-                    )
-                } else {
-                    Spacer(modifier = Modifier.width(1.dp))
-                }
-                if (note.tagRes != 0) {
-                    NoteTag(tagRes = note.tagRes)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = stringResource(note.titleRes),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = ManropeFontFamily,
-                color = TextPrimary,
-                textAlign = TextAlign.Start,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            if (note.contentRes != 0) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(note.contentRes),
-                    fontSize = 14.sp,
-                    fontFamily = ManropeFontFamily,
-                    fontStyle = if (note.isItalic) FontStyle.Italic else FontStyle.Normal,
-                    color = TextPrimary.copy(alpha = 0.7f),
-                    textAlign = TextAlign.Start,
-                    lineHeight = 22.sp,
-                    maxLines = if (note.isItalic) 3 else 4,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            if (!note.isItalic && note.contentRes != 0) {
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.read_more),
-                        fontSize = 13.sp,
-                        fontFamily = ManropeFontFamily,
-                        color = BrownCard,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.MenuBook,
-                        contentDescription = null,
-                        tint = BrownCard,
-                        modifier = Modifier.size(14.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-// ======= Image Note Card =======
-@Composable
-fun ImageNoteCard(note: NoteCardData, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(0.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-        ) {
-            AsyncImage(
-                model = note.imageUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(20.dp))
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(20.dp))
-            )
-            Text(
-                text = stringResource(note.titleRes),
-                fontSize = 14.sp,
-                fontFamily = ManropeFontFamily,
-                fontStyle = FontStyle.Italic,
-                color = Color.White.copy(alpha = 0.9f),
-                textAlign = TextAlign.Start,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(16.dp)
-                    .fillMaxWidth()
-            )
-        }
-    }
-}
-
-// ======= Bullets Note Card =======
-@Composable
-fun BulletsNoteCard(note: NoteCardData, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(0.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-
-            if (note.tagRes != 0) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End
-                ) {
-                    NoteTag(tagRes = note.tagRes)
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
-            Text(
-                text = stringResource(note.titleRes),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = ManropeFontFamily,
-                color = TextPrimary,
-                textAlign = TextAlign.Start,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            note.bulletsRes.forEach { bulletRes ->
-                Row(
-                    verticalAlignment = Alignment.Top,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "•",
-                        fontSize = 14.sp,
-                        color = BrownCard,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = stringResource(bulletRes),
-                        fontSize = 14.sp,
-                        fontFamily = ManropeFontFamily,
-                        color = TextPrimary.copy(alpha = 0.8f),
-                        textAlign = TextAlign.Start
-                    )
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-            }
-
-            if (note.contentRes != 0) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(note.contentRes),
-                    fontSize = 12.sp,
-                    fontFamily = ManropeFontFamily,
-                    color = TextSecondary,
-                    textAlign = TextAlign.Start,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
-    }
-}
-
-// ======= Note Tag =======
-@Composable
-fun NoteTag(tagRes: Int) {
-    Box(
-        modifier = Modifier
-            .background(Color(0xFFF0EBE6), RoundedCornerShape(20.dp))
-            .padding(horizontal = 10.dp, vertical = 4.dp)
-    ) {
-        Text(
-            text = stringResource(tagRes),
-            fontSize = 12.sp,
-            fontFamily = ManropeFontFamily,
-            color = BrownCard,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
 // ======= Page Title Section =======
 @Composable
 fun PageTitleSection() {
@@ -677,10 +437,15 @@ fun PageTitleSection() {
 @Composable
 fun AddNoteFAB(onAddClick: () -> Unit, modifier: Modifier = Modifier) {
     FloatingActionButton(
-        onClick = onAddClick, containerColor = BrownCard, shape = CircleShape, modifier = modifier
+        onClick = onAddClick,
+        containerColor = MaterialTheme.colorScheme.primary,
+        shape = CircleShape,
+        modifier = modifier
     ) {
         Icon(
-            imageVector = Icons.Default.Add, contentDescription = null, tint = Color.White
+            imageVector = Icons.Default.Add,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onPrimary
         )
     }
 }
