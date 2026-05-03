@@ -1,3 +1,5 @@
+package com.example.notes_taking.Screens.presentations.Onboarding
+
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
