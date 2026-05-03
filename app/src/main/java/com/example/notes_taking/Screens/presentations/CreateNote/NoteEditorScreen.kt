@@ -338,13 +338,11 @@ fun NoteEditorScreen(
                             onError = { error ->
                                 isSavingInternally = false
                                 scope.launch { snackbarHostState.showSnackbar(error) }
-                            }
-                        )
+                            })
                     },
                     shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colorScheme.primary,
-                        contentColor = colorScheme.onPrimary
+                        containerColor = colorScheme.primary, contentColor = colorScheme.onPrimary
                     ),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     modifier = Modifier.height(36.dp),
@@ -404,7 +402,11 @@ fun NoteEditorScreen(
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = ManropeFontFamily,
-                    color = if (title.isEmpty()) Color(0xFFCEC0B0) else TextPrimary,
+                    color = if (title.isEmpty()) {
+                        Color(0xFFCEC0B0)
+                    } else {
+                        colorScheme.onBackground
+                    },
                     textAlign = TextAlign.Start
                 ),
                 cursorBrush = SolidColor(BrownCard),
@@ -702,10 +704,9 @@ fun NoteEditorScreen(
                 }
             }
         }
-
         // ======= Bottom Toolbar =======
         Surface(
-            modifier = Modifier.fillMaxWidth(), color = Color(0xFFF5F0EB), shadowElevation = 8.dp
+            modifier = Modifier.fillMaxWidth(), color = colorScheme.surface, shadowElevation = 8.dp
         ) {
             Row(
                 modifier = Modifier
@@ -936,9 +937,7 @@ fun NoteEditorScreen(
 // ======= Toolbar Button =======
 @Composable
 fun EditorToolbarButton(
-    icon: ImageVector,
-    tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    onClick: () -> Unit
+    icon: ImageVector, tint: Color = colorScheme.onSurfaceVariant, onClick: () -> Unit
 ) {
     IconButton(onClick = onClick, modifier = Modifier.size(36.dp)) {
         Icon(
@@ -960,9 +959,8 @@ fun AddLinkDialog(
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(24.dp),
-            // ✅ الحل: استخدام surface بدلاً من Color.White
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 6.dp, // يعطي عمقاً جميلاً في الدارك مود
+            color = colorScheme.surface,
+            tonalElevation = 6.dp,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
@@ -976,8 +974,7 @@ fun AddLinkDialog(
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
-                    // ✅ الحل: استخدام onSurface
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -987,25 +984,21 @@ fun AddLinkDialog(
                     onValueChange = { text = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        // ✅ الحل: استخدام لون surfaceVariant للخلفية (رمادي داكن)
                         .background(
-                            MaterialTheme.colorScheme.surfaceVariant,
-                            RoundedCornerShape(12.dp)
+                            colorScheme.surfaceVariant, RoundedCornerShape(12.dp)
                         )
                         .padding(16.dp),
                     textStyle = TextStyle(
                         fontFamily = ManropeFontFamily,
-                        // ✅ الحل: التأكد من لون الخط داخل التكست فيلد
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = colorScheme.onSurface,
                         fontSize = 14.sp
                     ),
-                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary), // لون المؤشر
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     decorationBox = { innerTextField ->
                         if (text.isEmpty()) {
                             Text(
                                 "https://example.com",
-                                // ✅ لون التلميح (Hint)
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                color = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                 fontFamily = ManropeFontFamily,
                                 fontSize = 14.sp
                             )
@@ -1019,7 +1012,6 @@ fun AddLinkDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // زر الإلغاء
                     Button(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f),
@@ -1028,13 +1020,12 @@ fun AddLinkDialog(
                     ) {
                         Text(
                             text = stringResource(R.string.cancel),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = colorScheme.onSurfaceVariant,
                             fontFamily = ManropeFontFamily,
                             fontSize = 14.sp
                         )
                     }
 
-                    // زر الإضافة
                     Button(
                         onClick = {
                             if (text.isNotBlank()) {
@@ -1044,14 +1035,10 @@ fun AddLinkDialog(
                                 }
                                 onConfirm(url)
                             }
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        enabled = text.isNotBlank()
+                        }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(
+                            containerColor = colorScheme.primary,
+                            contentColor = colorScheme.onPrimary
+                        ), shape = RoundedCornerShape(12.dp), enabled = text.isNotBlank()
                     ) {
                         Text(
                             text = stringResource(R.string.add),
