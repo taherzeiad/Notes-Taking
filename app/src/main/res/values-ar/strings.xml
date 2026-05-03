@@ -143,4 +143,13 @@
     <string name="editor_reading_time">%1$d دقائق قراءة</string>
     <string name="audio_file">تسجيل صوتي</string>
 
+    //////////////////////////////////////////////////
+    <string name="about_app">حول التطبيق</string>
+    <string name="app_version">الإصدار 1.0.0</string>
+    <string name="app_description">تطبيق متكامل لتدوين الملاحظات وإدارة المهام بذكاء، مصمم ليوفر لك مساحة هادئة لترتيب أفكارك وتحقيق أهدافك اليومية.</string>
+    <string name="official_website">الموقع الرسمي</string>
+    <string name="technical_support">الدعم الفني</string>
+    <string name="privacy_policy">سياسة الخصوصية</string>
+    <string name="made_with_love">صنع بكل حب في 2026</string>
+
 </resources>

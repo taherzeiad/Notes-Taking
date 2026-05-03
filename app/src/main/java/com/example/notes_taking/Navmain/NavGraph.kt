@@ -17,6 +17,7 @@ import androidx.navigation.navArgument
 import com.example.notes_taking.Repository.GenericViewModelFactory
 import com.example.notes_taking.Repository.NoteRepositoryImpl
 import com.example.notes_taking.RoomDatabase.NoteDatabase
+import com.example.notes_taking.Screens.presentations.About.AboutScreen
 import com.example.notes_taking.Screens.presentations.Editor.NoteEditorScreen
 import com.example.notes_taking.Screens.presentations.Editor.NoteViewModel
 import com.example.notes_taking.Screens.presentations.Home.HomeScreen
@@ -35,8 +36,7 @@ import com.example.notes_taking.Screens.presentations.Tasks.TasksViewModel
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun NavGraph(
-    navController: NavHostController,
-    settingsViewModel: SettingsViewModel
+    navController: NavHostController, settingsViewModel: SettingsViewModel
 ) {
     val context = LocalContext.current
 
@@ -87,14 +87,11 @@ fun NavGraph(
 
         // ======= Note Editor =======
         composable(
-            route = Route.NoteEditor.route,
-            arguments = listOf(
-                navArgument("noteId") {
-                    type = NavType.IntType
-                    defaultValue = 0
-                }
-            )
-        ) { backStackEntry ->
+            route = Route.NoteEditor.route, arguments = listOf(
+            navArgument("noteId") {
+                type = NavType.IntType
+                defaultValue = 0
+            })) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getInt("noteId") ?: 0
             val editorViewModel: NoteViewModel = viewModel(factory = factory)
 
@@ -102,8 +99,7 @@ fun NavGraph(
                 noteId = noteId,
                 viewModel = editorViewModel,
                 onClose = { navController.popBackStack() },
-                onSave = { navController.popBackStack() }
-            )
+                onSave = { navController.popBackStack() })
         }
 
         // ======= Notes =======
@@ -123,6 +119,11 @@ fun NavGraph(
             val tasksViewModel: TasksViewModel = viewModel()
             TasksScreen(
                 viewModel = tasksViewModel, navController = navController
+            )
+        }
+        composable(route = Route.AboutApp.route) {
+            AboutScreen(
+                navController = navController
             )
         }
     }
