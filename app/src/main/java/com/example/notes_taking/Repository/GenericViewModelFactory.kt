@@ -1,9 +1,9 @@
 package com.example.notes_taking.Repository
 
-import HomeViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.notes_taking.Screens.presentations.Editor.NoteViewModel
+import com.example.notes_taking.Screens.presentations.Home.HomeViewModel
 import com.example.notes_taking.Screens.presentations.Notes.NotesViewModel
 
 @Suppress("UNCHECKED_CAST")

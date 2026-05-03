@@ -1,6 +1,5 @@
 package com.example.notes_taking.Screens.presentations.Home
 
-import HomeViewModel
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas

@@ -50,6 +50,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -257,7 +258,7 @@ fun NoteEditorScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(colorScheme.background)
             .navigationBarsPadding()
             .statusBarsPadding()
             .imePadding()
@@ -279,7 +280,7 @@ fun NoteEditorScreen(
                     Icon(
                         imageVector = Icons.Outlined.Close,
                         contentDescription = "إغلاق",
-                        tint = TextPrimary,
+                        tint = colorScheme.onBackground,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -288,7 +289,7 @@ fun NoteEditorScreen(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = ManropeFontFamily,
-                    color = TextPrimary
+                    color = colorScheme.onBackground
                 )
             }
 
@@ -341,7 +342,10 @@ fun NoteEditorScreen(
                         )
                     },
                     shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = BrownCard),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorScheme.primary,
+                        contentColor = colorScheme.onPrimary
+                    ),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     modifier = Modifier.height(36.dp),
                     enabled = !isLoading
@@ -379,7 +383,7 @@ fun NoteEditorScreen(
         }
 
         HorizontalDivider(
-            color = Color(0xFFE8E0D8), modifier = Modifier.padding(horizontal = 40.dp)
+            color = colorScheme.outlineVariant, modifier = Modifier.padding(horizontal = 40.dp)
         )
 
         // ======= Content Area =======
@@ -984,7 +988,10 @@ fun AddLinkDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         // ✅ الحل: استخدام لون surfaceVariant للخلفية (رمادي داكن)
-                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant,
+                            RoundedCornerShape(12.dp)
+                        )
                         .padding(16.dp),
                     textStyle = TextStyle(
                         fontFamily = ManropeFontFamily,

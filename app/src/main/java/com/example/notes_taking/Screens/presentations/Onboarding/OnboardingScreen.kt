@@ -1,6 +1,5 @@
 package com.example.notes_taking.Screens.presentations.Onboarding
 
-import OnboardingViewModel
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

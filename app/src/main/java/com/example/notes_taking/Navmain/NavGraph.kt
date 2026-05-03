@@ -1,7 +1,6 @@
 package com.example.notes_taking.Navmain
 
-import HomeViewModel
-import OnboardingViewModel
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
@@ -21,9 +20,11 @@ import com.example.notes_taking.RoomDatabase.NoteDatabase
 import com.example.notes_taking.Screens.presentations.Editor.NoteEditorScreen
 import com.example.notes_taking.Screens.presentations.Editor.NoteViewModel
 import com.example.notes_taking.Screens.presentations.Home.HomeScreen
+import com.example.notes_taking.Screens.presentations.Home.HomeViewModel
 import com.example.notes_taking.Screens.presentations.Notes.NotesScreen
 import com.example.notes_taking.Screens.presentations.Notes.NotesViewModel
 import com.example.notes_taking.Screens.presentations.Onboarding.OnboardingScreen
+import com.example.notes_taking.Screens.presentations.Onboarding.OnboardingViewModel
 import com.example.notes_taking.Screens.presentations.Settings.SettingsScreen
 import com.example.notes_taking.Screens.presentations.Settings.SettingsViewModel
 import com.example.notes_taking.Screens.presentations.Splash.SplashScreen
