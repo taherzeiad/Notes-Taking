@@ -16,8 +16,7 @@ class TasksViewModel : ViewModel() {
     var selectedTab by mutableIntStateOf(0)
         private set
 
-    // القائمة الكاملة (كمصدر وحيد للحقيقة داخل الـ ViewModel)
-    private var allTasks = sampleTasks
+    private var allTasks: List<Task> = sampleTasks
 
     private val _tasks = MutableStateFlow<List<Task>>(emptyList())
     val tasks: StateFlow<List<Task>> = _tasks.asStateFlow()
@@ -26,7 +25,7 @@ class TasksViewModel : ViewModel() {
         private set
 
     init {
-        filterTasksByTab(0) // تحميل مهام "قيد التنفيذ" عند البدء
+        filterTasksByTab(0)
         updateAiProgress()
     }
 
@@ -41,13 +40,12 @@ class TasksViewModel : ViewModel() {
             1 -> TaskStatus.COMPLETED
             else -> TaskStatus.SCHEDULED
         }
-        _tasks.value = allTasks.filter { it.status == status }
+        _tasks.value = allTasks.filter { task: Task -> task.status == status }
     }
 
     fun toggleTaskCompletion(taskId: Int) {
         viewModelScope.launch {
-            // تحديث الحالة في المصدر الرئيسي
-            allTasks = allTasks.map { task ->
+            allTasks = allTasks.map { task: Task ->
                 if (task.id == taskId) {
                     val newStatus = if (task.status == TaskStatus.COMPLETED)
                         TaskStatus.IN_PROGRESS else TaskStatus.COMPLETED
@@ -61,7 +59,7 @@ class TasksViewModel : ViewModel() {
 
     private fun updateAiProgress() {
         val total = allTasks.size
-        val completed = allTasks.count { it.status == TaskStatus.COMPLETED }
+        val completed = allTasks.count { task: Task -> task.status == TaskStatus.COMPLETED }
         if (total > 0) {
             aiProgress = completed.toFloat() / total.toFloat()
         }

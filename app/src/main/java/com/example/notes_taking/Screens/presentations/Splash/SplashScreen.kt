@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,27 +20,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.notes_taking.R
-import com.example.notes_taking.ui.theme.BrownColor
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
-import com.example.notes_taking.ui.theme.SplashBackground
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(onSplashFinished: () -> Unit) {
 
     val scale = remember { Animatable(0f) }
-    val layoutDirection = LocalLayoutDirection.current
-    val isRtl = layoutDirection == LayoutDirection.Rtl
 
     LaunchedEffect(Unit) {
         scale.animateTo(
@@ -53,7 +48,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SplashBackground),
+            .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -61,7 +56,6 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.scale(scale.value)
         ) {
-            // أيقونة التطبيق
             Image(
                 painter = painterResource(id = R.drawable.sticky_notes),
                 contentDescription = null,
@@ -70,35 +64,32 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // اسم التطبيق
             Text(
                 text = stringResource(R.string.splash_app_name),
                 fontSize = 42.sp,
                 fontFamily = MansalvaFontFamily,
                 fontWeight = FontWeight.Normal,
-                color = BrownColor,
+                color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // وصف التطبيق
             Text(
                 text = stringResource(R.string.splash_subtitle),
                 fontSize = 16.sp,
                 fontFamily = ManropeFontFamily,
                 fontWeight = FontWeight.Normal,
-                color = BrownColor.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f),
                 textAlign = TextAlign.Center
             )
         }
 
-        // النص السفلي
         Text(
             text = stringResource(R.string.splash_designed_by),
             fontSize = 12.sp,
             fontFamily = ManropeFontFamily,
-            color = BrownColor.copy(alpha = 0.5f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 32.dp)
