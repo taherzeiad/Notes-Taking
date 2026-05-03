@@ -499,7 +499,7 @@ fun NoteEditorScreen(
                                 fontFamily = ManropeFontFamily,
                                 fontStyle = if (isItalic) FontStyle.Italic else FontStyle.Normal,
                                 fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
-                                color = TextPrimary,
+                                color = colorScheme.onBackground,
                                 lineHeight = 26.sp,
                                 textAlign = TextAlign.Start
                             ),
@@ -516,7 +516,7 @@ fun NoteEditorScreen(
                                             text = stringResource(R.string.editor_content_hint),
                                             fontSize = 15.sp,
                                             fontFamily = ManropeFontFamily,
-                                            color = Color(0xFFCEC0B0),
+                                            color = colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                                             textAlign = TextAlign.Start,
                                             lineHeight = 26.sp,
                                             modifier = Modifier.fillMaxWidth()
