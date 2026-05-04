@@ -851,7 +851,7 @@ fun NoteEditorScreen(
                         .size(36.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(
-                            if (isBold) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent
+                            if (isBold) colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent
                         ), contentAlignment = Alignment.Center
                 ) {
                     IconButton(
@@ -874,7 +874,7 @@ fun NoteEditorScreen(
 @Composable
 fun EditorToolbarButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    tint: Color = colorScheme.onSurfaceVariant,
     onClick: () -> Unit
 ) {
     IconButton(onClick = onClick, modifier = Modifier.size(36.dp)) {
@@ -896,9 +896,14 @@ fun AddLinkDialog(
     var text by remember { mutableStateOf("") }
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = RoundedCornerShape(24.dp), color = colorScheme.surface, tonalElevation = 6.dp, modifier = Modifier
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = colorScheme.surface,
+            tonalElevation = 6.dp,
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)) {
+                .padding(16.dp)
+        ) {
             Column(
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -910,7 +915,6 @@ fun AddLinkDialog(
                     fontSize = 20.sp,
                     color = colorScheme.onSurface
                 )
-
                 Spacer(modifier = Modifier.height(16.dp))
 
                 BasicTextField(
@@ -922,7 +926,7 @@ fun AddLinkDialog(
                             colorScheme.surfaceVariant, RoundedCornerShape(12.dp)
                         )
                         .padding(16.dp),
-                    textStyle = androidx.compose.ui.text.TextStyle(
+                    textStyle = TextStyle(
                         fontFamily = ManropeFontFamily,
                         color = colorScheme.onSurface,
                         fontSize = 14.sp
