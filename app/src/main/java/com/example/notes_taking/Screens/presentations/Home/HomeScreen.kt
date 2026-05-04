@@ -59,6 +59,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
@@ -92,7 +93,7 @@ fun HomeScreen(
             item { WelcomeSection() }
 
             // 2. بطاقة الذكاء الاصطناعي
-            item { AICardSection() }
+            item { AICardSection(navController = navController) }
 
             // 3. المهام القادمة
             item { UpcomingTaskSection(onViewAll = onNavigateToTasks) }
@@ -463,7 +464,7 @@ fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
 }
 
 @Composable
-fun AICardSection() {
+fun AICardSection(navController: NavController) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -498,7 +499,7 @@ fun AICardSection() {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = { /* AI Action */ },
+                onClick = { navController.navigate(Route.Summary.route) },
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,

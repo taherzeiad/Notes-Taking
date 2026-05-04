@@ -11,5 +11,7 @@ sealed class Route(val route: String) {
     object NoteEditor : Route("note_editor/{noteId}") {
         fun createRoute(noteId: Int) = "note_editor/$noteId"
     }
+
     object AboutApp : Route("about_app")
+    object Summary : Route("summary_screen")
 }

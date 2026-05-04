@@ -1,3 +1,8 @@
+@file:Suppress(
+    "INFERRED_TYPE_VARIABLE_INTO_EMPTY_INTERSECTION_WARNING",
+    "TYPE_INTERSECTION_AS_REIFIED_WARNING"
+)
+
 package com.example.notes_taking.Navmain
 
 
@@ -29,6 +34,8 @@ import com.example.notes_taking.Screens.presentations.Onboarding.OnboardingViewM
 import com.example.notes_taking.Screens.presentations.Settings.SettingsScreen
 import com.example.notes_taking.Screens.presentations.Settings.SettingsViewModel
 import com.example.notes_taking.Screens.presentations.Splash.SplashScreen
+import com.example.notes_taking.Screens.presentations.Summary.SummaryScreen
+import com.example.notes_taking.Screens.presentations.Summary.SummaryViewModel
 import com.example.notes_taking.Screens.presentations.Tasks.TasksScreen
 import com.example.notes_taking.Screens.presentations.Tasks.TasksViewModel
 
@@ -88,10 +95,11 @@ fun NavGraph(
         // ======= Note Editor =======
         composable(
             route = Route.NoteEditor.route, arguments = listOf(
-            navArgument("noteId") {
-                type = NavType.IntType
-                defaultValue = 0
-            })) { backStackEntry ->
+                navArgument("noteId") {
+                    type = NavType.IntType
+                    defaultValue = 0
+                })
+        ) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getInt("noteId") ?: 0
             val editorViewModel: NoteViewModel = viewModel(factory = factory)
 
@@ -124,6 +132,15 @@ fun NavGraph(
         composable(route = Route.AboutApp.route) {
             AboutScreen(
                 navController = navController
+            )
+        }
+        // ======= Summary =======
+        composable(route = Route.Summary.route) {
+            val summaryViewModel: SummaryViewModel = viewModel(factory = factory)
+
+            SummaryScreen(
+                viewModel = summaryViewModel,
+                onBack = { navController.popBackStack() }
             )
         }
     }

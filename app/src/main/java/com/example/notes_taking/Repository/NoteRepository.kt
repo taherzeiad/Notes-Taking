@@ -10,6 +10,10 @@ interface NoteRepository {
     suspend fun insertNote(note: Note)
     suspend fun updateNote(note: Note)
     suspend fun deleteNote(note: Note)
+
+    // أضف هذه السطور
+    fun getNotesByDate(date: String): Flow<List<Note>>
+    suspend fun getRecentNotes(): List<Note>
 }
 
 // Implementation (مثال باستخدام Room)
@@ -19,4 +23,9 @@ class NoteRepositoryImpl(private val dao: NoteDao) : NoteRepository {
     override suspend fun insertNote(note: Note) = dao.insertNote(note)
     override suspend fun updateNote(note: Note) = dao.updateNote(note)
     override suspend fun deleteNote(note: Note) = dao.deleteNote(note)
+
+    // التصحيح هنا: استخدم dao وليس NoteDao
+    override fun getNotesByDate(date: String): Flow<List<Note>> = dao.getNotesByDate(date)
+
+    override suspend fun getRecentNotes(): List<Note> = dao.getRecentNotes()
 }
