@@ -20,7 +20,6 @@ class GenericViewModelFactory(private val repository: NoteRepository) : ViewMode
             modelClass.isAssignableFrom(NoteViewModel::class.java) -> {
                 NoteViewModel(repository) as T
             }
-            // أضف هذا الجزء لتعريف الـ SummaryViewModel
             modelClass.isAssignableFrom(SummaryViewModel::class.java) -> {
                 SummaryViewModel(repository) as T
             }

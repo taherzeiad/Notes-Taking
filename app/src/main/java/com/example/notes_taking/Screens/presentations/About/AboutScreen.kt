@@ -1,5 +1,8 @@
 package com.example.notes_taking.Screens.presentations.About
 
+import android.annotation.SuppressLint
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,19 +37,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import com.example.notes_taking.R
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
 
+@SuppressLint("UseKtx")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(navController: NavHostController) {
+
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -130,11 +139,31 @@ fun AboutScreen(navController: NavHostController) {
                 AboutLinkItem(
                     icon = Icons.Default.Language,
                     label = stringResource(R.string.official_website),
-                    onClick = { /* افتح الموقع */ })
+                    onClick = {
+                        val url = "https://www.linkedin.com/in/taherqudeih/"
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            // معالجة الخطأ في حال لم يتمكن الجهاز من فتح الرابط
+                        }
+                    }
+                )
                 AboutLinkItem(
                     icon = Icons.Default.Mail,
                     label = stringResource(R.string.technical_support),
-                    onClick = { /* افتح البريد */ })
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = "mailto:taherqudeih@gmail.com".toUri()
+                            putExtra(Intent.EXTRA_SUBJECT, "Support Request: Notes Taking App")
+                        }
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                        }
+                    }
+                )
                 AboutLinkItem(
                     icon = Icons.Default.PrivacyTip,
                     label = stringResource(R.string.privacy_policy),
