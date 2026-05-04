@@ -23,4 +23,12 @@ interface NoteDao {
     suspend fun updateNote(note: Note)
     @Delete
     suspend fun deleteNote(note: Note)
+
+    // جلب ملاحظات يوم معين
+    @Query("SELECT * FROM notes_table WHERE date = :date ORDER BY id DESC")
+    fun getNotesByDate(date: String): Flow<List<Note>>
+
+    // جلب ملاحظات الأيام الماضية (آخر 7 أيام)
+    @Query("SELECT * FROM notes_table ORDER BY id DESC LIMIT 50")
+    suspend fun getRecentNotes(): List<Note>
 }

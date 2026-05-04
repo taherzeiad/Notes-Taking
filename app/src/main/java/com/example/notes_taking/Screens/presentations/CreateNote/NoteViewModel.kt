@@ -16,9 +16,6 @@ import java.io.FileOutputStream
 
 class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
 
-    /**
-     * جلب ملاحظة بواسطة المعرف (ID)
-     */
     suspend fun getNoteById(id: Int): Note? {
         return if (id > 0) {
             withContext(Dispatchers.IO) {
@@ -34,9 +31,6 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
         }
     }
 
-    /**
-     * حفظ ملاحظة مع الذكاء الاصطناعي
-     */
     fun saveNoteWithAI(
         id: Int,
         title: String,
@@ -66,12 +60,27 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                     try {
                         val classification = GroqService.classifyNoteContent(finalContent)
                         autoCategory = when {
-                            classification.contains("Philo", ignoreCase = true) ||
-                                    classification.contains("فلسفة", ignoreCase = true) -> "Philosophy"
-                            classification.contains("Liter", ignoreCase = true) ||
-                                    classification.contains("أدب", ignoreCase = true) -> "Literature"
-                            classification.contains("Dev", ignoreCase = true) ||
-                                    classification.contains("تطوير", ignoreCase = true) -> "Self-Development"
+                            classification.contains(
+                                "Philo",
+                                ignoreCase = true
+                            ) || classification.contains(
+                                "فلسفة", ignoreCase = true
+                            ) -> "Philosophy"
+
+                            classification.contains(
+                                "Liter",
+                                ignoreCase = true
+                            ) || classification.contains(
+                                "أدب", ignoreCase = true
+                            ) -> "Literature"
+
+                            classification.contains(
+                                "Dev",
+                                ignoreCase = true
+                            ) || classification.contains(
+                                "تطوير", ignoreCase = true
+                            ) -> "Self-Development"
+
                             else -> "General"
                         }
                     } catch (e: Exception) {

@@ -33,7 +33,10 @@ object GroqService {
         val request = ChatRequest(
             model = "llama-3.3-70b-versatile",
             messages = listOf(
-                ChatMessage("system", "You are a professional organizer. Categorize the user's note into one of these: [Philosophy, Literature, Self-Development, Personal, Work]. Return only the category name in English."),
+                ChatMessage(
+                    "system",
+                    "You are a professional organizer. Categorize the user's note into one of these: [Philosophy, Literature, Self-Development, Personal, Work]. Return only the category name in English."
+                ),
                 ChatMessage("user", "Categorize this: $text")
             )
         )
@@ -55,5 +58,32 @@ object GroqService {
             Log.e("GroqAPI", "Error: $error")
             throw Exception("API Error: ${response.code()}")
         }
+    }
+
+    suspend fun summarizeNotes(notes: List<String>, targetDate: String): String {
+        val notesText = notes.mapIndexed { i, note ->
+            "${i + 1}. $note"
+        }.joinToString("\n")
+
+        val request = ChatRequest(
+            model = "llama-3.3-70b-versatile",
+            messages = listOf(
+                ChatMessage(
+                    "system",
+                    """أنت مساعد ذكي متخصص في تلخيص الملاحظات اليومية.
+                مهمتك: تلخيص ملاحظات المستخدم ليوم $targetDate بشكل واضح ومنظم.
+                اكتب الملخص باللغة العربية في النقاط التالية:
+                1. 📝 أبرز الأفكار
+                2. ✅ المهام المذكورة
+                3. 💡 التوصيات
+                اجعل الملخص مختصراً ومفيداً."""
+                ),
+                ChatMessage(
+                    "user",
+                    "لخص هذه الملاحظات:\n$notesText"
+                )
+            )
+        )
+        return makeRequest(request)
     }
 }

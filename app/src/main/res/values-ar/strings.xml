@@ -152,4 +152,15 @@
     <string name="privacy_policy">سياسة الخصوصية</string>
     <string name="made_with_love">صنع بكل حب في 2026</string>
 
+    ////////////////////////////////////////////
+        <string name="summary_title">ملخص الملاحظات</string>
+        <string name="refresh_summary">إعادة التلخيص</string>
+        <string name="summarizing_notes">جاري تلخيص ملاحظاتك...</string>
+        <string name="take_seconds">قد يستغرق هذا بضع ثوانٍ</string>
+        <string name="ai_summary_header">ملخص ذكي بالذكاء الاصطناعي</string>
+        <string name="summarized_days_count">تم تلخيص %1$d أيام من الملاحظات</string>
+        <string name="notes_count">%1$d ملاحظة</string>
+        <string name="ai_summary_badge">ملخص الذكاء الاصطناعي</string>
+        <string name="retry_button">إعادة المحاولة</string>
+
 </resources>
