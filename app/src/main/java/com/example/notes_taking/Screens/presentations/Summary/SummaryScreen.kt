@@ -45,6 +45,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,11 +53,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.notes_taking.R
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,156 +69,100 @@ fun SummaryScreen(
 ) {
     val summaryState by viewModel.summaryState.collectAsStateWithLifecycle()
 
+    val layoutDirection = androidx.compose.ui.platform.LocalLayoutDirection.current
+
     LaunchedEffect(Unit) {
         viewModel.summarizeDay(viewModel.getTodayDate())
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                Text(
-                    text = "ملخص الملاحظات",
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
-            }, navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = null
-                    )
-                }
-            }, actions = {
-                // زر إعادة التلخيص
-                IconButton(onClick = { viewModel.summarizeDay(viewModel.getTodayDate()) }) {
-                    Icon(
-                        imageVector = Icons.Outlined.Refresh,
-                        contentDescription = "إعادة التلخيص",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }, colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background
-            )
-            )
-        }, containerColor = MaterialTheme.colorScheme.background
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            when (val state = summaryState) {
-
-                // ======= Loading =======
-                is SummaryState.Loading -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
+    CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides layoutDirection) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
                         Text(
-                            text = "جاري تلخيص ملاحظاتك...",
+                            text = stringResource(R.string.summary_title),
                             fontFamily = ManropeFontFamily,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 14.sp
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
                         )
-                        Text(
-                            text = "قد يستغرق هذا بضع ثوانٍ",
-                            fontFamily = ManropeFontFamily,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-
-                // ======= Success =======
-                is SummaryState.Success -> {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 20.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        item { Spacer(modifier = Modifier.height(8.dp)) }
-
-                        // Header Card
-                        item {
-                            AIHeaderCard(totalDays = state.summaries.size)
-                        }
-
-                        // Daily Summaries
-                        items(state.summaries) { daily ->
-                            DailySummaryCard(daily = daily)
-                        }
-
-                        item { Spacer(modifier = Modifier.height(24.dp)) }
-                    }
-                }
-
-                // ======= Error =======
-                is SummaryState.Error -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.errorContainer, CircleShape
-                                ), contentAlignment = Alignment.Center
-                        ) {
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
                             Icon(
-                                imageVector = Icons.Outlined.ErrorOutline,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(40.dp)
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = null
                             )
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = state.message,
-                            fontFamily = ManropeFontFamily,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 16.sp,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Button(
-                            onClick = { viewModel.summarizeDay(viewModel.getTodayDate()) },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
+                    },
+                    actions = {
+                        IconButton(onClick = { viewModel.summarizeDay(viewModel.getTodayDate()) }) {
                             Icon(
                                 imageVector = Icons.Outlined.Refresh,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "إعادة المحاولة", fontFamily = ManropeFontFamily
+                                contentDescription =
+                                    stringResource(R.string.refresh_summary),
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
+                )
+            },
+            containerColor = MaterialTheme.colorScheme.background
+        ) { padding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                when (val state = summaryState) {
+                    is SummaryState.Loading -> {
+                        LoadingContent()
                     }
-                }
 
-                // ======= Idle =======
-                is SummaryState.Idle -> {}
+                    is SummaryState.Success -> {
+                        SuccessContent(state.summaries)
+                    }
+
+                    is SummaryState.Error -> {
+                        ErrorContent(state.message) {
+                            viewModel.summarizeDay(viewModel.getTodayDate())
+                        }
+                    }
+
+                    is SummaryState.Idle -> {}
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun LoadingContent() {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        CircularProgressIndicator(
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(48.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.summarizing_notes),
+            fontFamily = ManropeFontFamily,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 14.sp
+        )
+        Text(
+            text = stringResource(R.string.take_seconds),
+            fontFamily = ManropeFontFamily,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            fontSize = 12.sp
+        )
     }
 }
 
@@ -250,14 +197,14 @@ fun AIHeaderCard(totalDays: Int) {
             }
             Column {
                 Text(
-                    text = "ملخص ذكي بالذكاء الاصطناعي",
+                    text = stringResource(R.string.ai_summary_header),
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimary,
                     fontSize = 16.sp
                 )
                 Text(
-                    text = "تم تلخيص $totalDays أيام من الملاحظات",
+                    text = stringResource(R.string.summarized_days_count, totalDays),
                     fontFamily = ManropeFontFamily,
                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
                     fontSize = 13.sp
@@ -317,7 +264,7 @@ fun DailySummaryCard(daily: DailySummary) {
                             fontSize = 15.sp
                         )
                         Text(
-                            text = "${daily.notesCount} ملاحظة",
+                            text = stringResource(R.string.notes_count, daily.notesCount),
                             fontFamily = ManropeFontFamily,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp
@@ -356,7 +303,7 @@ fun DailySummaryCard(daily: DailySummary) {
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            text = "ملخص الذكاء الاصطناعي",
+                            text = stringResource(R.string.ai_summary_badge),
                             fontFamily = ManropeFontFamily,
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.primary,
@@ -377,6 +324,81 @@ fun DailySummaryCard(daily: DailySummary) {
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SuccessContent(summaries: List<DailySummary>) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item { Spacer(modifier = Modifier.height(8.dp)) }
+
+        item {
+            AIHeaderCard(totalDays = summaries.size)
+        }
+
+        items(summaries) { daily ->
+            DailySummaryCard(daily = daily)
+        }
+
+        item { Spacer(modifier = Modifier.height(24.dp)) }
+    }
+}
+
+@Composable
+private fun ErrorContent(message: String, onRetry: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(80.dp)
+                .background(
+                    MaterialTheme.colorScheme.errorContainer, CircleShape
+                ), contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.ErrorOutline,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(40.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = message,
+            fontFamily = ManropeFontFamily,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 16.sp,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = onRetry,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Refresh,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.retry_button),
+                fontFamily = ManropeFontFamily
+            )
         }
     }
 }

@@ -183,7 +183,6 @@ fun NoteEditorScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            // تشغيل في الخلفية فوراً لكي لا يشعر المستخدم ببطء عند اختيار الصورة
             scope.launch(Dispatchers.IO) {
                 val permanentPath = viewModel.saveImageToInternalStorage(context, it)
                 withContext(Dispatchers.Main) {

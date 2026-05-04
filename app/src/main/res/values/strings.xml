@@ -150,5 +150,17 @@
     <string name="technical_support">Technical Support</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="made_with_love">Made with love in 2026</string>
+    ///////////////////////////////////
+
+        <string name="summary_title">Notes Summary</string>
+        <string name="refresh_summary">Refresh Summary</string>
+        <string name="summarizing_notes">Summarizing your notes...</string>
+        <string name="take_seconds">This might take a few seconds</string>
+        <string name="ai_summary_header">Smart AI Summary</string>
+        <string name="summarized_days_count">Summarized %1$d days of notes</string>
+        <string name="notes_count">%1$d Notes</string>
+        <string name="ai_summary_badge">AI Summary</string>
+        <string name="retry_button">Retry</string>
+
 </resources>
 

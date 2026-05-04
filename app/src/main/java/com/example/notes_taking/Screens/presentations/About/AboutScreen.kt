@@ -60,19 +60,19 @@ fun AboutScreen(navController: NavHostController) {
         topBar = {
             TopAppBar(
                 title = {
-                Text(
-                    stringResource(R.string.about_app),
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
+                    Text(
+                        stringResource(R.string.about_app),
+                        fontFamily = ManropeFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    )
+                }, navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }, colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
                 )
-            }, navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                }
-            }, colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background
-            )
             )
         }, containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
