@@ -125,10 +125,7 @@ sealed class ContentBlock {
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun NoteEditorScreen(
-    noteId: Int = 0,
-    viewModel: NoteViewModel,
-    onClose: () -> Unit = {},
-    onSave: () -> Unit = {}
+    noteId: Int = 0, viewModel: NoteViewModel, onClose: () -> Unit = {}, onSave: () -> Unit = {}
 ) {
     val sdf = remember { SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()) }
     val currentDate = remember { sdf.format(Date()) }
@@ -206,6 +203,26 @@ fun NoteEditorScreen(
             } catch (e: Exception) {
                 scope.launch { snackbarHostState.showSnackbar("حدث خطأ أثناء إضافة الملف الصوتي") }
                 e.printStackTrace()
+            }
+        }
+    }
+    // ← أضف مع باقي المتغيرات
+    var hasAudioPermission by remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasAudioPermission = isGranted
+        if (isGranted) {
+            showAudioDialog = true
+        } else {
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    if (Locale.getDefault().language == "ar")
+                        "يجب منح صلاحية الميكروفون"
+                    else
+                        "Microphone permission required"
+                )
             }
         }
     }
@@ -317,13 +334,11 @@ fun NoteEditorScreen(
                             onError = { error ->
                                 isSavingInternally = false
                                 scope.launch { snackbarHostState.showSnackbar(error) }
-                            }
-                        )
+                            })
                     },
                     shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colorScheme.primary,
-                        contentColor = colorScheme.onPrimary
+                        containerColor = colorScheme.primary, contentColor = colorScheme.onPrimary
                     ),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     modifier = Modifier.height(36.dp),
@@ -331,9 +346,7 @@ fun NoteEditorScreen(
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp
+                            color = Color.White, modifier = Modifier.size(16.dp), strokeWidth = 2.dp
                         )
                     } else {
                         Text(
@@ -364,8 +377,7 @@ fun NoteEditorScreen(
         }
 
         HorizontalDivider(
-            color = colorScheme.outlineVariant,
-            modifier = Modifier.padding(horizontal = 40.dp)
+            color = colorScheme.outlineVariant, modifier = Modifier.padding(horizontal = 40.dp)
         )
 
         // ======= Content Area =======
@@ -406,8 +418,7 @@ fun NoteEditorScreen(
                         }
                         innerTextField()
                     }
-                }
-            )
+                })
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -503,8 +514,7 @@ fun NoteEditorScreen(
                                     }
                                     innerTextField()
                                 }
-                            }
-                        )
+                            })
                     }
 
                     is ContentBlock.BulletBlock -> {
@@ -555,9 +565,11 @@ fun NoteEditorScreen(
 
                     is ContentBlock.ImageBlock -> {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Box(modifier = Modifier
-                            .fillMaxWidth()
-                            .height(220.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(220.dp)
+                        ) {
                             AsyncImage(
                                 model = block.uri,
                                 contentDescription = null,
@@ -690,9 +702,7 @@ fun NoteEditorScreen(
 
         // ======= Bottom Toolbar =======
         Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = colorScheme.surface,
-            shadowElevation = 8.dp
+            modifier = Modifier.fillMaxWidth(), color = colorScheme.surface, shadowElevation = 8.dp
         ) {
             Row(
                 modifier = Modifier
@@ -730,110 +740,122 @@ fun NoteEditorScreen(
                         onDismissRequest = { aiMenuExpanded = false },
                         modifier = Modifier.background(colorScheme.surface)
                     ) {
-                        DropdownMenuItem(
-                            text = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.AutoAwesome,
-                                        contentDescription = null,
-                                        tint = colorScheme.primary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.rephrase_text),
-                                        fontFamily = ManropeFontFamily,
-                                        fontSize = 14.sp,
-                                        color = colorScheme.onSurface
-                                    )
-                                }
-                            },
-                            onClick = {
-                                aiMenuExpanded = false
-                                val currentText =
-                                    contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
-                                        .joinToString("\n") { it.text }.trim()
-                                if (currentText.isBlank()) {
-                                    scope.launch { snackbarHostState.showSnackbar("لا يوجد نص لإعادة صياغته") }
-                                    return@DropdownMenuItem
-                                }
-                                scope.launch {
-                                    isAiLoading = true
-                                    try {
-                                        val result = GroqService.rephraseText(currentText)
-                                        val firstTextIndex =
-                                            contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
-                                        if (firstTextIndex != -1) {
-                                            contentBlocks[firstTextIndex] =
-                                                ContentBlock.TextBlock(text = result)
-                                            snackbarHostState.showSnackbar("تمت إعادة الصياغة بنجاح")
-                                        }
-                                    } catch (e: Exception) {
-                                        snackbarHostState.showSnackbar("فشل في إعادة الصياغة")
-                                    } finally {
-                                        isAiLoading = false
+                        DropdownMenuItem(text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.rephrase_text),
+                                    fontFamily = ManropeFontFamily,
+                                    fontSize = 14.sp,
+                                    color = colorScheme.onSurface
+                                )
+                            }
+                        }, onClick = {
+                            aiMenuExpanded = false
+                            val currentText =
+                                contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
+                                    .joinToString("\n") { it.text }.trim()
+                            if (currentText.isBlank()) {
+                                scope.launch { snackbarHostState.showSnackbar("لا يوجد نص لإعادة صياغته") }
+                                return@DropdownMenuItem
+                            }
+                            scope.launch {
+                                isAiLoading = true
+                                try {
+                                    val result = GroqService.rephraseText(currentText)
+                                    val firstTextIndex =
+                                        contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
+                                    if (firstTextIndex != -1) {
+                                        contentBlocks[firstTextIndex] =
+                                            ContentBlock.TextBlock(text = result)
+                                        snackbarHostState.showSnackbar("تمت إعادة الصياغة بنجاح")
                                     }
+                                } catch (e: Exception) {
+                                    snackbarHostState.showSnackbar("فشل في إعادة الصياغة")
+                                } finally {
+                                    isAiLoading = false
                                 }
                             }
-                        )
+                        })
 
                         HorizontalDivider(color = colorScheme.outlineVariant)
 
-                        DropdownMenuItem(
-                            text = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Spellcheck,
-                                        contentDescription = null,
-                                        tint = colorScheme.primary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.diacritize_text),
-                                        fontFamily = ManropeFontFamily,
-                                        fontSize = 14.sp,
-                                        color = colorScheme.onSurface
-                                    )
-                                }
-                            },
-                            onClick = {
-                                aiMenuExpanded = false
-                                val currentText =
-                                    contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
-                                        .joinToString("\n") { it.text }.trim()
-                                if (currentText.isBlank()) {
-                                    scope.launch { snackbarHostState.showSnackbar("لا يوجد نص لتشكيله") }
-                                    return@DropdownMenuItem
-                                }
-                                scope.launch {
-                                    isAiLoading = true
-                                    try {
-                                        val result = GroqService.diacritizeText(currentText)
-                                        val firstTextIndex =
-                                            contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
-                                        if (firstTextIndex != -1) {
-                                            contentBlocks[firstTextIndex] =
-                                                ContentBlock.TextBlock(text = result)
-                                            snackbarHostState.showSnackbar("تم تشكيل النص بنجاح")
-                                        }
-                                    } catch (e: Exception) {
-                                        snackbarHostState.showSnackbar("فشل في تشكيل النص")
-                                    } finally {
-                                        isAiLoading = false
+                        DropdownMenuItem(text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Spellcheck,
+                                    contentDescription = null,
+                                    tint = colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.diacritize_text),
+                                    fontFamily = ManropeFontFamily,
+                                    fontSize = 14.sp,
+                                    color = colorScheme.onSurface
+                                )
+                            }
+                        }, onClick = {
+                            aiMenuExpanded = false
+                            val currentText =
+                                contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
+                                    .joinToString("\n") { it.text }.trim()
+                            if (currentText.isBlank()) {
+                                scope.launch { snackbarHostState.showSnackbar("لا يوجد نص لتشكيله") }
+                                return@DropdownMenuItem
+                            }
+                            scope.launch {
+                                isAiLoading = true
+                                try {
+                                    val result = GroqService.diacritizeText(currentText)
+                                    val firstTextIndex =
+                                        contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
+                                    if (firstTextIndex != -1) {
+                                        contentBlocks[firstTextIndex] =
+                                            ContentBlock.TextBlock(text = result)
+                                        snackbarHostState.showSnackbar("تم تشكيل النص بنجاح")
                                     }
+                                } catch (e: Exception) {
+                                    snackbarHostState.showSnackbar("فشل في تشكيل النص")
+                                } finally {
+                                    isAiLoading = false
                                 }
                             }
-                        )
+                        })
                     }
                 }
 
                 // ← Mic - يفتح Audio Dialog
-                EditorToolbarButton(icon = Icons.Outlined.Mic, onClick = { showAudioDialog = true })
+                EditorToolbarButton(
+                    icon = Icons.Outlined.Mic,
+                    onClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            val permission = android.Manifest.permission.RECORD_AUDIO
+                            val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+                                context, permission
+                            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+                            if (granted) {
+                                showAudioDialog = true
+                            } else {
+                                permissionLauncher.launch(permission)
+                            }
+                        } else {
+                            showAudioDialog = true
+                        }
+                    }
+                )
 
                 EditorToolbarButton(icon = Icons.Outlined.Link, onClick = { showLinkDialog = true })
 
@@ -868,8 +890,7 @@ fun NoteEditorScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     IconButton(
-                        onClick = { isItalic = !isItalic },
-                        modifier = Modifier.size(36.dp)
+                        onClick = { isItalic = !isItalic }, modifier = Modifier.size(36.dp)
                     ) {
                         Text(
                             text = "I",
@@ -903,17 +924,13 @@ fun NoteEditorScreen(
 
     // ======= Audio Source Dialog =======
     if (showAudioDialog) {
-        AudioSourceDialog(
-            onDismiss = { showAudioDialog = false },
-            onChooseFile = {
-                showAudioDialog = false
-                audioPickerLauncher.launch("audio/*")
-            },
-            onRecordDirect = {
-                showAudioDialog = false
-                showRecordingDialog = true
-            }
-        )
+        AudioSourceDialog(onDismiss = { showAudioDialog = false }, onChooseFile = {
+            showAudioDialog = false
+            audioPickerLauncher.launch("audio/*")
+        }, onRecordDirect = {
+            showAudioDialog = false
+            showRecordingDialog = true
+        })
     }
 
     // ======= Recording Dialog =======
@@ -931,8 +948,7 @@ fun NoteEditorScreen(
                 mediaRecorder.value = null
                 isRecording = false
                 recordingSeconds = 0
-            },
-            onSave = { filePath ->
+            }, onSave = { filePath ->
                 showRecordingDialog = false
                 isRecording = false
                 recordingSeconds = 0
@@ -941,16 +957,12 @@ fun NoteEditorScreen(
                 if (file.exists()) {
                     contentBlocks.add(
                         ContentBlock.AudioBlock(
-                            uri = Uri.fromFile(file),
-                            name = file.name
+                            uri = Uri.fromFile(file), name = file.name
                         )
                     )
                     contentBlocks.add(ContentBlock.TextBlock())
                 }
-            },
-            isRecording = isRecording,
-            recordingSeconds = recordingSeconds,
-            onStartRecording = {
+            }, isRecording = isRecording, recordingSeconds = recordingSeconds, onStartRecording = {
                 val fileName = "record_${System.currentTimeMillis()}.mp4"
                 val file = File(context.filesDir, fileName)
                 recordedFilePath = file.absolutePath
@@ -958,8 +970,7 @@ fun NoteEditorScreen(
                     val recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         android.media.MediaRecorder(context)
                     } else {
-                        @Suppress("DEPRECATION")
-                        android.media.MediaRecorder()
+                        @Suppress("DEPRECATION") android.media.MediaRecorder()
                     }
                     recorder.apply {
                         setAudioSource(android.media.MediaRecorder.AudioSource.MIC)
@@ -981,8 +992,7 @@ fun NoteEditorScreen(
                     e.printStackTrace()
                     scope.launch { snackbarHostState.showSnackbar("فشل في بدء التسجيل") }
                 }
-            },
-            onStopRecording = {
+            }, onStopRecording = {
                 mediaRecorder.value?.apply {
                     try {
                         stop(); release()
@@ -992,32 +1002,26 @@ fun NoteEditorScreen(
                 }
                 mediaRecorder.value = null
                 isRecording = false
-            },
-            recordedFilePath = recordedFilePath
+            }, recordedFilePath = recordedFilePath
         )
     }
 
     // ======= Link Dialog =======
     if (showLinkDialog) {
-        AddLinkDialog(
-            onDismiss = { showLinkDialog = false },
-            onConfirm = { url ->
-                if (url.isNotBlank()) {
-                    contentBlocks.add(ContentBlock.LinkBlock(url = url))
-                    contentBlocks.add(ContentBlock.TextBlock())
-                }
-                showLinkDialog = false
+        AddLinkDialog(onDismiss = { showLinkDialog = false }, onConfirm = { url ->
+            if (url.isNotBlank()) {
+                contentBlocks.add(ContentBlock.LinkBlock(url = url))
+                contentBlocks.add(ContentBlock.TextBlock())
             }
-        )
+            showLinkDialog = false
+        })
     }
 }
 
 // ======= Audio Source Dialog =======
 @Composable
 fun AudioSourceDialog(
-    onDismiss: () -> Unit,
-    onChooseFile: () -> Unit,
-    onRecordDirect: () -> Unit
+    onDismiss: () -> Unit, onChooseFile: () -> Unit, onRecordDirect: () -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -1048,14 +1052,14 @@ fun AudioSourceDialog(
                 }
 
                 Text(
-                    text = "إضافة صوت",
+                    text = stringResource(R.string.add_audio),
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = colorScheme.onSurface
                 )
                 Text(
-                    text = "اختر طريقة إضافة الملف الصوتي",
+                    text = stringResource(R.string.choose_audio_method),
                     fontFamily = ManropeFontFamily,
                     fontSize = 13.sp,
                     color = colorScheme.onSurfaceVariant,
@@ -1084,14 +1088,15 @@ fun AudioSourceDialog(
                         )
                         Column {
                             Text(
-                                text = "تسجيل مباشر",
+                                text = stringResource(R.string.record_audio),
+
                                 fontFamily = ManropeFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 color = colorScheme.onPrimary,
                                 fontSize = 15.sp
                             )
                             Text(
-                                text = "سجّل صوتك الآن",
+                                text = stringResource(R.string.record_now),
                                 fontFamily = ManropeFontFamily,
                                 color = colorScheme.onPrimary.copy(alpha = 0.8f),
                                 fontSize = 12.sp
@@ -1120,14 +1125,14 @@ fun AudioSourceDialog(
                         )
                         Column {
                             Text(
-                                text = "اختيار ملف صوتي",
+                                text = stringResource(R.string.pick_audio),
                                 fontFamily = ManropeFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 color = colorScheme.onSurface,
                                 fontSize = 15.sp
                             )
                             Text(
-                                text = "من مكتبة الصوت",
+                                text = stringResource(R.string.from_library),
                                 fontFamily = ManropeFontFamily,
                                 color = colorScheme.onSurfaceVariant,
                                 fontSize = 12.sp
@@ -1138,7 +1143,7 @@ fun AudioSourceDialog(
 
                 TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "إلغاء",
+                        text = stringResource(R.string.cancel),
                         fontFamily = ManropeFontFamily,
                         color = colorScheme.onSurfaceVariant
                     )
@@ -1178,7 +1183,7 @@ fun RecordingDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "تسجيل صوتي",
+                    text = stringResource(R.string.audio_recording),
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
@@ -1189,7 +1194,8 @@ fun RecordingDialog(
                     modifier = Modifier
                         .size(80.dp)
                         .background(
-                            if (isRecording) colorScheme.errorContainer else colorScheme.primaryContainer,
+                            if (isRecording) colorScheme.errorContainer
+                            else colorScheme.primaryContainer,
                             CircleShape
                         ),
                     contentAlignment = Alignment.Center
@@ -1212,9 +1218,9 @@ fun RecordingDialog(
 
                 Text(
                     text = when {
-                        isRecording -> "جاري التسجيل..."
-                        recordingSeconds > 0 -> "تم إيقاف التسجيل"
-                        else -> "اضغط للبدء"
+                        isRecording -> stringResource(R.string.recording_in_progress)
+                        recordingSeconds > 0 -> stringResource(R.string.recording_stopped)
+                        else -> stringResource(R.string.press_to_start)
                     },
                     fontFamily = ManropeFontFamily,
                     fontSize = 13.sp,
@@ -1225,8 +1231,6 @@ fun RecordingDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-
-                    // زر البدء/الإيقاف
                     Button(
                         onClick = { if (isRecording) onStopRecording() else onStartRecording() },
                         modifier = Modifier.weight(1f),
@@ -1242,12 +1246,12 @@ fun RecordingDialog(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = if (isRecording) "إيقاف" else "بدء",
+                            text = if (isRecording) stringResource(R.string.stop_recording)
+                            else stringResource(R.string.start_recording),
                             fontFamily = ManropeFontFamily
                         )
                     }
 
-                    // زر الحفظ
                     Button(
                         onClick = { recordedFilePath?.let { onSave(it) } },
                         enabled = !isRecording && recordingSeconds > 0,
@@ -1261,13 +1265,16 @@ fun RecordingDialog(
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "حفظ", fontFamily = ManropeFontFamily)
+                        Text(
+                            text = stringResource(R.string.save_recording),
+                            fontFamily = ManropeFontFamily
+                        )
                     }
                 }
 
                 TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "إلغاء",
+                        text = stringResource(R.string.cancel),
                         fontFamily = ManropeFontFamily,
                         color = colorScheme.onSurfaceVariant
                     )
@@ -1344,8 +1351,7 @@ fun AddLinkDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
                             )
                         }
                         innerTextField()
-                    }
-                )
+                    })
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -1374,14 +1380,10 @@ fun AddLinkDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
                                     "https://$url"
                                 onConfirm(url)
                             }
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
+                        }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(
                             containerColor = colorScheme.primary,
                             contentColor = colorScheme.onPrimary
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        enabled = text.isNotBlank()
+                        ), shape = RoundedCornerShape(12.dp), enabled = text.isNotBlank()
                     ) {
                         Text(
                             text = stringResource(R.string.add),
