@@ -152,15 +152,29 @@
     <string name="made_with_love">Made with love in 2026</string>
     ///////////////////////////////////
 
-        <string name="summary_title">Notes Summary</string>
-        <string name="refresh_summary">Refresh Summary</string>
-        <string name="summarizing_notes">Summarizing your notes...</string>
-        <string name="take_seconds">This might take a few seconds</string>
-        <string name="ai_summary_header">Smart AI Summary</string>
-        <string name="summarized_days_count">Summarized %1$d days of notes</string>
-        <string name="notes_count">%1$d Notes</string>
-        <string name="ai_summary_badge">AI Summary</string>
-        <string name="retry_button">Retry</string>
+    <string name="summary_title">Notes Summary</string>
+    <string name="refresh_summary">Refresh Summary</string>
+    <string name="summarizing_notes">Summarizing your notes...</string>
+    <string name="take_seconds">This might take a few seconds</string>
+    <string name="ai_summary_header">Smart AI Summary</string>
+    <string name="summarized_days_count">Summarized %1$d days of notes</string>
+    <string name="notes_count">%1$d Notes</string>
+    <string name="ai_summary_badge">AI Summary</string>
+    <string name="retry_button">Retry</string>
+    ///////////////////////////////////////////////
+    <string name="audio_recording">Voice Recording</string>
+    <string name="recording_in_progress">Recording in progress...</string>
+    <string name="recording_stopped">Recording stopped</string>
+    <string name="press_to_start">Press to start</string>
+    <string name="stop_recording">Stop</string>
+    <string name="start_recording">Start</string>
+    <string name="save_recording">Save</string>
+    <string name="add_audio">Add Audio</string>
+    <string name="choose_audio_method">Choose how to add audio</string>
+    <string name="record_audio">Direct Recording</string>
+    <string name="record_now">Record your voice now</string>
+    <string name="pick_audio">Choose Audio File</string>
+    <string name="from_library">From audio library</string>
 
 </resources>
 
