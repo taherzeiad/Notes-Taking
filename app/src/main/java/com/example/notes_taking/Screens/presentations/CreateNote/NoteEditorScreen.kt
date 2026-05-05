@@ -2,6 +2,7 @@ package com.example.notes_taking.Screens.presentations.Editor
 
 import android.annotation.SuppressLint
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -33,12 +34,15 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Spellcheck
+import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -49,11 +53,11 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -79,10 +83,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
+import com.example.notes_taking.API.GroqService
 import com.example.notes_taking.R
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -119,7 +125,10 @@ sealed class ContentBlock {
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun NoteEditorScreen(
-    noteId: Int = 0, viewModel: NoteViewModel, onClose: () -> Unit = {}, onSave: () -> Unit = {}
+    noteId: Int = 0,
+    viewModel: NoteViewModel,
+    onClose: () -> Unit = {},
+    onSave: () -> Unit = {}
 ) {
     val sdf = remember { SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()) }
     val currentDate = remember { sdf.format(Date()) }
@@ -133,12 +142,19 @@ fun NoteEditorScreen(
     var isAiLoading by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var showLinkDialog by remember { mutableStateOf(false) }
-    var linkUrl by remember { mutableStateOf("") }
-    var isSaving by remember { mutableStateOf(false) }
+    var isSavingInternally by remember { mutableStateOf(false) }
+
+    // ← متغيرات الصوت
+    var showAudioDialog by remember { mutableStateOf(false) }
+    var showRecordingDialog by remember { mutableStateOf(false) }
+    var isRecording by remember { mutableStateOf(false) }
+    var recordingSeconds by remember { mutableStateOf(0) }
+    val mediaRecorder = remember { mutableStateOf<android.media.MediaRecorder?>(null) }
+    var recordedFilePath by remember { mutableStateOf<String?>(null) }
 
     val contentBlocks = remember { mutableStateListOf<ContentBlock>(ContentBlock.TextBlock()) }
+    val scope = rememberCoroutineScope()
 
-    // حساب عدد الكلمات ووقت القراءة
     val wordCount = remember(contentBlocks) {
         derivedStateOf {
             contentBlocks.filterIsInstance<ContentBlock.TextBlock>().sumOf {
@@ -148,8 +164,6 @@ fun NoteEditorScreen(
     }
     val readingMinutes = derivedStateOf { maxOf(1, wordCount.value / 200) }
 
-
-    // حساب عدد الأحرف
     val characterCount = remember {
         derivedStateOf {
             contentBlocks.sumOf { block ->
@@ -161,24 +175,8 @@ fun NoteEditorScreen(
             }
         }
     }
-    var isSavingInternally by remember { mutableStateOf(false) }
-
-    // التحقق من وجود محتوى للحفظ
-    val hasContent = derivedStateOf {
-        title.isNotBlank() || contentBlocks.any { block ->
-            when (block) {
-                is ContentBlock.TextBlock -> block.text.isNotBlank()
-                is ContentBlock.BulletBlock -> block.text.isNotBlank()
-                is ContentBlock.ImageBlock -> true
-                is ContentBlock.AudioBlock -> true
-                is ContentBlock.LinkBlock -> block.url.isNotBlank()
-            }
-        }
-    }
 
     // ======= Image Picker =======
-    val scope = rememberCoroutineScope()
-
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -194,6 +192,7 @@ fun NoteEditorScreen(
             }
         }
     }
+
     // ======= Audio Picker =======
     val audioPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -205,9 +204,7 @@ fun NoteEditorScreen(
                 contentBlocks.add(ContentBlock.AudioBlock(uri = it, name = name))
                 contentBlocks.add(ContentBlock.TextBlock())
             } catch (e: Exception) {
-                scope.launch {
-                    snackbarHostState.showSnackbar("حدث خطأ أثناء إضافة الملف الصوتي")
-                }
+                scope.launch { snackbarHostState.showSnackbar("حدث خطأ أثناء إضافة الملف الصوتي") }
                 e.printStackTrace()
             }
         }
@@ -222,15 +219,11 @@ fun NoteEditorScreen(
                 note?.let {
                     title = it.title
                     contentBlocks.clear()
-
-                    // تحميل المحتوى النصي
                     if (it.content.isNotBlank()) {
                         contentBlocks.add(ContentBlock.TextBlock(text = it.content))
                     } else {
                         contentBlocks.add(ContentBlock.TextBlock())
                     }
-
-                    // تحميل الصورة إذا وجدت
                     it.imageUri?.let { path ->
                         val imageFile = File(path)
                         if (imageFile.exists()) {
@@ -239,9 +232,7 @@ fun NoteEditorScreen(
                     }
                 }
             } catch (e: Exception) {
-                scope.launch {
-                    snackbarHostState.showSnackbar("فشل في تحميل الملاحظة")
-                }
+                scope.launch { snackbarHostState.showSnackbar("فشل في تحميل الملاحظة") }
                 e.printStackTrace()
             } finally {
                 isLoading = false
@@ -257,6 +248,7 @@ fun NoteEditorScreen(
             .statusBarsPadding()
             .imePadding()
     ) {
+
         // ======= Top Bar =======
         Row(
             modifier = Modifier
@@ -293,23 +285,17 @@ fun NoteEditorScreen(
             ) {
                 Button(
                     onClick = {
-                        // التحقق من وجود محتوى قبل البدء
                         val hasContent = title.isNotBlank() || contentBlocks.any {
                             (it is ContentBlock.TextBlock && it.text.isNotBlank()) || it is ContentBlock.ImageBlock
                         }
-
                         if (!hasContent) {
                             scope.launch { snackbarHostState.showSnackbar("لا يوجد محتوى لحفظه") }
                             return@Button
                         }
-
-                        // تشغيل الحفظ
                         isSavingInternally = true
-
                         val firstImageBlock =
                             contentBlocks.filterIsInstance<ContentBlock.ImageBlock>().firstOrNull()
                         val imagePathToSave = firstImageBlock?.uri?.path
-
                         val fullContent = contentBlocks.joinToString("\n") { block ->
                             when (block) {
                                 is ContentBlock.TextBlock -> block.text
@@ -317,7 +303,6 @@ fun NoteEditorScreen(
                                 else -> ""
                             }
                         }
-
                         viewModel.saveNoteWithAI(
                             id = noteId,
                             title = title,
@@ -332,11 +317,13 @@ fun NoteEditorScreen(
                             onError = { error ->
                                 isSavingInternally = false
                                 scope.launch { snackbarHostState.showSnackbar(error) }
-                            })
+                            }
+                        )
                     },
                     shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colorScheme.primary, contentColor = colorScheme.onPrimary
+                        containerColor = colorScheme.primary,
+                        contentColor = colorScheme.onPrimary
                     ),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     modifier = Modifier.height(36.dp),
@@ -344,7 +331,9 @@ fun NoteEditorScreen(
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
-                            color = Color.White, modifier = Modifier.size(16.dp), strokeWidth = 2.dp
+                            color = Color.White,
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
                         )
                     } else {
                         Text(
@@ -366,7 +355,7 @@ fun NoteEditorScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Person,
-                        contentDescription = "الملف الشخصي",
+                        contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(20.dp)
                     )
@@ -375,7 +364,8 @@ fun NoteEditorScreen(
         }
 
         HorizontalDivider(
-            color = colorScheme.outlineVariant, modifier = Modifier.padding(horizontal = 40.dp)
+            color = colorScheme.outlineVariant,
+            modifier = Modifier.padding(horizontal = 40.dp)
         )
 
         // ======= Content Area =======
@@ -396,14 +386,10 @@ fun NoteEditorScreen(
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = ManropeFontFamily,
-                    color = if (title.isEmpty()) {
-                        Color(0xFFCEC0B0)
-                    } else {
-                        colorScheme.onBackground
-                    },
+                    color = if (title.isEmpty()) Color(0xFFCEC0B0) else colorScheme.onBackground,
                     textAlign = TextAlign.Start
                 ),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary), // تم استبدال BrownCard بـ primary
+                cursorBrush = SolidColor(colorScheme.primary),
                 modifier = Modifier.fillMaxWidth(),
                 decorationBox = { innerTextField ->
                     Box {
@@ -413,14 +399,15 @@ fun NoteEditorScreen(
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = MansalvaFontFamily,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), // لون Hint متكيف
+                                color = colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                                 textAlign = TextAlign.Start,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
                         innerTextField()
                     }
-                })
+                }
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -435,15 +422,15 @@ fun NoteEditorScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.CalendarMonth,
-                        contentDescription = "التاريخ",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant, // لون أيقونة متكيف
+                        contentDescription = null,
+                        tint = colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
                         text = currentDate,
                         fontSize = 12.sp,
                         fontFamily = ManropeFontFamily,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = colorScheme.onSurfaceVariant
                     )
                 }
                 Row(
@@ -452,22 +439,21 @@ fun NoteEditorScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Schedule,
-                        contentDescription = "وقت القراءة",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        contentDescription = null,
+                        tint = colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
                         text = stringResource(R.string.editor_reading_time, readingMinutes.value),
                         fontSize = 12.sp,
                         fontFamily = ManropeFontFamily,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = colorScheme.onSurfaceVariant
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // عرض مؤشر التحميل
             if (isLoading) {
                 Box(
                     modifier = Modifier
@@ -475,29 +461,28 @@ fun NoteEditorScreen(
                         .padding(32.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    CircularProgressIndicator(color = colorScheme.primary)
                 }
             }
 
             // ======= Content Blocks =======
             contentBlocks.forEachIndexed { index, block ->
                 when (block) {
+
                     is ContentBlock.TextBlock -> {
                         BasicTextField(
                             value = block.text,
-                            onValueChange = { newText ->
-                                contentBlocks[index] = block.copy(text = newText)
-                            },
+                            onValueChange = { contentBlocks[index] = block.copy(text = it) },
                             textStyle = TextStyle(
                                 fontSize = 16.sp,
                                 fontFamily = ManropeFontFamily,
                                 fontStyle = if (isItalic) FontStyle.Italic else FontStyle.Normal,
                                 fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
-                                color = MaterialTheme.colorScheme.onBackground,
+                                color = colorScheme.onBackground,
                                 lineHeight = 26.sp,
                                 textAlign = TextAlign.Start
                             ),
-                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                            cursorBrush = SolidColor(colorScheme.primary),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .defaultMinSize(
@@ -510,9 +495,7 @@ fun NoteEditorScreen(
                                             text = stringResource(R.string.editor_content_hint),
                                             fontSize = 15.sp,
                                             fontFamily = ManropeFontFamily,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                                alpha = 0.6f
-                                            ),
+                                            color = colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                             textAlign = TextAlign.Start,
                                             lineHeight = 26.sp,
                                             modifier = Modifier.fillMaxWidth()
@@ -520,7 +503,8 @@ fun NoteEditorScreen(
                                     }
                                     innerTextField()
                                 }
-                            })
+                            }
+                        )
                     }
 
                     is ContentBlock.BulletBlock -> {
@@ -534,7 +518,7 @@ fun NoteEditorScreen(
                                 text = "•",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary, // النقطة تأخذ اللون البني
+                                color = colorScheme.primary,
                                 modifier = Modifier.padding(horizontal = 8.dp)
                             )
                             BasicTextField(
@@ -549,10 +533,10 @@ fun NoteEditorScreen(
                                 textStyle = TextStyle(
                                     fontSize = 16.sp,
                                     fontFamily = ManropeFontFamily,
-                                    color = MaterialTheme.colorScheme.onBackground,
+                                    color = colorScheme.onBackground,
                                     lineHeight = 24.sp
                                 ),
-                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                                cursorBrush = SolidColor(colorScheme.primary),
                                 modifier = Modifier.weight(1f)
                             )
                             IconButton(
@@ -561,8 +545,8 @@ fun NoteEditorScreen(
                             ) {
                                 Icon(
                                     Icons.Default.Close,
-                                    contentDescription = "حذف",
-                                    tint = MaterialTheme.colorScheme.outline,
+                                    contentDescription = null,
+                                    tint = colorScheme.outline,
                                     modifier = Modifier.size(14.dp)
                                 )
                             }
@@ -571,14 +555,12 @@ fun NoteEditorScreen(
 
                     is ContentBlock.ImageBlock -> {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(220.dp)
-                        ) {
+                        Box(modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp)) {
                             AsyncImage(
                                 model = block.uri,
-                                contentDescription = "صورة مرفقة",
+                                contentDescription = null,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -594,7 +576,7 @@ fun NoteEditorScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "حذف الصورة",
+                                    contentDescription = null,
                                     tint = Color.White,
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -606,13 +588,14 @@ fun NoteEditorScreen(
                     is ContentBlock.AudioBlock -> {
                         Spacer(modifier = Modifier.height(8.dp))
                         Card(
-                            modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
-                            // استخدام surfaceVariant بدلاً من لون ثابت لإعطاء لمسة بنية خفيفة
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                                containerColor = colorScheme.surfaceVariant.copy(
                                     alpha = 0.5f
                                 )
-                            ), elevation = CardDefaults.cardElevation(0.dp)
+                            ),
+                            elevation = CardDefaults.cardElevation(0.dp)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -624,13 +607,13 @@ fun NoteEditorScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(44.dp)
-                                        .background(MaterialTheme.colorScheme.primary, CircleShape),
+                                        .background(colorScheme.primary, CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.Mic,
-                                        contentDescription = "تسجيل صوتي",
-                                        tint = MaterialTheme.colorScheme.onPrimary,
+                                        contentDescription = null,
+                                        tint = colorScheme.onPrimary,
                                         modifier = Modifier.size(22.dp)
                                     )
                                 }
@@ -639,14 +622,14 @@ fun NoteEditorScreen(
                                         text = block.name,
                                         fontSize = 13.sp,
                                         fontFamily = ManropeFontFamily,
-                                        color = MaterialTheme.colorScheme.onSurface,
+                                        color = colorScheme.onSurface,
                                         fontWeight = FontWeight.Medium
                                     )
                                     Text(
                                         text = stringResource(R.string.audio_file),
                                         fontSize = 11.sp,
                                         fontFamily = ManropeFontFamily,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = colorScheme.onSurfaceVariant
                                     )
                                 }
                                 IconButton(
@@ -655,8 +638,8 @@ fun NoteEditorScreen(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Close,
-                                        contentDescription = "حذف التسجيل",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        contentDescription = null,
+                                        tint = colorScheme.onSurfaceVariant,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
@@ -671,8 +654,7 @@ fun NoteEditorScreen(
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp),
                             shape = RoundedCornerShape(12.dp),
-                            // استخدام لون secondaryContainer للروابط لتمييزها بلمسة Teal هادئة
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                            colors = CardDefaults.cardColors(containerColor = colorScheme.secondaryContainer)
                         ) {
                             Row(
                                 modifier = Modifier.padding(12.dp),
@@ -680,13 +662,13 @@ fun NoteEditorScreen(
                             ) {
                                 Icon(
                                     Icons.Outlined.Link,
-                                    contentDescription = "رابط",
-                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                    contentDescription = null,
+                                    tint = colorScheme.onSecondaryContainer
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = block.url,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    color = colorScheme.onSecondaryContainer,
                                     fontSize = 14.sp,
                                     fontFamily = ManropeFontFamily,
                                     modifier = Modifier.weight(1f)
@@ -694,8 +676,8 @@ fun NoteEditorScreen(
                                 IconButton(onClick = { contentBlocks.removeAt(index) }) {
                                     Icon(
                                         Icons.Default.Close,
-                                        contentDescription = "حذف الرابط",
-                                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        contentDescription = null,
+                                        tint = colorScheme.onSecondaryContainer,
                                         modifier = Modifier.size(16.dp)
                                     )
                                 }
@@ -705,10 +687,11 @@ fun NoteEditorScreen(
                 }
             }
         }
+
         // ======= Bottom Toolbar =======
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surface,
+            color = colorScheme.surface,
             shadowElevation = 8.dp
         ) {
             Row(
@@ -718,7 +701,8 @@ fun NoteEditorScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // ======= AI Button + DropdownMenu =======
+
+                // ======= AI Button =======
                 Box {
                     IconButton(
                         onClick = { aiMenuExpanded = true },
@@ -727,15 +711,15 @@ fun NoteEditorScreen(
                     ) {
                         if (isAiLoading) {
                             CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.primary,
+                                color = colorScheme.primary,
                                 modifier = Modifier.size(20.dp),
                                 strokeWidth = 2.dp
                             )
                         } else {
                             Icon(
                                 imageVector = Icons.Outlined.AutoAwesome,
-                                contentDescription = "الذكاء الاصطناعي",
-                                tint = MaterialTheme.colorScheme.primary,
+                                contentDescription = null,
+                                tint = colorScheme.primary,
                                 modifier = Modifier.size(22.dp)
                             )
                         }
@@ -744,63 +728,114 @@ fun NoteEditorScreen(
                     DropdownMenu(
                         expanded = aiMenuExpanded,
                         onDismissRequest = { aiMenuExpanded = false },
-                        modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                        modifier = Modifier.background(colorScheme.surface)
                     ) {
-                        DropdownMenuItem(text = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.AutoAwesome,
-                                    contentDescription = "إعادة صياغة",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    text = stringResource(R.string.rephrase_text),
-                                    fontFamily = ManropeFontFamily,
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = colorScheme.primary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.rephrase_text),
+                                        fontFamily = ManropeFontFamily,
+                                        fontSize = 14.sp,
+                                        color = colorScheme.onSurface
+                                    )
+                                }
+                            },
+                            onClick = {
+                                aiMenuExpanded = false
+                                val currentText =
+                                    contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
+                                        .joinToString("\n") { it.text }.trim()
+                                if (currentText.isBlank()) {
+                                    scope.launch { snackbarHostState.showSnackbar("لا يوجد نص لإعادة صياغته") }
+                                    return@DropdownMenuItem
+                                }
+                                scope.launch {
+                                    isAiLoading = true
+                                    try {
+                                        val result = GroqService.rephraseText(currentText)
+                                        val firstTextIndex =
+                                            contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
+                                        if (firstTextIndex != -1) {
+                                            contentBlocks[firstTextIndex] =
+                                                ContentBlock.TextBlock(text = result)
+                                            snackbarHostState.showSnackbar("تمت إعادة الصياغة بنجاح")
+                                        }
+                                    } catch (e: Exception) {
+                                        snackbarHostState.showSnackbar("فشل في إعادة الصياغة")
+                                    } finally {
+                                        isAiLoading = false
+                                    }
+                                }
                             }
-                        }, onClick = {
-                            aiMenuExpanded = false
-                            // ... باقي منطق الـ onClick كما هو ...
-                        })
+                        )
 
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        HorizontalDivider(color = colorScheme.outlineVariant)
 
-                        DropdownMenuItem(text = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Spellcheck,
-                                    contentDescription = "تشكيل النص",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    text = stringResource(R.string.diacritize_text),
-                                    fontFamily = ManropeFontFamily,
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Spellcheck,
+                                        contentDescription = null,
+                                        tint = colorScheme.primary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.diacritize_text),
+                                        fontFamily = ManropeFontFamily,
+                                        fontSize = 14.sp,
+                                        color = colorScheme.onSurface
+                                    )
+                                }
+                            },
+                            onClick = {
+                                aiMenuExpanded = false
+                                val currentText =
+                                    contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
+                                        .joinToString("\n") { it.text }.trim()
+                                if (currentText.isBlank()) {
+                                    scope.launch { snackbarHostState.showSnackbar("لا يوجد نص لتشكيله") }
+                                    return@DropdownMenuItem
+                                }
+                                scope.launch {
+                                    isAiLoading = true
+                                    try {
+                                        val result = GroqService.diacritizeText(currentText)
+                                        val firstTextIndex =
+                                            contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
+                                        if (firstTextIndex != -1) {
+                                            contentBlocks[firstTextIndex] =
+                                                ContentBlock.TextBlock(text = result)
+                                            snackbarHostState.showSnackbar("تم تشكيل النص بنجاح")
+                                        }
+                                    } catch (e: Exception) {
+                                        snackbarHostState.showSnackbar("فشل في تشكيل النص")
+                                    } finally {
+                                        isAiLoading = false
+                                    }
+                                }
                             }
-                        }, onClick = {
-                            aiMenuExpanded = false
-                            // ... باقي منطق الـ onClick كما هو ...
-                        })
+                        )
                     }
                 }
 
-                EditorToolbarButton(
-                    icon = Icons.Outlined.Mic, onClick = { audioPickerLauncher.launch("audio/*") })
+                // ← Mic - يفتح Audio Dialog
+                EditorToolbarButton(icon = Icons.Outlined.Mic, onClick = { showAudioDialog = true })
 
-                EditorToolbarButton(
-                    icon = Icons.Outlined.Link, onClick = { showLinkDialog = true })
+                EditorToolbarButton(icon = Icons.Outlined.Link, onClick = { showLinkDialog = true })
 
                 EditorToolbarButton(
                     icon = Icons.Outlined.Image,
@@ -817,7 +852,7 @@ fun NoteEditorScreen(
                         fontSize = 14.sp,
                         fontFamily = ManropeFontFamily,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -829,19 +864,19 @@ fun NoteEditorScreen(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(
-                            if (isItalic) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent
-                        ), contentAlignment = Alignment.Center
+                        .background(if (isItalic) colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent),
+                    contentAlignment = Alignment.Center
                 ) {
                     IconButton(
-                        onClick = { isItalic = !isItalic }, modifier = Modifier.size(36.dp)
+                        onClick = { isItalic = !isItalic },
+                        modifier = Modifier.size(36.dp)
                     ) {
                         Text(
                             text = "I",
                             fontSize = 16.sp,
                             fontStyle = FontStyle.Italic,
                             fontWeight = FontWeight.Bold,
-                            color = if (isItalic) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (isItalic) colorScheme.primary else colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -850,20 +885,392 @@ fun NoteEditorScreen(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(
-                            if (isBold) colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent
-                        ), contentAlignment = Alignment.Center
+                        .background(if (isBold) colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent),
+                    contentAlignment = Alignment.Center
                 ) {
-                    IconButton(
-                        onClick = { isBold = !isBold }, modifier = Modifier.size(36.dp)
-                    ) {
+                    IconButton(onClick = { isBold = !isBold }, modifier = Modifier.size(36.dp)) {
                         Text(
                             text = "B",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = if (isBold) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (isBold) colorScheme.primary else colorScheme.onSurfaceVariant
                         )
                     }
+                }
+            }
+        }
+    }
+
+    // ======= Audio Source Dialog =======
+    if (showAudioDialog) {
+        AudioSourceDialog(
+            onDismiss = { showAudioDialog = false },
+            onChooseFile = {
+                showAudioDialog = false
+                audioPickerLauncher.launch("audio/*")
+            },
+            onRecordDirect = {
+                showAudioDialog = false
+                showRecordingDialog = true
+            }
+        )
+    }
+
+    // ======= Recording Dialog =======
+    if (showRecordingDialog) {
+        RecordingDialog(
+            onDismiss = {
+                showRecordingDialog = false
+                mediaRecorder.value?.apply {
+                    try {
+                        stop(); release()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                mediaRecorder.value = null
+                isRecording = false
+                recordingSeconds = 0
+            },
+            onSave = { filePath ->
+                showRecordingDialog = false
+                isRecording = false
+                recordingSeconds = 0
+                mediaRecorder.value = null
+                val file = File(filePath)
+                if (file.exists()) {
+                    contentBlocks.add(
+                        ContentBlock.AudioBlock(
+                            uri = Uri.fromFile(file),
+                            name = file.name
+                        )
+                    )
+                    contentBlocks.add(ContentBlock.TextBlock())
+                }
+            },
+            isRecording = isRecording,
+            recordingSeconds = recordingSeconds,
+            onStartRecording = {
+                val fileName = "record_${System.currentTimeMillis()}.mp4"
+                val file = File(context.filesDir, fileName)
+                recordedFilePath = file.absolutePath
+                try {
+                    val recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        android.media.MediaRecorder(context)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        android.media.MediaRecorder()
+                    }
+                    recorder.apply {
+                        setAudioSource(android.media.MediaRecorder.AudioSource.MIC)
+                        setOutputFormat(android.media.MediaRecorder.OutputFormat.MPEG_4)
+                        setAudioEncoder(android.media.MediaRecorder.AudioEncoder.AAC)
+                        setOutputFile(file.absolutePath)
+                        prepare()
+                        start()
+                    }
+                    mediaRecorder.value = recorder
+                    isRecording = true
+                    scope.launch {
+                        while (isRecording) {
+                            delay(1000)
+                            recordingSeconds++
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    scope.launch { snackbarHostState.showSnackbar("فشل في بدء التسجيل") }
+                }
+            },
+            onStopRecording = {
+                mediaRecorder.value?.apply {
+                    try {
+                        stop(); release()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                mediaRecorder.value = null
+                isRecording = false
+            },
+            recordedFilePath = recordedFilePath
+        )
+    }
+
+    // ======= Link Dialog =======
+    if (showLinkDialog) {
+        AddLinkDialog(
+            onDismiss = { showLinkDialog = false },
+            onConfirm = { url ->
+                if (url.isNotBlank()) {
+                    contentBlocks.add(ContentBlock.LinkBlock(url = url))
+                    contentBlocks.add(ContentBlock.TextBlock())
+                }
+                showLinkDialog = false
+            }
+        )
+    }
+}
+
+// ======= Audio Source Dialog =======
+@Composable
+fun AudioSourceDialog(
+    onDismiss: () -> Unit,
+    onChooseFile: () -> Unit,
+    onRecordDirect: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = colorScheme.surface,
+            tonalElevation = 6.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(colorScheme.primaryContainer, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Mic,
+                        contentDescription = null,
+                        tint = colorScheme.primary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                Text(
+                    text = "إضافة صوت",
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = colorScheme.onSurface
+                )
+                Text(
+                    text = "اختر طريقة إضافة الملف الصوتي",
+                    fontFamily = ManropeFontFamily,
+                    fontSize = 13.sp,
+                    color = colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // ← تسجيل مباشر
+                Surface(
+                    onClick = onRecordDirect,
+                    shape = RoundedCornerShape(16.dp),
+                    color = colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Mic,
+                            contentDescription = null,
+                            tint = colorScheme.onPrimary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Column {
+                            Text(
+                                text = "تسجيل مباشر",
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = colorScheme.onPrimary,
+                                fontSize = 15.sp
+                            )
+                            Text(
+                                text = "سجّل صوتك الآن",
+                                fontFamily = ManropeFontFamily,
+                                color = colorScheme.onPrimary.copy(alpha = 0.8f),
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+
+                // ← اختيار ملف
+                Surface(
+                    onClick = onChooseFile,
+                    shape = RoundedCornerShape(16.dp),
+                    color = colorScheme.surfaceVariant,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.FolderOpen,
+                            contentDescription = null,
+                            tint = colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Column {
+                            Text(
+                                text = "اختيار ملف صوتي",
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = colorScheme.onSurface,
+                                fontSize = 15.sp
+                            )
+                            Text(
+                                text = "من مكتبة الصوت",
+                                fontFamily = ManropeFontFamily,
+                                color = colorScheme.onSurfaceVariant,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+
+                TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "إلغاء",
+                        fontFamily = ManropeFontFamily,
+                        color = colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ======= Recording Dialog =======
+@Composable
+fun RecordingDialog(
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit,
+    isRecording: Boolean,
+    recordingSeconds: Int,
+    onStartRecording: () -> Unit,
+    onStopRecording: () -> Unit,
+    recordedFilePath: String?
+) {
+    val minutes = recordingSeconds / 60
+    val seconds = recordingSeconds % 60
+    val timeText = "%02d:%02d".format(minutes, seconds)
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = colorScheme.surface,
+            tonalElevation = 6.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "تسجيل صوتي",
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = colorScheme.onSurface
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .background(
+                            if (isRecording) colorScheme.errorContainer else colorScheme.primaryContainer,
+                            CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Mic,
+                        contentDescription = null,
+                        tint = if (isRecording) colorScheme.error else colorScheme.primary,
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+
+                Text(
+                    text = timeText,
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 32.sp,
+                    color = if (isRecording) colorScheme.error else colorScheme.onSurface
+                )
+
+                Text(
+                    text = when {
+                        isRecording -> "جاري التسجيل..."
+                        recordingSeconds > 0 -> "تم إيقاف التسجيل"
+                        else -> "اضغط للبدء"
+                    },
+                    fontFamily = ManropeFontFamily,
+                    fontSize = 13.sp,
+                    color = colorScheme.onSurfaceVariant
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+
+                    // زر البدء/الإيقاف
+                    Button(
+                        onClick = { if (isRecording) onStopRecording() else onStartRecording() },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isRecording) colorScheme.error else colorScheme.primary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = if (isRecording) Icons.Outlined.Stop else Icons.Outlined.Mic,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isRecording) "إيقاف" else "بدء",
+                            fontFamily = ManropeFontFamily
+                        )
+                    }
+
+                    // زر الحفظ
+                    Button(
+                        onClick = { recordedFilePath?.let { onSave(it) } },
+                        enabled = !isRecording && recordingSeconds > 0,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Save,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(text = "حفظ", fontFamily = ManropeFontFamily)
+                    }
+                }
+
+                TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "إلغاء",
+                        fontFamily = ManropeFontFamily,
+                        color = colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }
@@ -889,10 +1296,7 @@ fun EditorToolbarButton(
 
 // ======= Add Link Dialog =======
 @Composable
-fun AddLinkDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
-) {
+fun AddLinkDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     var text by remember { mutableStateOf("") }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -922,9 +1326,7 @@ fun AddLinkDialog(
                     onValueChange = { text = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(
-                            colorScheme.surfaceVariant, RoundedCornerShape(12.dp)
-                        )
+                        .background(colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
                         .padding(16.dp),
                     textStyle = TextStyle(
                         fontFamily = ManropeFontFamily,
@@ -942,7 +1344,8 @@ fun AddLinkDialog(
                             )
                         }
                         innerTextField()
-                    })
+                    }
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -963,14 +1366,12 @@ fun AddLinkDialog(
                             fontSize = 14.sp
                         )
                     }
-
                     Button(
                         onClick = {
                             if (text.isNotBlank()) {
                                 var url = text.trim()
-                                if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                                    url = "https://$url"
-                                }
+                                if (!url.startsWith("http://") && !url.startsWith("https://")) url =
+                                    "https://$url"
                                 onConfirm(url)
                             }
                         },
