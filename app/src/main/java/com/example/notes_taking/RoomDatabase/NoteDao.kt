@@ -26,7 +26,6 @@ interface NoteDao {
     @Query("SELECT * FROM notes_table ORDER BY id DESC LIMIT 50")
     suspend fun getRecentNotes(): List<Note>
 
-    // ← جلب آخر ملاحظة أُدخلت
     @Query("SELECT * FROM notes_table ORDER BY id DESC LIMIT 1")
     suspend fun getLastNote(): Note?
 }

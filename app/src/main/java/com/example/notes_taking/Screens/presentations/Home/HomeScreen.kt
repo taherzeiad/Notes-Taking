@@ -107,9 +107,14 @@ fun HomeScreen(
                 )
             }
 
-            // 5. الإجراءات السريعة
-            item { QuickActionsSection(onAddNote = onAddNote) }
-
+            item {
+                QuickActionsSection(
+                    onAddNote = onAddNote,
+                    onVoiceRecord = {
+                        navController.navigate(Route.NoteEditor.createRoute(0, true))
+                    }
+                )
+            }
             item { Spacer(modifier = Modifier.height(10.dp)) }
         }
     }
@@ -134,15 +139,20 @@ fun WelcomeSection() {
     }
 }
 
+// ======= QuickActionsSection =======
 @Composable
-fun QuickActionsSection(onAddNote: () -> Unit) {
+fun QuickActionsSection(
+    onAddNote: () -> Unit,
+    onVoiceRecord: () -> Unit
+) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             QuickActionButton(
                 label = stringResource(R.string.voice_record),
                 icon = Icons.Outlined.Mic,
                 modifier = Modifier.weight(1f),
-                onClick = {})
+                onClick = onVoiceRecord
+            )
             QuickActionButton(
                 label = stringResource(R.string.quick_idea),
                 icon = Icons.Outlined.Lightbulb,
@@ -154,7 +164,8 @@ fun QuickActionsSection(onAddNote: () -> Unit) {
             label = stringResource(R.string.add_document),
             icon = Icons.Outlined.Image,
             modifier = Modifier.fillMaxWidth(),
-            onClick = {})
+            onClick = {}
+        )
     }
 }
 
