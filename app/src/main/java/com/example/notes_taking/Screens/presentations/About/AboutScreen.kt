@@ -38,13 +38,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.navigation.NavHostController
+import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
@@ -55,6 +58,8 @@ import com.example.notes_taking.ui.theme.MansalvaFontFamily
 fun AboutScreen(navController: NavHostController) {
 
     val context = LocalContext.current
+    val layoutDirection = LocalLayoutDirection.current
+    val isRtl = layoutDirection == LayoutDirection.Rtl
 
     Scaffold(
         topBar = {
@@ -148,8 +153,7 @@ fun AboutScreen(navController: NavHostController) {
                         } catch (e: Exception) {
                             // معالجة الخطأ في حال لم يتمكن الجهاز من فتح الرابط
                         }
-                    }
-                )
+                    })
                 AboutLinkItem(
                     icon = Icons.Default.Mail,
                     label = stringResource(R.string.technical_support),
@@ -162,12 +166,12 @@ fun AboutScreen(navController: NavHostController) {
                             context.startActivity(intent)
                         } catch (e: Exception) {
                         }
-                    }
-                )
+                    })
                 AboutLinkItem(
                     icon = Icons.Default.PrivacyTip,
                     label = stringResource(R.string.privacy_policy),
-                    onClick = { /* افتح الرابط */ })
+                    isRtl = isRtl,
+                    onClick = { navController.navigate(Route.Privacy.route) })
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -185,7 +189,12 @@ fun AboutScreen(navController: NavHostController) {
 }
 
 @Composable
-fun AboutLinkItem(icon: ImageVector, label: String, onClick: () -> Unit) {
+fun AboutLinkItem(
+    icon: ImageVector,
+    label: String,
+    isRtl: Boolean = false,
+    onClick: () -> Unit
+) {
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
@@ -197,19 +206,38 @@ fun AboutLinkItem(icon: ImageVector, label: String, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
-            Text(
-                text = label,
-                fontFamily = ManropeFontFamily,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            if (isRtl) {
+                Text(
+                    text = label,
+                    fontFamily = ManropeFontFamily,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.End
+                )
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+            } else {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    text = label,
+                    fontFamily = ManropeFontFamily,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 }

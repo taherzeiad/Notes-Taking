@@ -180,4 +180,72 @@
     <string name="play_recording">تشغيل</string>
     <string name="stop_playing">إيقاف</string>
     <string name="play">تشغيل</string>
+
+    /////////////////////privacyPolicy///////////////////////////////////
+    <string name="privacy_header_title">خصوصيتك تهمنا</string>
+    <string name="privacy_header_subtitle">نحن ملتزمون بحماية معلوماتك الشخصية وحقك في الخصوصية. تشرح هذه السياسة كيفية تعاملنا مع بياناتك.</string>
+    <string name="privacy_last_updated">آخر تحديث: يناير 2026</string>
+
+    <string name="privacy_section_1_title">المعلومات التي نجمعها</string>
+    <string name="privacy_section_1_content">نجمع فقط المعلومات التي تقدمها مباشرة عبر التطبيق، مثل الملاحظات والمهام والتسجيلات الصوتية. لا نجمع معلومات تعريف شخصية دون موافقتك الصريحة.</string>
+
+    <string name="privacy_section_2_title">تخزين البيانات</string>
+    <string name="privacy_section_2_content">يتم تخزين جميع ملاحظاتك ومهامك محلياً على جهازك. لا نقوم برفع بياناتك إلى خوادم خارجية ما لم تختر تفعيل ميزات المزامنة السحابية بشكل صريح.</string>
+
+    <string name="privacy_section_3_title">ميزات الذكاء الاصطناعي</string>
+    <string name="privacy_section_3_content">عند استخدام ميزات الذكاء الاصطناعي كإعادة الصياغة أو استخراج المهام، يتم إرسال نصك إلى مزود الذكاء الاصطناعي (Groq) للمعالجة. لا يتم تخزين هذه البيانات بشكل دائم وتُستخدم فقط لتوليد الاستجابة. نوصي بعدم تضمين معلومات شخصية حساسة في المحتوى المعالج بالذكاء الاصطناعي.</string>
+
+    <string name="privacy_section_4_title">الوصول إلى الميكروفون</string>
+    <string name="privacy_section_4_content">يطلب التطبيق إذن الميكروفون فقط عندما تبدأ تسجيلاً صوتياً. يتم حفظ التسجيلات محلياً على جهازك ولا يتم رفعها دون علمك. يمكنك إلغاء إذن الميكروفون في أي وقت من إعدادات جهازك.</string>
+
+    <string name="privacy_section_5_title">الصور والوسائط</string>
+    <string name="privacy_section_5_content">يطلب التطبيق الوصول إلى صورك ووسائطك فقط عندما تختار إرفاق صورة بملاحظة. يتم نسخ الصور المحددة إلى مخزن التطبيق الخاص على جهازك. لا نصل إلى معرضك أو نفحصه دون إجرائك.</string>
+
+    <string name="privacy_section_6_title">مشاركة البيانات</string>
+    <string name="privacy_section_6_content">لا نبيع أو نتاجر أو ننقل بياناتك الشخصية إلى أطراف ثالثة. الاستثناء الوحيد هو عند الاقتضاء القانوني أو لحماية حقوق وسلامة المستخدمين. تتم معالجة الذكاء الاصطناعي من خلال واجهة برمجة Groq وفق سياسة خصوصيتهم.</string>
+
+    <string name="privacy_section_7_title">أمان البيانات</string>
+    <string name="privacy_section_7_content">نطبق معايير أمان على مستوى الصناعة لحماية بياناتك. تُخزن بياناتك في الدليل الخاص بالتطبيق، غير قابل للوصول من التطبيقات الأخرى. نراجع ممارسات الأمان بانتظام لضمان سلامة معلوماتك.</string>
+
+    <string name="privacy_section_8_title">خصوصية الأطفال</string>
+    <string name="privacy_section_8_content">تطبيقنا غير موجه للأطفال دون سن 13 عاماً. لا نجمع معلومات شخصية من الأطفال عن قصد. إذا كنت تعتقد أن طفلاً قدم لنا معلومات شخصية، يرجى التواصل معنا فوراً.</string>
+
+    <string name="privacy_section_9_title">التغييرات على هذه السياسة</string>
+    <string name="privacy_section_9_content">قد نحدّث سياسة الخصوصية هذه من وقت لآخر. سنخطرك بأي تغييرات عن طريق تحديث التاريخ في أعلى هذه السياسة. نشجعك على مراجعة هذه السياسة بشكل دوري.</string>
+
+    <string name="privacy_contact_title">تواصل معنا</string>
+    <string name="privacy_contact_email">privacy@intellectualsanctuary.com</string>
+    ////////////////////////privacycenter///////////////////////////////////////
+    <string name="privacy_center_title">تحكم في خصوصيتك</string>
+    <string name="privacy_center_subtitle">أدر كيفية استخدام بياناتك داخل التطبيق</string>
+    <string name="privacy_score">مستوى الخصوصية</string>
+    <string name="privacy_score_high">ممتاز — خصوصيتك محمية بشكل جيد</string>
+    <string name="privacy_score_medium">جيد — يمكن تحسين بعض الإعدادات</string>
+    <string name="privacy_score_low">منخفض — راجع إعدادات خصوصيتك</string>
+    <string name="privacy_data_controls">التحكم في البيانات</string>
+    <string name="privacy_ai_processing">معالجة الذكاء الاصطناعي</string>
+    <string name="privacy_ai_processing_desc">السماح لمعالجة الملاحظات بواسطة الذكاء الاصطناعي لإعادة الصياغة واستخراج المهام</string>
+    <string name="privacy_voice_storage">تخزين التسجيل الصوتي</string>
+    <string name="privacy_voice_storage_desc">حفظ التسجيلات الصوتية محلياً على جهازك</string>
+    <string name="privacy_analytics">تحليلات الاستخدام</string>
+    <string name="privacy_analytics_desc">مشاركة بيانات الاستخدام المجهولة للمساعدة في تحسين التطبيق</string>
+    <string name="privacy_your_data">بياناتك</string>
+    <string name="privacy_export_data">تصدير بياناتي</string>
+    <string name="privacy_export_data_desc">تنزيل جميع ملاحظاتك ومهامك كملف</string>
+    <string name="privacy_export_btn">تصدير</string>
+    <string name="privacy_delete_data">حذف جميع البيانات</string>
+    <string name="privacy_delete_data_desc">حذف جميع الملاحظات والمهام والتسجيلات بشكل نهائي</string>
+    <string name="privacy_delete_btn">حذف</string>
+    <string name="privacy_permissions">أذونات التطبيق</string>
+    <string name="permission_microphone">الميكروفون</string>
+    <string name="permission_microphone_desc">يُستخدم لتسجيل الملاحظات الصوتية</string>
+    <string name="permission_storage">الصور والوسائط</string>
+    <string name="permission_storage_desc">يُستخدم لإرفاق الصور بالملاحظات</string>
+    <string name="permission_granted">مسموح</string>
+    <string name="permission_denied">مرفوض</string>
+    <string name="privacy_policy_link_desc">اقرأ سياسة الخصوصية الكاملة</string>
+    <string name="privacy_delete_confirm_title">حذف جميع البيانات؟</string>
+    <string name="privacy_delete_confirm_desc">هذا الإجراء لا يمكن التراجع عنه. سيتم حذف جميع ملاحظاتك ومهامك وتسجيلاتك بشكل دائم.</string>
+    <string name="privacy_export_confirm_title">تصدير بياناتك</string>
+    <string name="privacy_export_confirm_desc">سيتم تصدير ملاحظاتك ومهامك كملف نصي محفوظ على جهازك.</string>
 </resources>

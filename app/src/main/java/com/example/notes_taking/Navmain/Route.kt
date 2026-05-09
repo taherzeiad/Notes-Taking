@@ -1,6 +1,10 @@
 package com.example.notes_taking.Navmain
 
 sealed class Route(val route: String) {
+    enum class PrivacyPolicy(route: Any) {
+
+    }
+
     object Splash : Route("splash_screen")
     object Onboarding : Route("onboarding_screen")
     object Home : Route("home_screen")
@@ -16,4 +20,6 @@ sealed class Route(val route: String) {
 
     object AboutApp : Route("about_app")
     object Summary : Route("summary_screen")
+    object Privacy : Route("privacy_screen")
+    object PrivacyCenter : Route("privacy_center_screen")
 }

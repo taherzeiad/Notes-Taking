@@ -179,5 +179,73 @@
     <string name="play_recording">Play</string>
     <string name="stop_playing">Stop</string>
     <string name="play">Play</string>
+
+    /////////////////////privacyPolicy///////////////////////////////////
+    <string name="privacy_header_title">Your Privacy Matters</string>
+    <string name="privacy_header_subtitle">We are committed to protecting your personal information and your right to privacy. This policy explains how we handle your data.</string>
+    <string name="privacy_last_updated">Last updated: January 2026</string>
+
+    <string name="privacy_section_1_title">Information We Collect</string>
+    <string name="privacy_section_1_content">We collect only the information you provide directly through the app, such as notes, tasks, and voice recordings. We do not collect personal identification information without your explicit consent.</string>
+
+    <string name="privacy_section_2_title">Data Storage</string>
+    <string name="privacy_section_2_content">All your notes and tasks are stored locally on your device. We do not upload your data to external servers unless you explicitly choose to enable cloud sync features.</string>
+
+    <string name="privacy_section_3_title">AI Features</string>
+    <string name="privacy_section_3_content">When you use AI features like rephrasing or task extraction, your text is sent to our AI provider (Groq) for processing. This data is not stored permanently and is used only to generate the response. We recommend not including sensitive personal information in AI-processed content.</string>
+
+    <string name="privacy_section_4_title">Microphone Access</string>
+    <string name="privacy_section_4_content">The app requests microphone access only when you initiate a voice recording. Recordings are saved locally on your device and are never uploaded without your knowledge. You can revoke microphone permission at any time from your device settings.</string>
+
+    <string name="privacy_section_5_title">Photos and Media</string>
+    <string name="privacy_section_5_content">The app requests access to your photos and media only when you choose to attach an image to a note. Selected images are copied to the app\'s private storage on your device. We do not access or scan your gallery without your action.</string>
+
+    <string name="privacy_section_6_title">Data Sharing</string>
+    <string name="privacy_section_6_content">We do not sell, trade, or transfer your personal data to third parties. The only exception is when required by law or to protect the rights and safety of users. AI processing is done through Groq\'s API under their privacy policy.</string>
+
+    <string name="privacy_section_7_title">Data Security</string>
+    <string name="privacy_section_7_content">We implement industry-standard security measures to protect your data. Your data is stored in the app\'s private directory, inaccessible to other apps. We regularly review our security practices to ensure your information remains safe.</string>
+
+    <string name="privacy_section_8_title">Children\'s Privacy</string>
+    <string name="privacy_section_8_content">Our app is not directed to children under 13 years of age. We do not knowingly collect personal information from children. If you believe a child has provided us with personal information, please contact us immediately.</string>
+
+    <string name="privacy_section_9_title">Changes to This Policy</string>
+    <string name="privacy_section_9_content">We may update this privacy policy from time to time. We will notify you of any changes by updating the date at the top of this policy. We encourage you to review this policy periodically.</string>
+
+    <string name="privacy_contact_title">Contact Us</string>
+    <string name="privacy_contact_email">privacy@intellectualsanctuary.com</string>
+    ////////////////////////privacycenter///////////////////////////////////////
+    <string name="privacy_center_title">Control Your Privacy</string>
+    <string name="privacy_center_subtitle">Manage how your data is used within the app</string>
+    <string name="privacy_score">Privacy Score</string>
+    <string name="privacy_score_high">Excellent — Your privacy is well protected</string>
+    <string name="privacy_score_medium">Good — Some settings can be improved</string>
+    <string name="privacy_score_low">Low — Review your privacy settings</string>
+    <string name="privacy_data_controls">Data Controls</string>
+    <string name="privacy_ai_processing">AI Processing</string>
+    <string name="privacy_ai_processing_desc">Allow notes to be processed by AI for rephrasing and task extraction</string>
+    <string name="privacy_voice_storage">Voice Recording Storage</string>
+    <string name="privacy_voice_storage_desc">Store voice recordings locally on your device</string>
+    <string name="privacy_analytics">Usage Analytics</string>
+    <string name="privacy_analytics_desc">Share anonymous usage data to help improve the app</string>
+    <string name="privacy_your_data">Your Data</string>
+    <string name="privacy_export_data">Export My Data</string>
+    <string name="privacy_export_data_desc">Download all your notes and tasks as a file</string>
+    <string name="privacy_export_btn">Export</string>
+    <string name="privacy_delete_data">Delete All Data</string>
+    <string name="privacy_delete_data_desc">Permanently delete all notes, tasks, and recordings</string>
+    <string name="privacy_delete_btn">Delete</string>
+    <string name="privacy_permissions">App Permissions</string>
+    <string name="permission_microphone">Microphone</string>
+    <string name="permission_microphone_desc">Used for voice note recording</string>
+    <string name="permission_storage">Photos &amp; Media</string>
+    <string name="permission_storage_desc">Used to attach images to notes</string>
+    <string name="permission_granted">Granted</string>
+    <string name="permission_denied">Denied</string>
+    <string name="privacy_policy_link_desc">Read our full privacy policy</string>
+    <string name="privacy_delete_confirm_title">Delete All Data?</string>
+    <string name="privacy_delete_confirm_desc">This action is irreversible. All your notes, tasks, and recordings will be permanently deleted.</string>
+    <string name="privacy_export_confirm_title">Export Your Data</string>
+    <string name="privacy_export_confirm_desc">Your notes and tasks will be exported as a text file saved to your device.</string>
 </resources>
 
