@@ -1,18 +1,10 @@
 package com.example.notes_taking.Screens.presentations.Tasks
 
+import TasksViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -23,16 +15,7 @@ import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -46,33 +29,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.notes_taking.R
+import com.example.notes_taking.RoomDatabase.TaskEntity
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
 
-// ======= Data Classes =======
-data class Task(
-    val id: Int,
-    val titleRes: Int,
-    val sourceRes: Int,
-    val timeRes: Int,
-    val isUrgent: Boolean = false,
-    val status: TaskStatus = TaskStatus.IN_PROGRESS
-)
-
-val sampleTasks = listOf(
-
-    Task(1, R.string.task_1_title, R.string.task_1_source, R.string.task_1_time, isUrgent = true),
-
-    Task(2, R.string.task_2_title, R.string.task_2_source, R.string.task_2_time),
-
-    Task(3, R.string.task_3_title, R.string.task_3_source, R.string.task_3_time),
-
-    Task(4, R.string.task_4_title, R.string.task_4_source, R.string.task_empty_time),
-
-    Task(5, R.string.task_5_title, R.string.task_5_source, R.string.task_empty_time)
-
-)
 enum class TaskStatus { IN_PROGRESS, COMPLETED, SCHEDULED }
 
 data class SourceCategory(val nameRes: Int, val count: Int, val unitRes: Int)
@@ -82,7 +43,9 @@ fun TasksScreen(
     viewModel: TasksViewModel,
     navController: NavHostController
 ) {
+    // ← هذا هو المهم: جلب المهام من Room عبر TasksViewModel
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
+    val allTasks by viewModel.allTasks.collectAsStateWithLifecycle()
 
     val tabs = listOf(
         stringResource(R.string.tab_in_progress),
@@ -90,17 +53,9 @@ fun TasksScreen(
         stringResource(R.string.tab_scheduled)
     )
 
-    val categories = listOf(
-        SourceCategory(R.string.cat_research, 12, R.string.tasks_unit),
-        SourceCategory(R.string.cat_personal, 4, R.string.tasks_unit),
-        SourceCategory(R.string.cat_meetings, 8, R.string.tasks_unit)
-    )
-
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = {
-            BottomNavBar(navController = navController, selectedTab = 1)
-        }
+        bottomBar = { BottomNavBar(navController = navController, selectedTab = 1) }
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -123,9 +78,7 @@ fun TasksScreen(
                         imageVector = Icons.Outlined.Search,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier
-                            .size(26.dp)
-                            .clickable { /* TODO: Search Logic */ }
+                        modifier = Modifier.size(26.dp)
                     )
                     Text(
                         text = stringResource(R.string.notes_screen_title_bar),
@@ -191,7 +144,7 @@ fun TasksScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer // بديل لـ BrownCard
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
@@ -231,91 +184,131 @@ fun TasksScreen(
                             color = MaterialTheme.colorScheme.primary,
                             trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f)
                         )
+                        // ← عداد المهام
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "${allTasks.count { it.isCompleted }}/${allTasks.size} مهمة مكتملة",
+                            fontSize = 12.sp,
+                            fontFamily = ManropeFontFamily,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        )
                     }
                 }
             }
 
-            // ======= 5. Tasks List =======
+            // ======= 5. Tasks List من Room =======
             if (tasks.isEmpty()) {
                 item {
-                    Text(
-                        text = stringResource(R.string.empty_notes_title),
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 32.dp),
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = ManropeFontFamily
-                    )
+                            .padding(vertical = 40.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = when (viewModel.selectedTab) {
+                                0 -> "لا توجد مهام قيد التنفيذ"
+                                1 -> "لا توجد مهام مكتملة"
+                                else -> "لا توجد مهام"
+                            },
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = ManropeFontFamily,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "أضف ملاحظة تحتوي على مهام لتظهر هنا",
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            fontFamily = ManropeFontFamily,
+                            fontSize = 13.sp
+                        )
+                    }
                 }
             } else {
-                items(tasks) { task ->
-                    TaskCard(
+                // ← items تأخذ TaskEntity من Room
+                items(
+                    items = tasks,
+                    key = { it.id }
+                ) { task ->
+                    RoomTaskCard(
                         task = task,
                         onCheck = { viewModel.toggleTaskCompletion(task.id) }
                     )
                 }
             }
 
-            // ======= 6. Source Categories =======
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.source_categories),
-                    fontSize = 15.sp,
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    elevation = CardDefaults.cardElevation(0.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+            // ======= 6. Source Categories ديناميكية من Room =======
+            if (allTasks.isNotEmpty()) {
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.source_categories),
+                        fontSize = 15.sp,
+                        fontFamily = ManropeFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // ← تجميع المهام حسب المصدر (اسم الملاحظة)
+                    val sourceGroups = allTasks
+                        .groupBy { it.source.ifBlank { "غير محدد" } }
+                        .entries
+                        .toList()
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        elevation = CardDefaults.cardElevation(0.dp)
                     ) {
-                        categories.forEachIndexed { index, category ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    stringResource(category.nameRes),
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontFamily = ManropeFontFamily
-                                )
-                                Text(
-                                    text = "${category.count} ${stringResource(category.unitRes)}",
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = ManropeFontFamily
-                                )
-                            }
-                            if (index < categories.size - 1) {
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            sourceGroups.forEachIndexed { index, (source, sourceTasks) ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = source,
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontFamily = ManropeFontFamily,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Text(
+                                        text = "${sourceTasks.size} مهام",
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = ManropeFontFamily
+                                    )
+                                }
+                                if (index < sourceGroups.size - 1) {
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                }
                             }
                         }
                     }
                 }
             }
+
             item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 }
 
+// ← بطاقة المهمة من Room
 @Composable
-fun TaskCard(task: Task, onCheck: () -> Unit) {
-    val isCompleted = task.status == TaskStatus.COMPLETED
-
+fun RoomTaskCard(task: TaskEntity, onCheck: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -338,15 +331,18 @@ fun TaskCard(task: Task, onCheck: () -> Unit) {
                         Spacer(modifier = Modifier.height(6.dp))
                     }
                     Text(
-                        text = stringResource(task.titleRes),
+                        text = task.title,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = ManropeFontFamily,
-                        color = if (isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
+                        color = if (task.isCompleted)
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        else
+                            MaterialTheme.colorScheme.onSurface
                     )
                 }
                 RadioButton(
-                    selected = isCompleted,
+                    selected = task.isCompleted,
                     onClick = onCheck,
                     colors = RadioButtonDefaults.colors(
                         selectedColor = MaterialTheme.colorScheme.primary,
@@ -354,12 +350,9 @@ fun TaskCard(task: Task, onCheck: () -> Unit) {
                     )
                 )
             }
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+
+            if (task.source.isNotBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -371,16 +364,7 @@ fun TaskCard(task: Task, onCheck: () -> Unit) {
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
-                        text = stringResource(task.sourceRes),
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = ManropeFontFamily
-                    )
-                }
-                val time = stringResource(task.timeRes)
-                if (time.isNotEmpty()) {
-                    Text(
-                        text = time,
+                        text = task.source,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontFamily = ManropeFontFamily
@@ -421,10 +405,7 @@ fun TaskTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
 fun UrgentBadge() {
     Box(
         modifier = Modifier
-            .background(
-                MaterialTheme.colorScheme.errorContainer,
-                RoundedCornerShape(20.dp)
-            )
+            .background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(20.dp))
             .padding(horizontal = 10.dp, vertical = 3.dp)
     ) {
         Text(

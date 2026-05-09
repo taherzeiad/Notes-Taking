@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.notes_taking.API.GroqService
 import com.example.notes_taking.Repository.NoteRepository
 import com.example.notes_taking.RoomDatabase.Note
+import com.example.notes_taking.RoomDatabase.TaskEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -22,13 +23,11 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                 try {
                     repository.getNoteById(id)
                 } catch (e: Exception) {
-                    Log.e("NoteViewModel", "Error getting note by id: ${e.message}")
+                    Log.e("NoteViewModel", "Error getting note: ${e.message}")
                     null
                 }
             }
-        } else {
-            null
-        }
+        } else null
     }
 
     fun saveNoteWithAI(
@@ -37,58 +36,36 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
         content: String,
         imageUri: String?,
         date: String,
+        manualTasks: List<String> = emptyList(),
         onComplete: () -> Unit,
         onError: (String) -> Unit
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // التحقق من صحة المدخلات الأساسية
-                val finalTitle = if (title.isBlank()) {
-                    // إنشاء عنوان تلقائي من أول 30 حرفاً من المحتوى
-                    val autoTitle = content.take(30).trim()
-                    if (autoTitle.isBlank()) "ملاحظة جديدة" else autoTitle
-                } else {
-                    title.trim()
+                val finalTitle = title.trim().ifBlank {
+                    content.take(30).trim().ifBlank { "ملاحظة جديدة" }
                 }
-
                 val finalContent = content.trim()
 
+                // 1. تصنيف الملاحظة بالـ AI
                 var autoCategory = "General"
-
-                // استدعاء الذكاء الاصطناعي فقط إذا كان المحتوى غير فارغ
                 if (finalContent.isNotBlank()) {
                     try {
                         val classification = GroqService.classifyNoteContent(finalContent)
                         autoCategory = when {
-                            classification.contains(
-                                "Philo",
-                                ignoreCase = true
-                            ) || classification.contains(
-                                "فلسفة", ignoreCase = true
-                            ) -> "Philosophy"
-
-                            classification.contains(
-                                "Liter",
-                                ignoreCase = true
-                            ) || classification.contains(
-                                "أدب", ignoreCase = true
-                            ) -> "Literature"
-
-                            classification.contains(
-                                "Dev",
-                                ignoreCase = true
-                            ) || classification.contains(
-                                "تطوير", ignoreCase = true
-                            ) -> "Self-Development"
-
+                            classification.contains("Philo", ignoreCase = true) -> "Philosophy"
+                            classification.contains("Liter", ignoreCase = true) -> "Literature"
+                            classification.contains("Dev", ignoreCase = true) -> "Self-Development"
+                            classification.contains("Task", ignoreCase = true) -> "Task"
+                            classification.contains("Work", ignoreCase = true) -> "Work"
                             else -> "General"
                         }
                     } catch (e: Exception) {
-                        Log.e("AI_SAVE", "AI classification failed: ${e.message}")
-                        autoCategory = "General"
+                        Log.e("NoteViewModel", "AI classification failed: ${e.message}")
                     }
                 }
 
+                // 2. حفظ الملاحظة
                 val noteToSave = Note(
                     id = if (id > 0) id else 0,
                     title = finalTitle,
@@ -98,40 +75,104 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                     date = date
                 )
 
-                // حفظ الملاحظة
                 if (id > 0) {
                     repository.updateNote(noteToSave)
                 } else {
                     repository.insertNote(noteToSave)
                 }
 
-                withContext(Dispatchers.Main) {
-                    onComplete()
+                // 3. جلب ID الملاحظة المحفوظة
+                val savedNoteId = if (id > 0) id else {
+                    repository.getLastNote()?.id ?: 0
                 }
-            } catch (e: Exception) {
-                Log.e("AI_SAVE", "Error during save: ${e.message}")
 
-                // حفظ الملاحظة بدون AI في حالة الفشل التام
+                // 4. حذف المهام القديمة لهذه الملاحظة
+                if (savedNoteId > 0) {
+                    repository.deleteTasksByNoteId(savedNoteId)
+                }
+
+                // 5. بناء قائمة المهام
+                val allTaskTitles = mutableListOf<String>()
+
+                // أولاً: المهام اليدوية من BulletBlocks
+                allTaskTitles.addAll(manualTasks.filter { it.isNotBlank() })
+
+                // ثانياً: إذا كانت الملاحظة من نوع Task أو تحتوي على مهام في النص
+                if (finalContent.isNotBlank()) {
+                    val textOnlyContent =
+                        finalContent.lines().filter { !it.startsWith("•") }.joinToString("\n")
+                            .trim()
+
+                    if (textOnlyContent.isNotBlank()) {
+                        try {
+                            val aiTasks =
+                                GroqService.extractTasksFromNote(finalTitle, textOnlyContent)
+                            aiTasks.forEach { aiTask ->
+                                val isDuplicate = allTaskTitles.any { existing ->
+                                    existing.contains(aiTask, ignoreCase = true) || aiTask.contains(
+                                        existing,
+                                        ignoreCase = true
+                                    )
+                                }
+                                if (!isDuplicate && aiTask.isNotBlank()) {
+                                    allTaskTitles.add(aiTask)
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.e("NoteViewModel", "AI task extraction failed: ${e.message}")
+                        }
+                    }
+                }
+
+                // 6. حفظ المهام في Room
+                if (allTaskTitles.isNotEmpty() && savedNoteId > 0) {
+                    val taskEntities = allTaskTitles.mapIndexed { index, taskTitle ->
+                        TaskEntity(
+                            title = taskTitle,
+                            source = finalTitle,
+                            noteId = savedNoteId,
+                            date = date,
+                            isUrgent = index < manualTasks.size
+                        )
+                    }
+                    repository.insertTasks(taskEntities)
+                }
+
+                withContext(Dispatchers.Main) { onComplete() }
+
+            } catch (e: Exception) {
+                Log.e("NoteViewModel", "Error during save: ${e.message}")
+                // Fallback
                 try {
-                    val fallbackTitle = if (title.isBlank()) "ملاحظة جديدة" else title.trim()
                     val fallbackNote = Note(
                         id = if (id > 0) id else 0,
-                        title = fallbackTitle,
+                        title = title.trim().ifBlank { "ملاحظة جديدة" },
                         content = content.trim(),
                         category = "General",
                         imageUri = imageUri,
                         date = date
                     )
+                    if (id > 0) repository.updateNote(fallbackNote)
+                    else repository.insertNote(fallbackNote)
 
-                    if (id > 0) {
-                        repository.updateNote(fallbackNote)
-                    } else {
-                        repository.insertNote(fallbackNote)
+                    // حفظ المهام اليدوية على الأقل
+                    if (manualTasks.isNotEmpty()) {
+                        val savedNoteId = if (id > 0) id else repository.getLastNote()?.id ?: 0
+                        if (savedNoteId > 0) {
+                            repository.insertTasks(manualTasks.filter { it.isNotBlank() }
+                                .map { taskTitle ->
+                                    TaskEntity(
+                                        title = taskTitle,
+                                        source = title.ifBlank { "ملاحظة" },
+                                        noteId = savedNoteId,
+                                        date = date,
+                                        isUrgent = true
+                                    )
+                                })
+                        }
                     }
 
-                    withContext(Dispatchers.Main) {
-                        onComplete()
-                    }
+                    withContext(Dispatchers.Main) { onComplete() }
                 } catch (fallbackError: Exception) {
                     withContext(Dispatchers.Main) {
                         onError("فشل في حفظ الملاحظة: ${fallbackError.message}")
@@ -141,83 +182,6 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
         }
     }
 
-    /**
-     * حفظ ملاحظة جديدة (بدون AI)
-     */
-    fun saveNote(
-        title: String,
-        content: String,
-        imagePath: String?,
-        date: String,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val finalTitle = if (title.isBlank()) "ملاحظة جديدة" else title.trim()
-                val finalContent = content.trim()
-
-                val newNote = Note(
-                    title = finalTitle,
-                    content = finalContent,
-                    imageUri = imagePath,
-                    date = date,
-                    category = "General"
-                )
-                repository.insertNote(newNote)
-
-                withContext(Dispatchers.Main) {
-                    onSuccess()
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    onError("فشل في حفظ الملاحظة: ${e.message}")
-                }
-            }
-        }
-    }
-
-    /**
-     * تحديث ملاحظة موجودة
-     */
-    fun updateNote(
-        id: Int,
-        title: String,
-        content: String,
-        imagePath: String?,
-        date: String,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val finalTitle = if (title.isBlank()) "ملاحظة جديدة" else title.trim()
-                val finalContent = content.trim()
-
-                val updatedNote = Note(
-                    id = id,
-                    title = finalTitle,
-                    content = finalContent,
-                    imageUri = imagePath,
-                    date = date,
-                    category = "General"
-                )
-                repository.updateNote(updatedNote)
-
-                withContext(Dispatchers.Main) {
-                    onSuccess()
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    onError("فشل في تحديث الملاحظة: ${e.message}")
-                }
-            }
-        }
-    }
-
-    /**
-     * حفظ الصورة في التخزين الداخلي
-     */
     fun saveImageToInternalStorage(context: Context, uri: Uri): String? {
         return try {
             context.contentResolver.openInputStream(uri)?.use { inputStream ->
@@ -234,20 +198,13 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
         }
     }
 
-    /**
-     * حذف الملاحظة
-     */
     fun deleteNote(note: Note, onDeleteSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 repository.deleteNote(note)
-                withContext(Dispatchers.Main) {
-                    onDeleteSuccess()
-                }
+                withContext(Dispatchers.Main) { onDeleteSuccess() }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    onError("فشل في حذف الملاحظة: ${e.message}")
-                }
+                withContext(Dispatchers.Main) { onError("فشل في حذف الملاحظة: ${e.message}") }
             }
         }
     }
