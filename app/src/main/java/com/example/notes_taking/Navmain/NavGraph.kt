@@ -31,6 +31,8 @@ import com.example.notes_taking.Screens.presentations.Notes.NotesScreen
 import com.example.notes_taking.Screens.presentations.Notes.NotesViewModel
 import com.example.notes_taking.Screens.presentations.Onboarding.OnboardingScreen
 import com.example.notes_taking.Screens.presentations.Onboarding.OnboardingViewModel
+import com.example.notes_taking.Screens.presentations.Privacy.PrivacyPolicyScreen
+import com.example.notes_taking.Screens.presentations.Privacy.PrivacyScreen
 import com.example.notes_taking.Screens.presentations.Settings.SettingsScreen
 import com.example.notes_taking.Screens.presentations.Settings.SettingsViewModel
 import com.example.notes_taking.Screens.presentations.Splash.SplashScreen
@@ -149,6 +151,12 @@ fun NavGraph(
 
             SummaryScreen(
                 viewModel = summaryViewModel, onBack = { navController.popBackStack() })
+        }
+        composable(route = Route.Privacy.route) {
+            PrivacyPolicyScreen(navController = navController)
+        }
+        composable(route = Route.PrivacyCenter.route){
+            PrivacyScreen(navController = navController)
         }
     }
 }

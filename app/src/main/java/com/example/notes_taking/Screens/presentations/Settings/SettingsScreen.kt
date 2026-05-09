@@ -198,7 +198,8 @@ fun PrivacySection(navController: NavHostController) {
     SettingsSection(title = stringResource(R.string.section_privacy)) {
         SettingsItem(
             label = stringResource(R.string.item_privacy_center),
-            icon = Icons.Outlined.Shield
+            icon = Icons.Outlined.Shield,
+            onClick  = {navController.navigate(Route.PrivacyCenter.route)}
         )
         HorizontalDivider(
             color = MaterialTheme.colorScheme.outlineVariant,
