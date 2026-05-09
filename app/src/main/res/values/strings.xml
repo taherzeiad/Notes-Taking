@@ -175,6 +175,11 @@
     <string name="record_now">Record your voice now</string>
     <string name="pick_audio">Choose Audio File</string>
     <string name="from_library">From audio library</string>
+    <string name="playing_audio">Playing audio...</string>
+    <string name="play_recording">Play</string>
+    <string name="stop_playing">Stop</string>
+    <string name="play">Play</string>
+
 
 </resources>
 

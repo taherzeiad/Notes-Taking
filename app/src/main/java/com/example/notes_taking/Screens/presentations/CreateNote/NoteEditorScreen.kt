@@ -39,6 +39,7 @@ import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Spellcheck
@@ -54,11 +55,14 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -1182,6 +1186,7 @@ fun AudioSourceDialog(
 }
 
 // ======= Recording Dialog =======
+// ======= Recording Dialog مع إضافة خاصية التشغيل =======
 @Composable
 fun RecordingDialog(
     onDismiss: () -> Unit,
@@ -1196,7 +1201,85 @@ fun RecordingDialog(
     val seconds = recordingSeconds % 60
     val timeText = "%02d:%02d".format(minutes, seconds)
 
-    Dialog(onDismissRequest = onDismiss) {
+    // متغيرات التشغيل
+    var isPlaying by remember { mutableStateOf(false) }
+    var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+    var currentPosition by remember { mutableStateOf(0) }
+    var duration by remember { mutableStateOf(0) }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    // تنظيف MediaPlayer عند الخروج
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaPlayer?.release()
+            mediaPlayer = null
+        }
+    }
+
+    // تحديث position أثناء التشغيل
+    LaunchedEffect(isPlaying) {
+        if (isPlaying && mediaPlayer != null) {
+            while (isPlaying && mediaPlayer?.isPlaying == true) {
+                delay(100)
+                currentPosition = mediaPlayer?.currentPosition ?: 0
+            }
+        }
+    }
+
+    // دالة تشغيل/إيقاف التسجيل
+    fun togglePlayback() {
+        if (recordedFilePath == null) return
+
+        if (mediaPlayer == null) {
+            // إنشاء MediaPlayer جديد
+            val player = android.media.MediaPlayer().apply {
+                setDataSource(recordedFilePath)
+                prepare()
+                setOnCompletionListener {
+                    isPlaying = false
+                    currentPosition = 0
+                    mediaPlayer?.release()
+                    mediaPlayer = null
+                }
+                setOnPreparedListener {
+                    duration = it.duration
+                }
+            }
+            mediaPlayer = player
+        }
+
+        if (isPlaying) {
+            mediaPlayer?.pause()
+            isPlaying = false
+        } else {
+            mediaPlayer?.apply {
+                if (currentPosition > 0) {
+                    seekTo(currentPosition)
+                }
+                start()
+                isPlaying = true
+            }
+        }
+    }
+
+    // دالة إيقاف التشغيل وإعادة الضبط
+    fun stopPlayback() {
+        mediaPlayer?.apply {
+            if (isPlaying) {
+                stop()
+            }
+            release()
+        }
+        mediaPlayer = null
+        isPlaying = false
+        currentPosition = 0
+    }
+
+    Dialog(onDismissRequest = {
+        stopPlayback()
+        onDismiss()
+    }) {
         Surface(
             shape = RoundedCornerShape(24.dp),
             color = colorScheme.surface,
@@ -1223,28 +1306,76 @@ fun RecordingDialog(
                         .size(80.dp)
                         .background(
                             if (isRecording) colorScheme.errorContainer
-                            else colorScheme.primaryContainer, CircleShape
-                        ), contentAlignment = Alignment.Center
+                            else if (isPlaying) colorScheme.tertiaryContainer
+                            else colorScheme.primaryContainer,
+                            CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Mic,
+                        imageVector = when {
+                            isRecording -> Icons.Outlined.Mic
+                            isPlaying -> Icons.Outlined.Stop
+                            else -> Icons.Outlined.Mic
+                        },
                         contentDescription = null,
-                        tint = if (isRecording) colorScheme.error else colorScheme.primary,
+                        tint = when {
+                            isRecording -> colorScheme.error
+                            isPlaying -> colorScheme.tertiary
+                            else -> colorScheme.primary
+                        },
                         modifier = Modifier.size(40.dp)
                     )
                 }
 
+                // وقت التسجيل أو التشغيل
                 Text(
-                    text = timeText,
+                    text = if (isPlaying) {
+                        val posMinutes = currentPosition / 1000 / 60
+                        val posSeconds = currentPosition / 1000 % 60
+                        "%02d:%02d / %02d:%02d".format(posMinutes, posSeconds, minutes, seconds)
+                    } else {
+                        timeText
+                    },
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 32.sp,
-                    color = if (isRecording) colorScheme.error else colorScheme.onSurface
+                    fontSize = 24.sp,
+                    color = when {
+                        isRecording -> colorScheme.error
+                        isPlaying -> colorScheme.tertiary
+                        else -> colorScheme.onSurface
+                    }
                 )
+
+                // شريط التقدم (إذا كان هناك تسجيل محفوظ وغير مسجل حالياً)
+                if (recordedFilePath != null && !isRecording && recordingSeconds > 0) {
+                    Slider(
+                        value = currentPosition.toFloat(),
+                        onValueChange = { newPosition ->
+                            if (!isPlaying) {
+                                currentPosition = newPosition.toInt()
+                                mediaPlayer?.seekTo(currentPosition)
+                            }
+                        },
+                        onValueChangeFinished = {
+                            if (!isPlaying && mediaPlayer != null) {
+                                mediaPlayer?.seekTo(currentPosition)
+                            }
+                        },
+                        valueRange = 0f..duration.toFloat(),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = SliderDefaults.colors(
+                            thumbColor = colorScheme.primary,
+                            activeTrackColor = colorScheme.primary,
+                            inactiveTrackColor = colorScheme.primaryContainer
+                        )
+                    )
+                }
 
                 Text(
                     text = when {
                         isRecording -> stringResource(R.string.recording_in_progress)
+                        isPlaying -> stringResource(R.string.playing_audio)
                         recordingSeconds > 0 -> stringResource(R.string.recording_stopped)
                         else -> stringResource(R.string.press_to_start)
                     },
@@ -1257,8 +1388,17 @@ fun RecordingDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    // زر التسجيل/الإيقاف
                     Button(
-                        onClick = { if (isRecording) onStopRecording() else onStartRecording() },
+                        onClick = {
+                            if (isRecording) {
+                                onStopRecording()
+                                stopPlayback()
+                            } else {
+                                onStartRecording()
+                                stopPlayback()
+                            }
+                        },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -1278,38 +1418,75 @@ fun RecordingDialog(
                         )
                     }
 
-                    Button(
-                        onClick = { recordedFilePath?.let { onSave(it) } },
-                        enabled = !isRecording && recordingSeconds > 0,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Save,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = stringResource(R.string.save_recording),
-                            fontFamily = ManropeFontFamily
-                        )
+                    // زر التشغيل (يظهر فقط عند وجود تسجيل وغير مسجل حالياً)
+                    if (recordedFilePath != null && !isRecording && recordingSeconds > 0) {
+                        Button(
+                            onClick = { togglePlayback() },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isPlaying) colorScheme.tertiary else colorScheme.secondary
+                            )
+                        ) {
+                            Icon(
+                                imageVector = if (isPlaying) Icons.Outlined.Stop else Icons.Outlined.PlayArrow,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (isPlaying) stringResource(R.string.stop_playing)
+                                else stringResource(R.string.play_recording),
+                                fontFamily = ManropeFontFamily
+                            )
+                        }
                     }
                 }
 
-                TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = stringResource(R.string.cancel),
-                        fontFamily = ManropeFontFamily,
-                        color = colorScheme.onSurfaceVariant
-                    )
+                // الصف الثاني من الأزرار (حفظ + إلغاء أو تشغيل + حفظ)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (recordedFilePath != null && !isRecording && recordingSeconds > 0) {
+                        Button(
+                            onClick = { recordedFilePath?.let { onSave(it) } },
+                            enabled = !isRecording && recordingSeconds > 0,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Save,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = stringResource(R.string.save_recording),
+                                fontFamily = ManropeFontFamily
+                            )
+                        }
+                    } else {
+                        Button(
+                            onClick = onDismiss,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                            elevation = null
+                        ) {
+                            Text(
+                                text = stringResource(R.string.cancel),
+                                color = colorScheme.onSurfaceVariant,
+                                fontFamily = ManropeFontFamily,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
-
 // ======= Toolbar Button =======
 @Composable
 fun EditorToolbarButton(

@@ -176,4 +176,8 @@
     <string name="record_now">سجّل صوتك الآن</string>
     <string name="pick_audio">اختيار ملف صوتي</string>
     <string name="from_library">من مكتبة الصوت</string>
+    <string name="playing_audio">جاري تشغيل التسجيل...</string>
+    <string name="play_recording">تشغيل</string>
+    <string name="stop_playing">إيقاف</string>
+    <string name="play">تشغيل</string>
 </resources>
