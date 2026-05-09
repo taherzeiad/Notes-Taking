@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.androidx.contentpager)
     implementation(libs.androidx.ui)
     implementation(libs.generativeai)
+    implementation(libs.androidx.constraintlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

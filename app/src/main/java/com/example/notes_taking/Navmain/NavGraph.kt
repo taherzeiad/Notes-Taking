@@ -1,11 +1,11 @@
 @file:Suppress(
-    "INFERRED_TYPE_VARIABLE_INTO_EMPTY_INTERSECTION_WARNING",
-    "TYPE_INTERSECTION_AS_REIFIED_WARNING"
+    "INFERRED_TYPE_VARIABLE_INTO_EMPTY_INTERSECTION_WARNING", "TYPE_INTERSECTION_AS_REIFIED_WARNING"
 )
 
 package com.example.notes_taking.Navmain
 
 
+import TasksViewModel
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
@@ -37,7 +37,6 @@ import com.example.notes_taking.Screens.presentations.Splash.SplashScreen
 import com.example.notes_taking.Screens.presentations.Summary.SummaryScreen
 import com.example.notes_taking.Screens.presentations.Summary.SummaryViewModel
 import com.example.notes_taking.Screens.presentations.Tasks.TasksScreen
-import com.example.notes_taking.Screens.presentations.Tasks.TasksViewModel
 
 @SuppressLint("NewApi")
 @RequiresApi(Build.VERSION_CODES.N)
@@ -47,10 +46,12 @@ fun NavGraph(
 ) {
     val context = LocalContext.current
 
-    // 1. إعداد الـ Repository والـ DAO مرة واحدة فقط
     val dao = remember { NoteDatabase.getDatabase(context).noteDao() }
-    val repository = remember { NoteRepositoryImpl(dao) }
+    val taskDao = remember { NoteDatabase.getDatabase(context).taskDao() }
+    val repository = remember { NoteRepositoryImpl(dao, taskDao) }
+
     val factory = remember { GenericViewModelFactory(repository) }
+
 
     val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     val lang = prefs.getString("language", "en") ?: "en"
@@ -124,11 +125,10 @@ fun NavGraph(
             )
         }
         composable(route = Route.Tasks.route) {
-            val tasksViewModel: TasksViewModel = viewModel()
-            TasksScreen(
-                viewModel = tasksViewModel, navController = navController
-            )
+            val tasksViewModel: TasksViewModel = viewModel(factory = factory)
+            TasksScreen(viewModel = tasksViewModel, navController = navController)
         }
+
         composable(route = Route.AboutApp.route) {
             AboutScreen(
                 navController = navController
@@ -139,9 +139,7 @@ fun NavGraph(
             val summaryViewModel: SummaryViewModel = viewModel(factory = factory)
 
             SummaryScreen(
-                viewModel = summaryViewModel,
-                onBack = { navController.popBackStack() }
-            )
+                viewModel = summaryViewModel, onBack = { navController.popBackStack() })
         }
     }
 }

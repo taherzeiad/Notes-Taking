@@ -5,6 +5,7 @@ import com.example.notes_taking.BuildConfig
 
 object GroqService {
     private const val API_KEY = BuildConfig.GROQ_API_KEY
+
     suspend fun rephraseText(text: String): String {
         val request = ChatRequest(
             model = "llama-3.3-70b-versatile", messages = listOf(
@@ -28,29 +29,73 @@ object GroqService {
         return makeRequest(request)
     }
 
-    // داخل GroqService.kt
     suspend fun classifyNoteContent(text: String): String {
         val request = ChatRequest(
-            model = "llama-3.3-70b-versatile",
-            messages = listOf(
+            model = "llama-3.3-70b-versatile", messages = listOf(
                 ChatMessage(
                     "system",
-                    "You are a professional organizer. Categorize the user's note into one of these: [Philosophy, Literature, Self-Development, Personal, Work]. Return only the category name in English."
-                ),
-                ChatMessage("user", "Categorize this: $text")
+                    "You are a professional organizer. Categorize the user's note into one of these: [Philosophy, Literature, Self-Development, Personal, Work, Task]. Return only the category name in English."
+                ), ChatMessage("user", "Categorize this: $text")
             )
         )
         return try {
             makeRequest(request).trim()
         } catch (e: Exception) {
-            "General" // تصنيف افتراضي عند حدوث خطأ
+            "General"
         }
+    }
+
+    // ← دالة استخراج المهام من النوت
+    suspend fun extractTasksFromNote(noteTitle: String, noteContent: String): List<String> {
+        val request = ChatRequest(
+            model = "llama-3.3-70b-versatile", messages = listOf(
+                ChatMessage(
+                    "system", """أنت مساعد متخصص في استخراج المهام من الملاحظات.
+استخرج المهام القابلة للتنفيذ من النص فقط.
+أعد قائمة المهام، كل مهمة في سطر منفصل.
+لا تضف أرقاماً أو نقاطاً أو أي تنسيق إضافي.
+إذا لم تجد مهاماً واضحة، أعد كلمة NONE فقط."""
+                ), ChatMessage(
+                    "user",
+                    "استخرج المهام من هذه الملاحظة:\nالعنوان: $noteTitle\nالمحتوى: $noteContent"
+                )
+            )
+        )
+        return try {
+            val result = makeRequest(request).trim()
+            if (result.uppercase() == "NONE" || result.isBlank()) {
+                emptyList()
+            } else {
+                result.lines().map { it.trim() }
+                    .filter { it.isNotBlank() && it.uppercase() != "NONE" }
+            }
+        } catch (e: Exception) {
+            Log.e("GroqService", "extractTasks failed: ${e.message}")
+            emptyList()
+        }
+    }
+
+    suspend fun summarizeNotes(notes: List<String>, targetDate: String): String {
+        val notesText = notes.mapIndexed { i, note -> "${i + 1}. $note" }.joinToString("\n")
+        val request = ChatRequest(
+            model = "llama-3.3-70b-versatile", messages = listOf(
+                ChatMessage(
+                    "system", """أنت مساعد ذكي متخصص في تلخيص الملاحظات اليومية.
+مهمتك: تلخيص ملاحظات المستخدم ليوم $targetDate بشكل واضح ومنظم.
+اكتب الملخص باللغة العربية في النقاط التالية:
+1. 📝 أبرز الأفكار
+2. ✅ المهام المذكورة
+3. 💡 التوصيات
+اجعل الملخص مختصراً ومفيداً."""
+                ), ChatMessage("user", "لخص هذه الملاحظات:\n$notesText")
+            )
+        )
+        return makeRequest(request)
     }
 
     private suspend fun makeRequest(request: ChatRequest): String {
         val authHeader = "Bearer $API_KEY"
         val response = RetrofitClient.instance.generateChatCompletion(authHeader, request)
-
         return if (response.isSuccessful) {
             response.body()?.choices?.firstOrNull()?.message?.content ?: "No response"
         } else {
@@ -58,32 +103,5 @@ object GroqService {
             Log.e("GroqAPI", "Error: $error")
             throw Exception("API Error: ${response.code()}")
         }
-    }
-
-    suspend fun summarizeNotes(notes: List<String>, targetDate: String): String {
-        val notesText = notes.mapIndexed { i, note ->
-            "${i + 1}. $note"
-        }.joinToString("\n")
-
-        val request = ChatRequest(
-            model = "llama-3.3-70b-versatile",
-            messages = listOf(
-                ChatMessage(
-                    "system",
-                    """أنت مساعد ذكي متخصص في تلخيص الملاحظات اليومية.
-                مهمتك: تلخيص ملاحظات المستخدم ليوم $targetDate بشكل واضح ومنظم.
-                اكتب الملخص باللغة العربية في النقاط التالية:
-                1. 📝 أبرز الأفكار
-                2. ✅ المهام المذكورة
-                3. 💡 التوصيات
-                اجعل الملخص مختصراً ومفيداً."""
-                ),
-                ChatMessage(
-                    "user",
-                    "لخص هذه الملاحظات:\n$notesText"
-                )
-            )
-        )
-        return makeRequest(request)
     }
 }

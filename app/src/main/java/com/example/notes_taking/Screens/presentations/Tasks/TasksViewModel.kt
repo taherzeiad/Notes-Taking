@@ -1,67 +1,62 @@
-package com.example.notes_taking.Screens.presentations.Tasks
-
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.notes_taking.Repository.NoteRepository
+import com.example.notes_taking.RoomDatabase.TaskEntity
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class TasksViewModel : ViewModel() {
+class TasksViewModel(private val repository: NoteRepository) : ViewModel() {
 
     var selectedTab by mutableIntStateOf(0)
         private set
 
-    private var allTasks: List<Task> = sampleTasks
-
-    private val _tasks = MutableStateFlow<List<Task>>(emptyList())
-    val tasks: StateFlow<List<Task>> = _tasks.asStateFlow()
-
     var aiProgress by mutableFloatStateOf(0f)
         private set
 
+    private val _selectedTabFlow = MutableStateFlow(0)
+
+    val allTasks: StateFlow<List<TaskEntity>> = repository.getAllTasks()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // ← المهام المفلترة حسب التبويب
+    val tasks: StateFlow<List<TaskEntity>> = combine(
+        allTasks,
+        _selectedTabFlow
+    ) { all, tab ->
+        when (tab) {
+            0 -> all.filter { !it.isCompleted }
+            1 -> all.filter { it.isCompleted }
+            else -> all
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     init {
-        filterTasksByTab(0)
-        updateAiProgress()
+        viewModelScope.launch {
+            allTasks.collect { all ->
+                val total = all.size
+                val completed = all.count { it.isCompleted }
+                aiProgress = if (total > 0) completed.toFloat() / total.toFloat() else 0f
+            }
+        }
     }
 
     fun onTabSelected(index: Int) {
         selectedTab = index
-        filterTasksByTab(index)
-    }
-
-    private fun filterTasksByTab(index: Int) {
-        val status = when (index) {
-            0 -> TaskStatus.IN_PROGRESS
-            1 -> TaskStatus.COMPLETED
-            else -> TaskStatus.SCHEDULED
-        }
-        _tasks.value = allTasks.filter { task: Task -> task.status == status }
+        _selectedTabFlow.value = index
     }
 
     fun toggleTaskCompletion(taskId: Int) {
         viewModelScope.launch {
-            allTasks = allTasks.map { task: Task ->
-                if (task.id == taskId) {
-                    val newStatus = if (task.status == TaskStatus.COMPLETED)
-                        TaskStatus.IN_PROGRESS else TaskStatus.COMPLETED
-                    task.copy(status = newStatus)
-                } else task
-            }
-            filterTasksByTab(selectedTab)
-            updateAiProgress()
-        }
-    }
-
-    private fun updateAiProgress() {
-        val total = allTasks.size
-        val completed = allTasks.count { task: Task -> task.status == TaskStatus.COMPLETED }
-        if (total > 0) {
-            aiProgress = completed.toFloat() / total.toFloat()
+            val task = allTasks.value.find { it.id == taskId } ?: return@launch
+            repository.updateTask(task.copy(isCompleted = !task.isCompleted))
         }
     }
 }

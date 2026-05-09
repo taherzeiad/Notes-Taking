@@ -218,10 +218,8 @@ fun NoteEditorScreen(
         } else {
             scope.launch {
                 snackbarHostState.showSnackbar(
-                    if (Locale.getDefault().language == "ar")
-                        "يجب منح صلاحية الميكروفون"
-                    else
-                        "Microphone permission required"
+                    if (Locale.getDefault().language == "ar") "يجب منح صلاحية الميكروفون"
+                    else "Microphone permission required"
                 )
             }
         }
@@ -310,9 +308,11 @@ fun NoteEditorScreen(
                             return@Button
                         }
                         isSavingInternally = true
+
                         val firstImageBlock =
                             contentBlocks.filterIsInstance<ContentBlock.ImageBlock>().firstOrNull()
                         val imagePathToSave = firstImageBlock?.uri?.path
+
                         val fullContent = contentBlocks.joinToString("\n") { block ->
                             when (block) {
                                 is ContentBlock.TextBlock -> block.text
@@ -320,12 +320,18 @@ fun NoteEditorScreen(
                                 else -> ""
                             }
                         }
+
+                        // ← استخراج BulletBlocks كمهام يدوية
+                        val manualTasks = contentBlocks.filterIsInstance<ContentBlock.BulletBlock>()
+                            .map { it.text.trim() }.filter { it.isNotBlank() }
+
                         viewModel.saveNoteWithAI(
                             id = noteId,
                             title = title,
                             content = fullContent,
                             imageUri = imagePathToSave,
                             date = currentDate,
+                            manualTasks = manualTasks,
                             onComplete = {
                                 isSavingInternally = false
                                 onSave()
@@ -838,8 +844,7 @@ fun NoteEditorScreen(
 
                 // ← Mic - يفتح Audio Dialog
                 EditorToolbarButton(
-                    icon = Icons.Outlined.Mic,
-                    onClick = {
+                    icon = Icons.Outlined.Mic, onClick = {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                             val permission = android.Manifest.permission.RECORD_AUDIO
                             val granted = androidx.core.content.ContextCompat.checkSelfPermission(
@@ -854,8 +859,7 @@ fun NoteEditorScreen(
                         } else {
                             showAudioDialog = true
                         }
-                    }
-                )
+                    })
 
                 EditorToolbarButton(icon = Icons.Outlined.Link, onClick = { showLinkDialog = true })
 
@@ -1195,10 +1199,8 @@ fun RecordingDialog(
                         .size(80.dp)
                         .background(
                             if (isRecording) colorScheme.errorContainer
-                            else colorScheme.primaryContainer,
-                            CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
+                            else colorScheme.primaryContainer, CircleShape
+                        ), contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Mic,
