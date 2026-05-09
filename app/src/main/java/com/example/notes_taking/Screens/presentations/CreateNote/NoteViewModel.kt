@@ -35,6 +35,7 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
         title: String,
         content: String,
         imageUri: String?,
+        audioPaths: String?,
         date: String,
         manualTasks: List<String> = emptyList(),
         onComplete: () -> Unit,
@@ -70,6 +71,7 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                     id = if (id > 0) id else 0,
                     title = finalTitle,
                     content = finalContent,
+                    audioPaths = audioPaths,
                     category = autoCategory,
                     imageUri = imageUri,
                     date = date

@@ -3,6 +3,7 @@ package com.example.notes_taking.Screens.presentations.Editor
 import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -31,6 +32,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Close
@@ -112,7 +114,10 @@ sealed class ContentBlock {
     ) : ContentBlock()
 
     data class AudioBlock(
-        val id: String = UUID.randomUUID().toString(), val uri: Uri, val name: String
+        val id: String = UUID.randomUUID().toString(),
+        val uri: Uri,
+        val name: String,
+        val filePath: String = uri.path ?: ""
     ) : ContentBlock()
 
     data class BulletBlock(
@@ -257,6 +262,20 @@ fun NoteEditorScreen(
                             contentBlocks.add(ContentBlock.ImageBlock(uri = Uri.fromFile(imageFile)))
                         }
                     }
+                    it.audioPaths?.split(",")?.forEach { audioPath ->
+                        if (audioPath.isNotBlank()) {
+                            val audioFile = File(audioPath)
+                            if (audioFile.exists()) {
+                                contentBlocks.add(
+                                    ContentBlock.AudioBlock(
+                                        uri = Uri.fromFile(audioFile),
+                                        name = audioFile.name,
+                                        filePath = audioPath
+                                    )
+                                )
+                            }
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 scope.launch { snackbarHostState.showSnackbar("فشل في تحميل الملاحظة") }
@@ -352,11 +371,16 @@ fun NoteEditorScreen(
                         // ← استخراج BulletBlocks كمهام يدوية
                         val manualTasks = contentBlocks.filterIsInstance<ContentBlock.BulletBlock>()
                             .map { it.text.trim() }.filter { it.isNotBlank() }
+                        val audioPaths = contentBlocks
+                            .filterIsInstance<ContentBlock.AudioBlock>()
+                            .map { it.filePath }
+                            .joinToString(",")
 
                         viewModel.saveNoteWithAI(
                             id = noteId,
                             title = title,
                             content = fullContent,
+                            audioPaths = audioPaths,
                             imageUri = imagePathToSave,
                             date = currentDate,
                             manualTasks = manualTasks,
@@ -633,61 +657,208 @@ fun NoteEditorScreen(
 
                     is ContentBlock.AudioBlock -> {
                         Spacer(modifier = Modifier.height(8.dp))
+
+                        var isPlaying by remember { mutableStateOf(false) }
+                        var mediaPlayer by remember {
+                            mutableStateOf<android.media.MediaPlayer?>(
+                                null
+                            )
+                        }
+                        var currentPosition by remember { mutableStateOf(0) }
+                        var duration by remember { mutableStateOf(0) }
+                        val scope = rememberCoroutineScope()
+
+                        // تنظيف MediaPlayer عند إزالة البلوك
+                        DisposableEffect(Unit) {
+                            onDispose {
+                                mediaPlayer?.release()
+                                mediaPlayer = null
+                            }
+                        }
+
+                        // تحديث position أثناء التشغيل
+                        LaunchedEffect(isPlaying) {
+                            if (isPlaying && mediaPlayer != null) {
+                                while (isPlaying && mediaPlayer?.isPlaying == true) {
+                                    delay(100)
+                                    currentPosition = mediaPlayer?.currentPosition ?: 0
+                                }
+                            }
+                        }
+
+                        // دالة تشغيل/إيقاف
+                        fun togglePlayback() {
+                            if (mediaPlayer == null) {
+                                try {
+                                    val player = android.media.MediaPlayer().apply {
+                                        setDataSource(block.filePath)
+                                        prepare()
+                                        setOnCompletionListener {
+                                            isPlaying = false
+                                            currentPosition = 0
+                                            mediaPlayer?.release()
+                                            mediaPlayer = null
+                                        }
+                                        setOnPreparedListener {
+                                            duration = it.duration
+                                        }
+                                    }
+                                    mediaPlayer = player
+                                } catch (e: Exception) {
+                                    Log.e(
+                                        "AudioBlock",
+                                        "Error initializing MediaPlayer: ${e.message}"
+                                    )
+                                    return
+                                }
+                            }
+
+                            if (isPlaying) {
+                                mediaPlayer?.pause()
+                                isPlaying = false
+                            } else {
+                                mediaPlayer?.apply {
+                                    if (currentPosition > 0) {
+                                        seekTo(currentPosition)
+                                    }
+                                    start()
+                                    isPlaying = true
+                                }
+                            }
+                        }
+
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = colorScheme.surfaceVariant.copy(
-                                    alpha = 0.5f
-                                )
+                                containerColor = colorScheme.surfaceVariant.copy(alpha = 0.5f)
                             ),
                             elevation = CardDefaults.cardElevation(0.dp)
                         ) {
-                            Row(
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    .padding(12.dp)
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(44.dp)
-                                        .background(colorScheme.primary, CircleShape),
-                                    contentAlignment = Alignment.Center
+                                // الصف العلوي: معلومات الملف
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Mic,
-                                        contentDescription = null,
-                                        tint = colorScheme.onPrimary,
-                                        modifier = Modifier.size(22.dp)
-                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(44.dp)
+                                            .background(
+                                                if (isPlaying) colorScheme.tertiaryContainer
+                                                else colorScheme.primaryContainer,
+                                                CircleShape
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isPlaying) Icons.Outlined.Stop else Icons.Outlined.Mic,
+                                            contentDescription = null,
+                                            tint = if (isPlaying) colorScheme.tertiary else colorScheme.primary,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = block.name,
+                                            fontSize = 13.sp,
+                                            fontFamily = ManropeFontFamily,
+                                            color = colorScheme.onSurface,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.audio_file),
+                                            fontSize = 11.sp,
+                                            fontFamily = ManropeFontFamily,
+                                            color = colorScheme.onSurfaceVariant
+                                        )
+                                    }
+
+                                    // زر تشغيل
+                                    IconButton(
+                                        onClick = { togglePlayback() },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isPlaying) Icons.Outlined.Stop else Icons.Default.PlayArrow,
+                                            contentDescription = if (isPlaying) "إيقاف" else "تشغيل",
+                                            tint = colorScheme.primary,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
+
+                                    // زر حذف
+                                    IconButton(
+                                        onClick = { contentBlocks.removeAt(index) },
+                                        modifier = Modifier.size(28.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "حذف",
+                                            tint = colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
                                 }
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = block.name,
-                                        fontSize = 13.sp,
-                                        fontFamily = ManropeFontFamily,
-                                        color = colorScheme.onSurface,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.audio_file),
-                                        fontSize = 11.sp,
-                                        fontFamily = ManropeFontFamily,
-                                        color = colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                IconButton(
-                                    onClick = { contentBlocks.removeAt(index) },
-                                    modifier = Modifier.size(28.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = null,
-                                        tint = colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(18.dp)
-                                    )
+
+                                // شريط التقدم (يظهر فقط أثناء التشغيل)
+                                if (isPlaying || currentPosition > 0) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(
+                                            text = String.format(
+                                                "%02d:%02d",
+                                                currentPosition / 1000 / 60,
+                                                currentPosition / 1000 % 60
+                                            ),
+                                            fontSize = 10.sp,
+                                            fontFamily = ManropeFontFamily,
+                                            color = colorScheme.onSurfaceVariant
+                                        )
+
+                                        Slider(
+                                            value = currentPosition.toFloat(),
+                                            onValueChange = { newPosition ->
+                                                if (!isPlaying) {
+                                                    currentPosition = newPosition.toInt()
+                                                    mediaPlayer?.seekTo(currentPosition)
+                                                }
+                                            },
+                                            onValueChangeFinished = {
+                                                if (!isPlaying && mediaPlayer != null) {
+                                                    mediaPlayer?.seekTo(currentPosition)
+                                                }
+                                            },
+                                            valueRange = 0f..duration.toFloat(),
+                                            modifier = Modifier.weight(1f),
+                                            colors = SliderDefaults.colors(
+                                                thumbColor = colorScheme.primary,
+                                                activeTrackColor = colorScheme.primary,
+                                                inactiveTrackColor = colorScheme.primaryContainer
+                                            )
+                                        )
+
+                                        Text(
+                                            text = String.format(
+                                                "%02d:%02d",
+                                                duration / 1000 / 60,
+                                                duration / 1000 % 60
+                                            ),
+                                            fontSize = 10.sp,
+                                            fontFamily = ManropeFontFamily,
+                                            color = colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -980,7 +1151,8 @@ fun NoteEditorScreen(
                 mediaRecorder.value = null
                 isRecording = false
                 recordingSeconds = 0
-            }, onSave = { filePath ->
+            },
+            onSave = { filePath ->
                 showRecordingDialog = false
                 isRecording = false
                 recordingSeconds = 0
@@ -989,7 +1161,9 @@ fun NoteEditorScreen(
                 if (file.exists()) {
                     contentBlocks.add(
                         ContentBlock.AudioBlock(
-                            uri = Uri.fromFile(file), name = file.name
+                            uri = Uri.fromFile(file),
+                            name = file.name,
+                            filePath = file.absolutePath
                         )
                     )
                     contentBlocks.add(ContentBlock.TextBlock())
@@ -1487,6 +1661,7 @@ fun RecordingDialog(
         }
     }
 }
+
 // ======= Toolbar Button =======
 @Composable
 fun EditorToolbarButton(
