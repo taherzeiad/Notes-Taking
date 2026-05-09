@@ -8,9 +8,11 @@ sealed class Route(val route: String) {
     object Tasks : Route("tasks_screen")
     object Notes : Route("notes_screen")
 
-    object NoteEditor : Route("note_editor/{noteId}") {
-        fun createRoute(noteId: Int) = "note_editor/$noteId"
+    object NoteEditor : Route("note_editor/{noteId}/{openAudio}") {
+        fun createRoute(noteId: Int, openAudio: Boolean = false) =
+            "note_editor/$noteId/$openAudio"
     }
+
 
     object AboutApp : Route("about_app")
     object Summary : Route("summary_screen")

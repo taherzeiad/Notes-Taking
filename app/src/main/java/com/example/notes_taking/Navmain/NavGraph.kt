@@ -95,20 +95,29 @@ fun NavGraph(
 
         // ======= Note Editor =======
         composable(
-            route = Route.NoteEditor.route, arguments = listOf(
+            route = Route.NoteEditor.route,
+            arguments = listOf(
                 navArgument("noteId") {
                     type = NavType.IntType
                     defaultValue = 0
-                })
+                },
+                navArgument("openAudio") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
         ) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getInt("noteId") ?: 0
+            val openAudio = backStackEntry.arguments?.getBoolean("openAudio") ?: false
             val editorViewModel: NoteViewModel = viewModel(factory = factory)
 
             NoteEditorScreen(
                 noteId = noteId,
+                openAudio = openAudio,
                 viewModel = editorViewModel,
                 onClose = { navController.popBackStack() },
-                onSave = { navController.popBackStack() })
+                onSave = { navController.popBackStack() }
+            )
         }
 
         // ======= Notes =======

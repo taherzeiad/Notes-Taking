@@ -125,7 +125,11 @@ sealed class ContentBlock {
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun NoteEditorScreen(
-    noteId: Int = 0, viewModel: NoteViewModel, onClose: () -> Unit = {}, onSave: () -> Unit = {}
+    noteId: Int = 0,
+    openAudio: Boolean = false,
+    viewModel: NoteViewModel,
+    onClose: () -> Unit = {},
+    onSave: () -> Unit = {}
 ) {
     val sdf = remember { SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()) }
     val currentDate = remember { sdf.format(Date()) }
@@ -206,7 +210,6 @@ fun NoteEditorScreen(
             }
         }
     }
-    // ← أضف مع باقي المتغيرات
     var hasAudioPermission by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -214,17 +217,22 @@ fun NoteEditorScreen(
     ) { isGranted ->
         hasAudioPermission = isGranted
         if (isGranted) {
-            showAudioDialog = true
+            if (openAudio) {
+                showRecordingDialog = true
+            } else {
+                showAudioDialog = true
+            }
         } else {
             scope.launch {
                 snackbarHostState.showSnackbar(
-                    if (Locale.getDefault().language == "ar") "يجب منح صلاحية الميكروفون"
-                    else "Microphone permission required"
+                    if (Locale.getDefault().language == "ar")
+                        "يجب منح صلاحية الميكروفون"
+                    else
+                        "Microphone permission required"
                 )
             }
         }
     }
-
     // ======= Load Note =======
     LaunchedEffect(noteId) {
         if (noteId > 0) {
@@ -251,6 +259,22 @@ fun NoteEditorScreen(
                 e.printStackTrace()
             } finally {
                 isLoading = false
+            }
+        }
+    }
+
+    LaunchedEffect(key1 = openAudio) {
+        if (openAudio) {
+            delay(350)
+            val permission = android.Manifest.permission.RECORD_AUDIO
+            val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+                context, permission
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+            if (granted) {
+                showRecordingDialog = true
+            } else {
+                permissionLauncher.launch(permission)
             }
         }
     }
