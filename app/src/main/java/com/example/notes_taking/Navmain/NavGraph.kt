@@ -39,8 +39,9 @@ import com.example.notes_taking.Screens.presentations.Splash.SplashScreen
 import com.example.notes_taking.Screens.presentations.Summary.SummaryScreen
 import com.example.notes_taking.Screens.presentations.Summary.SummaryViewModel
 import com.example.notes_taking.Screens.presentations.Tasks.TasksScreen
+import androidx.core.content.edit
 
-@SuppressLint("NewApi")
+@SuppressLint("NewApi", "UseKtx")
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun NavGraph(
@@ -59,29 +60,43 @@ fun NavGraph(
     val lang = prefs.getString("language", "en") ?: "en"
     val isRtl = lang == "ar"
 
+    val isFirstTime = prefs.getBoolean("is_first_time", true)
+
     NavHost(
         navController = navController, startDestination = Route.Splash.route
     ) {
         // ======= Splash =======
         composable(route = Route.Splash.route) {
             SplashScreen(onSplashFinished = {
-                navController.navigate(Route.Onboarding.route) {
-                    popUpTo(Route.Splash.route) { inclusive = true }
+                if (isFirstTime) {
+                    navController.navigate(Route.Onboarding.route) {
+                        popUpTo(Route.Splash.route) { inclusive = true }
+                    }
+                } else {
+                    navController.navigate(Route.Home.route) {
+                        popUpTo(Route.Splash.route) { inclusive = true }
+                    }
                 }
             })
         }
+
 
         // ======= Onboarding =======
         composable(route = Route.Onboarding.route) {
             val onboardingViewModel: OnboardingViewModel = viewModel()
             OnboardingScreen(
-                viewModel = onboardingViewModel, onFinish = {
+                viewModel = onboardingViewModel,
+                onFinish = {
+                    prefs.edit {putBoolean("is_first_time", false)}
+
                     navController.navigate(Route.Home.route) {
                         popUpTo(Route.Onboarding.route) { inclusive = true }
                     }
-                }, isRtl = isRtl
+                },
+                isRtl = isRtl
             )
         }
+
 
         // ======= Home =======
         composable(route = Route.Home.route) {
