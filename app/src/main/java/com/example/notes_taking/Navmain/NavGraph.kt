@@ -106,16 +106,22 @@ fun NavGraph(
                 navArgument("openAudio") {
                     type = NavType.BoolType
                     defaultValue = false
+                },
+                navArgument("openImage") {
+                    type = NavType.BoolType
+                    defaultValue = false
                 }
             )
         ) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getInt("noteId") ?: 0
             val openAudio = backStackEntry.arguments?.getBoolean("openAudio") ?: false
+            val openImage = backStackEntry.arguments?.getBoolean("openImage") ?: false
             val editorViewModel: NoteViewModel = viewModel(factory = factory)
 
             NoteEditorScreen(
                 noteId = noteId,
                 openAudio = openAudio,
+                openImage = openImage,
                 viewModel = editorViewModel,
                 onClose = { navController.popBackStack() },
                 onSave = { navController.popBackStack() }

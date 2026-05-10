@@ -12,9 +12,12 @@ sealed class Route(val route: String) {
     object Tasks : Route("tasks_screen")
     object Notes : Route("notes_screen")
 
-    object NoteEditor : Route("note_editor/{noteId}/{openAudio}") {
-        fun createRoute(noteId: Int, openAudio: Boolean = false) =
-            "note_editor/$noteId/$openAudio"
+    object NoteEditor : Route("note_editor/{noteId}/{openAudio}/{openImage}") {
+        fun createRoute(
+            noteId: Int,
+            openAudio: Boolean = false,
+            openImage: Boolean = false
+        ) = "note_editor/$noteId/$openAudio/$openImage"
     }
 
 

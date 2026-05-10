@@ -136,6 +136,7 @@ sealed class ContentBlock {
 fun NoteEditorScreen(
     noteId: Int = 0,
     openAudio: Boolean = false,
+    openImage: Boolean = false,
     viewModel: NoteViewModel,
     onClose: () -> Unit = {},
     onSave: () -> Unit = {}
@@ -301,7 +302,12 @@ fun NoteEditorScreen(
             }
         }
     }
-
+    LaunchedEffect(key1 = openImage) {
+        if (openImage) {
+            delay(400)
+            imagePickerLauncher.launch("image/*")
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
