@@ -112,6 +112,9 @@ fun HomeScreen(
                     onAddNote = onAddNote,
                     onVoiceRecord = {
                         navController.navigate(Route.NoteEditor.createRoute(0, true))
+                    },
+                    onAddDocument = {
+                        navController.navigate(Route.NoteEditor.createRoute(0, false, true))
                     }
                 )
             }
@@ -143,7 +146,8 @@ fun WelcomeSection() {
 @Composable
 fun QuickActionsSection(
     onAddNote: () -> Unit,
-    onVoiceRecord: () -> Unit
+    onVoiceRecord: () -> Unit,
+    onAddDocument: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -164,11 +168,10 @@ fun QuickActionsSection(
             label = stringResource(R.string.add_document),
             icon = Icons.Outlined.Image,
             modifier = Modifier.fillMaxWidth(),
-            onClick = {}
+            onClick = onAddDocument
         )
     }
 }
-
 // ======= المكونات المنفصلة (Components) =======
 @Composable
 fun LastEditedNoteSection(note: Note?, onEditClick: (Int) -> Unit, onAddNote: () -> Unit) {

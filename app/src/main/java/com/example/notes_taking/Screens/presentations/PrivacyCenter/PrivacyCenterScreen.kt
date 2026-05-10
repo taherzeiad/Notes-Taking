@@ -52,30 +52,24 @@ fun PrivacyScreen(navController: NavHostController) {
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = stringResource(R.string.item_privacy_center),
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = if (isRtl)
-                                Icons.AutoMirrored.Filled.ArrowForward
-                            else
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                Text(
+                    text = stringResource(R.string.item_privacy_center),
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
                 )
+            }, navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(
+                        imageVector = if (isRtl) Icons.AutoMirrored.Filled.ArrowForward
+                        else Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null
+                    )
+                }
+            }, colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background
             )
-        },
-        containerColor = MaterialTheme.colorScheme.background
+            )
+        }, containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
 
         Column(
@@ -102,8 +96,7 @@ fun PrivacyScreen(navController: NavHostController) {
                 ) {
                     if (isRtl) {
                         Column(
-                            modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.End
+                            modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End
                         ) {
                             Text(
                                 text = stringResource(R.string.privacy_center_title),
@@ -129,8 +122,7 @@ fun PrivacyScreen(navController: NavHostController) {
                                 .background(
                                     MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                                     CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
+                                ), contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Shield,
@@ -146,8 +138,7 @@ fun PrivacyScreen(navController: NavHostController) {
                                 .background(
                                     MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                                     CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
+                                ), contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Shield,
@@ -179,9 +170,7 @@ fun PrivacyScreen(navController: NavHostController) {
 
             // ======= Privacy Score =======
             val score = listOf(
-                aiProcessingEnabled,
-                voiceStorageEnabled,
-                !analyticsEnabled
+                aiProcessingEnabled, voiceStorageEnabled, !analyticsEnabled
             ).count { it }
             val scorePercent = score / 3f
 
@@ -237,8 +226,7 @@ fun PrivacyScreen(navController: NavHostController) {
 
             // ======= Section: Data Controls =======
             SectionHeader(
-                title = stringResource(R.string.privacy_data_controls),
-                isRtl = isRtl
+                title = stringResource(R.string.privacy_data_controls), isRtl = isRtl
             )
 
             // AI Processing Toggle
@@ -274,8 +262,7 @@ fun PrivacyScreen(navController: NavHostController) {
 
             // ======= Section: Your Data =======
             SectionHeader(
-                title = stringResource(R.string.privacy_your_data),
-                isRtl = isRtl
+                title = stringResource(R.string.privacy_your_data), isRtl = isRtl
             )
 
             // Export Data
@@ -286,8 +273,7 @@ fun PrivacyScreen(navController: NavHostController) {
                 actionLabel = stringResource(R.string.privacy_export_btn),
                 actionColor = MaterialTheme.colorScheme.primary,
                 isRtl = isRtl,
-                onClick = { showExportDialog = true }
-            )
+                onClick = { showExportDialog = true })
 
             // Delete Data
             PrivacyActionItem(
@@ -297,13 +283,11 @@ fun PrivacyScreen(navController: NavHostController) {
                 actionLabel = stringResource(R.string.privacy_delete_btn),
                 actionColor = MaterialTheme.colorScheme.error,
                 isRtl = isRtl,
-                onClick = { showDeleteDialog = true }
-            )
+                onClick = { showDeleteDialog = true })
 
             // ======= Section: Permissions =======
             SectionHeader(
-                title = stringResource(R.string.privacy_permissions),
-                isRtl = isRtl
+                title = stringResource(R.string.privacy_permissions), isRtl = isRtl
             )
 
             PermissionInfoItem(
@@ -329,105 +313,86 @@ fun PrivacyScreen(navController: NavHostController) {
     // ======= Delete Dialog =======
     if (showDeleteDialog) {
         AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            icon = {
-                Icon(
-                    Icons.Outlined.Warning,
-                    null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(32.dp)
-                )
-            },
-            title = {
+            onDismissRequest = { showDeleteDialog = false }, icon = {
+            Icon(
+                Icons.Outlined.Warning,
+                null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(32.dp)
+            )
+        }, title = {
+            Text(
+                text = stringResource(R.string.privacy_delete_confirm_title),
+                fontFamily = ManropeFontFamily,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+        }, text = {
+            Text(
+                text = stringResource(R.string.privacy_delete_confirm_desc),
+                fontFamily = ManropeFontFamily,
+                textAlign = TextAlign.Center,
+                lineHeight = 22.sp
+            )
+        }, confirmButton = {
+            Button(
+                onClick = { showDeleteDialog = false }, colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                ), shape = RoundedCornerShape(12.dp)
+            ) {
                 Text(
-                    text = stringResource(R.string.privacy_delete_confirm_title),
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    stringResource(R.string.privacy_delete_btn), fontFamily = ManropeFontFamily
                 )
-            },
-            text = {
+            }
+        }, dismissButton = {
+            TextButton(onClick = { showDeleteDialog = false }) {
                 Text(
-                    text = stringResource(R.string.privacy_delete_confirm_desc),
-                    fontFamily = ManropeFontFamily,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 22.sp
+                    stringResource(R.string.cancel), fontFamily = ManropeFontFamily
                 )
-            },
-            confirmButton = {
-                Button(
-                    onClick = { showDeleteDialog = false },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        stringResource(R.string.privacy_delete_btn),
-                        fontFamily = ManropeFontFamily
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text(
-                        stringResource(R.string.cancel),
-                        fontFamily = ManropeFontFamily
-                    )
-                }
-            },
-            shape = RoundedCornerShape(20.dp)
+            }
+        }, shape = RoundedCornerShape(20.dp)
         )
     }
 
     // ======= Export Dialog =======
     if (showExportDialog) {
         AlertDialog(
-            onDismissRequest = { showExportDialog = false },
-            icon = {
-                Icon(
-                    Icons.Outlined.FileDownload,
-                    null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(32.dp)
-                )
-            },
-            title = {
+            onDismissRequest = { showExportDialog = false }, icon = {
+            Icon(
+                Icons.Outlined.FileDownload,
+                null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(32.dp)
+            )
+        }, title = {
+            Text(
+                text = stringResource(R.string.privacy_export_confirm_title),
+                fontFamily = ManropeFontFamily,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+        }, text = {
+            Text(
+                text = stringResource(R.string.privacy_export_confirm_desc),
+                fontFamily = ManropeFontFamily,
+                textAlign = TextAlign.Center,
+                lineHeight = 22.sp
+            )
+        }, confirmButton = {
+            Button(
+                onClick = { showExportDialog = false }, shape = RoundedCornerShape(12.dp)
+            ) {
                 Text(
-                    text = stringResource(R.string.privacy_export_confirm_title),
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    stringResource(R.string.privacy_export_btn), fontFamily = ManropeFontFamily
                 )
-            },
-            text = {
+            }
+        }, dismissButton = {
+            TextButton(onClick = { showExportDialog = false }) {
                 Text(
-                    text = stringResource(R.string.privacy_export_confirm_desc),
-                    fontFamily = ManropeFontFamily,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 22.sp
+                    stringResource(R.string.cancel), fontFamily = ManropeFontFamily
                 )
-            },
-            confirmButton = {
-                Button(
-                    onClick = { showExportDialog = false },
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        stringResource(R.string.privacy_export_btn),
-                        fontFamily = ManropeFontFamily
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showExportDialog = false }) {
-                    Text(
-                        stringResource(R.string.cancel),
-                        fontFamily = ManropeFontFamily
-                    )
-                }
-            },
-            shape = RoundedCornerShape(20.dp)
+            }
+        }, shape = RoundedCornerShape(20.dp)
         )
     }
 }
@@ -461,10 +426,8 @@ fun PrivacyToggleItem(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isWarning)
-                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-            else
-                MaterialTheme.colorScheme.surface
+            containerColor = if (isWarning) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+            else MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
@@ -481,15 +444,12 @@ fun PrivacyToggleItem(
                     onCheckedChange = onCheckedChange,
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                        checkedTrackColor = if (isWarning)
-                            MaterialTheme.colorScheme.error
-                        else
-                            MaterialTheme.colorScheme.primary
+                        checkedTrackColor = if (isWarning) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.primary
                     )
                 )
                 Column(
-                    modifier = Modifier.weight(1f),
-                    horizontalAlignment = Alignment.End
+                    modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End
                 ) {
                     Text(
                         text = title,
@@ -514,20 +474,15 @@ fun PrivacyToggleItem(
                         .size(38.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(
-                            if (isWarning)
-                                MaterialTheme.colorScheme.errorContainer
-                            else
-                                MaterialTheme.colorScheme.primaryContainer
-                        ),
-                    contentAlignment = Alignment.Center
+                            if (isWarning) MaterialTheme.colorScheme.errorContainer
+                            else MaterialTheme.colorScheme.primaryContainer
+                        ), contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = if (isWarning)
-                            MaterialTheme.colorScheme.error
-                        else
-                            MaterialTheme.colorScheme.primary,
+                        tint = if (isWarning) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -537,20 +492,15 @@ fun PrivacyToggleItem(
                         .size(38.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(
-                            if (isWarning)
-                                MaterialTheme.colorScheme.errorContainer
-                            else
-                                MaterialTheme.colorScheme.primaryContainer
-                        ),
-                    contentAlignment = Alignment.Center
+                            if (isWarning) MaterialTheme.colorScheme.errorContainer
+                            else MaterialTheme.colorScheme.primaryContainer
+                        ), contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = if (isWarning)
-                            MaterialTheme.colorScheme.error
-                        else
-                            MaterialTheme.colorScheme.primary,
+                        tint = if (isWarning) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -576,10 +526,8 @@ fun PrivacyToggleItem(
                     onCheckedChange = onCheckedChange,
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                        checkedTrackColor = if (isWarning)
-                            MaterialTheme.colorScheme.error
-                        else
-                            MaterialTheme.colorScheme.primary
+                        checkedTrackColor = if (isWarning) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.primary
                     )
                 )
             }
@@ -622,14 +570,11 @@ fun PrivacyActionItem(
                     modifier = Modifier.height(34.dp)
                 ) {
                     Text(
-                        text = actionLabel,
-                        fontFamily = ManropeFontFamily,
-                        fontSize = 12.sp
+                        text = actionLabel, fontFamily = ManropeFontFamily, fontSize = 12.sp
                     )
                 }
                 Column(
-                    modifier = Modifier.weight(1f),
-                    horizontalAlignment = Alignment.End
+                    modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End
                 ) {
                     Text(
                         text = title,
@@ -703,9 +648,7 @@ fun PrivacyActionItem(
                     modifier = Modifier.height(34.dp)
                 ) {
                     Text(
-                        text = actionLabel,
-                        fontFamily = ManropeFontFamily,
-                        fontSize = 12.sp
+                        text = actionLabel, fontFamily = ManropeFontFamily, fontSize = 12.sp
                     )
                 }
             }
@@ -716,11 +659,7 @@ fun PrivacyActionItem(
 // ======= Permission Info Item =======
 @Composable
 fun PermissionInfoItem(
-    icon: ImageVector,
-    title: String,
-    description: String,
-    isGranted: Boolean,
-    isRtl: Boolean
+    icon: ImageVector, title: String, description: String, isGranted: Boolean, isRtl: Boolean
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -742,19 +681,14 @@ fun PermissionInfoItem(
                 Box(
                     modifier = Modifier
                         .background(
-                            if (isGranted)
-                                Color(0xFF4CAF50).copy(alpha = 0.15f)
-                            else
-                                MaterialTheme.colorScheme.errorContainer,
-                            RoundedCornerShape(8.dp)
+                            if (isGranted) Color(0xFF4CAF50).copy(alpha = 0.15f)
+                            else MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(8.dp)
                         )
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = if (isGranted)
-                            stringResource(R.string.permission_granted)
-                        else
-                            stringResource(R.string.permission_denied),
+                        text = if (isGranted) stringResource(R.string.permission_granted)
+                        else stringResource(R.string.permission_denied),
                         fontFamily = ManropeFontFamily,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -763,8 +697,7 @@ fun PermissionInfoItem(
                     )
                 }
                 Column(
-                    modifier = Modifier.weight(1f),
-                    horizontalAlignment = Alignment.End
+                    modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End
                 ) {
                     Text(
                         text = title,
@@ -833,19 +766,14 @@ fun PermissionInfoItem(
                 Box(
                     modifier = Modifier
                         .background(
-                            if (isGranted)
-                                Color(0xFF4CAF50).copy(alpha = 0.15f)
-                            else
-                                MaterialTheme.colorScheme.errorContainer,
-                            RoundedCornerShape(8.dp)
+                            if (isGranted) Color(0xFF4CAF50).copy(alpha = 0.15f)
+                            else MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(8.dp)
                         )
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = if (isGranted)
-                            stringResource(R.string.permission_granted)
-                        else
-                            stringResource(R.string.permission_denied),
+                        text = if (isGranted) stringResource(R.string.permission_granted)
+                        else stringResource(R.string.permission_denied),
                         fontFamily = ManropeFontFamily,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
