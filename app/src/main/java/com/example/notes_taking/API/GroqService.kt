@@ -2,15 +2,18 @@ package com.example.notes_taking.API
 
 import android.util.Log
 import com.example.notes_taking.BuildConfig
+import java.util.Locale
 
 object GroqService {
     private const val API_KEY = BuildConfig.GROQ_API_KEY
 
     suspend fun rephraseText(text: String): String {
+        val langInstruction = getResponseLanguageInstruction()
         val request = ChatRequest(
             model = "llama-3.3-70b-versatile", messages = listOf(
                 ChatMessage(
-                    "system", "You are a helpful assistant. Return only the rephrased text."
+                    "system",
+                    "You are a helpful assistant. Return only the rephrased text. $langInstruction"
                 ), ChatMessage("user", "Rephrase this: $text")
             )
         )
@@ -18,11 +21,12 @@ object GroqService {
     }
 
     suspend fun diacritizeText(text: String): String {
+        // هذه دائماً عربية لأن التشكيل خاص بالعربية
         val request = ChatRequest(
             model = "llama-3.3-70b-versatile", messages = listOf(
                 ChatMessage(
                     "system",
-                    "أنت مساعد خبير في تشكيل النصوص العربية. قم بإعادة النص مع الحركات فقط."
+                    "أنت مساعد خبير في تشكيل النصوص العربية. قم بإعادة النص مع الحركات فقط. يجب أن يكون ردك باللغة العربية فقط."
                 ), ChatMessage("user", "قم بتشكيل النص التالي: $text")
             )
         )
@@ -30,6 +34,7 @@ object GroqService {
     }
 
     suspend fun classifyNoteContent(text: String): String {
+        // التصنيف دائماً بالإنجليزية لأنها قيم برمجية
         val request = ChatRequest(
             model = "llama-3.3-70b-versatile", messages = listOf(
                 ChatMessage(
@@ -45,19 +50,32 @@ object GroqService {
         }
     }
 
-    // ← دالة استخراج المهام من النوت
     suspend fun extractTasksFromNote(noteTitle: String, noteContent: String): List<String> {
+        val langInstruction = getResponseLanguageInstruction()
+        val isArabic = Locale.getDefault().language == "ar"
+
         val request = ChatRequest(
             model = "llama-3.3-70b-versatile", messages = listOf(
                 ChatMessage(
-                    "system", """أنت مساعد متخصص في استخراج المهام من الملاحظات.
+                    "system", if (isArabic) {
+                        """أنت مساعد متخصص في استخراج المهام من الملاحظات.
 استخرج المهام القابلة للتنفيذ من النص فقط.
 أعد قائمة المهام، كل مهمة في سطر منفصل.
 لا تضف أرقاماً أو نقاطاً أو أي تنسيق إضافي.
-إذا لم تجد مهاماً واضحة، أعد كلمة NONE فقط."""
+إذا لم تجد مهاماً واضحة، أعد كلمة NONE فقط.
+$langInstruction"""
+                    } else {
+                        """You are an assistant specialized in extracting tasks from notes.
+Extract only actionable tasks from the text.
+Return a list of tasks, one per line.
+Do not add numbers, bullets, or any extra formatting.
+If no clear tasks are found, return the word NONE only.
+$langInstruction"""
+                    }
                 ), ChatMessage(
                     "user",
-                    "استخرج المهام من هذه الملاحظة:\nالعنوان: $noteTitle\nالمحتوى: $noteContent"
+                    if (isArabic) "استخرج المهام من هذه الملاحظة:\nالعنوان: $noteTitle\nالمحتوى: $noteContent"
+                    else "Extract tasks from this note:\nTitle: $noteTitle\nContent: $noteContent"
                 )
             )
         )
@@ -76,18 +94,37 @@ object GroqService {
     }
 
     suspend fun summarizeNotes(notes: List<String>, targetDate: String): String {
+        val langInstruction = getResponseLanguageInstruction()
+        val isArabic = Locale.getDefault().language == "ar"
+
         val notesText = notes.mapIndexed { i, note -> "${i + 1}. $note" }.joinToString("\n")
+
         val request = ChatRequest(
             model = "llama-3.3-70b-versatile", messages = listOf(
                 ChatMessage(
-                    "system", """أنت مساعد ذكي متخصص في تلخيص الملاحظات اليومية.
+                    "system", if (isArabic) {
+                        """أنت مساعد ذكي متخصص في تلخيص الملاحظات اليومية.
 مهمتك: تلخيص ملاحظات المستخدم ليوم $targetDate بشكل واضح ومنظم.
-اكتب الملخص باللغة العربية في النقاط التالية:
+اكتب الملخص في النقاط التالية:
 1. 📝 أبرز الأفكار
 2. ✅ المهام المذكورة
 3. 💡 التوصيات
-اجعل الملخص مختصراً ومفيداً."""
-                ), ChatMessage("user", "لخص هذه الملاحظات:\n$notesText")
+اجعل الملخص مختصراً ومفيداً.
+$langInstruction"""
+                    } else {
+                        """You are a smart assistant specialized in summarizing daily notes.
+Your task: Summarize the user's notes for $targetDate in a clear and organized way.
+Write the summary in these points:
+1. 📝 Key Ideas
+2. ✅ Mentioned Tasks
+3. 💡 Recommendations
+Keep the summary concise and useful.
+$langInstruction"""
+                    }
+                ), ChatMessage(
+                    "user", if (isArabic) "لخص هذه الملاحظات:\n$notesText"
+                    else "Summarize these notes:\n$notesText"
+                )
             )
         )
         return makeRequest(request)
@@ -102,6 +139,14 @@ object GroqService {
             val error = response.errorBody()?.string()
             Log.e("GroqAPI", "Error: $error")
             throw Exception("API Error: ${response.code()}")
+        }
+    }
+
+    private fun getResponseLanguageInstruction(): String {
+        return if (Locale.getDefault().language == "ar") {
+            "يجب أن يكون ردك باللغة العربية فقط."
+        } else {
+            "Your response must be in English only."
         }
     }
 }

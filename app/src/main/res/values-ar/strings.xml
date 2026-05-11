@@ -162,6 +162,9 @@
     <string name="notes_count">%1$d ملاحظة</string>
     <string name="ai_summary_badge">ملخص الذكاء الاصطناعي</string>
     <string name="retry_button">إعادة المحاولة</string>
+    <string name="todays_summary">ملخص اليوم</string>
+    <string name="no_notes_today_title">لا توجد ملاحظات اليوم</string>
+    <string name="no_notes_today_desc">لم تضف أي ملاحظات اليوم. ابدأ بالكتابة للحصول على ملخصك اليومي بالذكاء الاصطناعي!</string>
     /////////////////////////////////////////////////////
     <string name="audio_recording">تسجيل صوتي</string>
     <string name="recording_in_progress">جاري التسجيل...</string>

@@ -161,6 +161,9 @@
     <string name="notes_count">%1$d Notes</string>
     <string name="ai_summary_badge">AI Summary</string>
     <string name="retry_button">Retry</string>
+    <string name="todays_summary">Today\'s Summary</string>
+    <string name="no_notes_today_title">No Notes Today</string>
+    <string name="no_notes_today_desc">You haven\'t added any notes today. Start writing to get your daily AI summary!</string>
     ///////////////////////////////////////////////
     <string name="audio_recording">Voice Recording</string>
     <string name="recording_in_progress">Recording in progress...</string>
