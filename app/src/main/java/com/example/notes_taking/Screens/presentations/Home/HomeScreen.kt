@@ -95,10 +95,9 @@ fun HomeScreen(
             // 2. بطاقة الذكاء الاصطناعي
             item { AICardSection(navController = navController) }
 
-            // 3. المهام القادمة
-            item { UpcomingTaskSection(onViewAll = onNavigateToTasks) }
 
-            // 4. آخر ملاحظة (البيانات تأتي من الـ ViewModel)
+
+            // 3. آخر ملاحظة (البيانات تأتي من الـ ViewModel)
             item {
                 LastEditedNoteSection(
                     note = lastNote, onEditClick = { id ->
@@ -172,6 +171,7 @@ fun QuickActionsSection(
         )
     }
 }
+
 // ======= المكونات المنفصلة (Components) =======
 @Composable
 fun LastEditedNoteSection(note: Note?, onEditClick: (Int) -> Unit, onAddNote: () -> Unit) {
@@ -522,47 +522,6 @@ fun AICardSection(navController: NavController) {
             ) {
                 Text(stringResource(R.string.start_summary), fontFamily = ManropeFontFamily)
             }
-        }
-    }
-}
-
-@Composable
-fun UpcomingTaskSection(onViewAll: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    stringResource(R.string.important_task),
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontFamily = ManropeFontFamily
-                )
-                Icon(Icons.Outlined.CheckCircle, null, tint = MaterialTheme.colorScheme.primary)
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "مراجعة متطلبات المشروع",
-                fontSize = 17.sp,
-                fontFamily = ManropeFontFamily,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Text(
-                text = stringResource(R.string.view_all_tasks),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onViewAll() }
-                    .padding(top = 12.dp),
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.primary,
-                fontFamily = ManropeFontFamily)
         }
     }
 }
