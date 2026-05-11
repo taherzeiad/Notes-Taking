@@ -13,16 +13,14 @@ import java.util.Date
 import java.util.Locale
 
 data class DailySummary(
-    val date: String,
-    val notesCount: Int,
-    val summary: String,
-    val notes: List<Note>
+    val date: String, val notesCount: Int, val summary: String, val notes: List<Note>
 )
 
 sealed class SummaryState {
     object Idle : SummaryState()
     object Loading : SummaryState()
-    data class Success(val summaries: List<DailySummary>) : SummaryState()
+    object EmptyToday : SummaryState()
+    data class Success(val summary: DailySummary) : SummaryState()
     data class Error(val message: String) : SummaryState()
 }
 
@@ -31,64 +29,51 @@ class SummaryViewModel(private val repository: NoteRepository) : ViewModel() {
     private val _summaryState = MutableStateFlow<SummaryState>(SummaryState.Idle)
     val summaryState = _summaryState.asStateFlow()
 
-    private val _selectedDate = MutableStateFlow(getTodayDate())
-    val selectedDate = _selectedDate.asStateFlow()
-
-    // ← جلب وتلخيص ملاحظات يوم معين
     fun summarizeDay(date: String) {
         viewModelScope.launch {
             _summaryState.value = SummaryState.Loading
             try {
                 val allNotes = repository.getRecentNotes()
 
-                // تجميع الملاحظات حسب التاريخ
-                val groupedByDate = allNotes
-                    .groupBy { it.date }
-                    .filter { it.value.isNotEmpty() }
+                val todayNotes = allNotes.filter { it.date == date }
 
-                if (groupedByDate.isEmpty()) {
-                    _summaryState.value = SummaryState.Error("لا توجد ملاحظات لتلخيصها")
+                if (todayNotes.isEmpty()) {
+                    _summaryState.value = SummaryState.EmptyToday
                     return@launch
                 }
 
-                val summaries = mutableListOf<DailySummary>()
-
-                // تلخيص كل يوم
-                for ((noteDate, notes) in groupedByDate) {
-                    val notesText = notes
-                        .filter { it.content.isNotBlank() || it.title.isNotBlank() }
+                val notesText =
+                    todayNotes.filter { it.content.isNotBlank() || it.title.isNotBlank() }
                         .map { "${it.title}: ${it.content}" }
 
-                    if (notesText.isEmpty()) continue
+                if (notesText.isEmpty()) {
+                    _summaryState.value = SummaryState.EmptyToday
+                    return@launch
+                }
 
-                    val summary = try {
-                        GroqService.summarizeNotes(notesText, noteDate)
-                    } catch (e: Exception) {
-                        "فشل في تلخيص ملاحظات هذا اليوم"
-                    }
-
-                    summaries.add(
-                        DailySummary(
-                            date = noteDate,
-                            notesCount = notes.size,
-                            summary = summary,
-                            notes = notes
-                        )
-                    )
+                val summary = try {
+                    GroqService.summarizeNotes(notesText, date)
+                } catch (e: Exception) {
+                    if (Locale.getDefault().language == "ar") "فشل في تلخيص ملاحظات اليوم"
+                    else "Failed to summarize today's notes"
                 }
 
                 _summaryState.value = SummaryState.Success(
-                    summaries.sortedByDescending { it.date }
+                    DailySummary(
+                        date = date,
+                        notesCount = todayNotes.size,
+                        summary = summary,
+                        notes = todayNotes
+                    )
                 )
 
             } catch (e: Exception) {
-                _summaryState.value = SummaryState.Error("حدث خطأ: ${e.message}")
+                _summaryState.value = SummaryState.Error(
+                    if (Locale.getDefault().language == "ar") "حدث خطأ: ${e.message}"
+                    else "An error occurred: ${e.message}"
+                )
             }
         }
-    }
-
-    fun selectDate(date: String) {
-        _selectedDate.value = date
     }
 
     fun getTodayDate(): String {

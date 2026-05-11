@@ -113,8 +113,15 @@
     <string name="task_4_source">Source: Shopping &amp; Supplies List</string>
     <string name="task_5_title">The Almanack of Naval Ravikant</string>
     <string name="task_5_source">Source: Smart Reading Library</string>
-    <string name="task_empty_time"></string>
-
+    <string name="search_tasks">Search tasks...</string>
+    <string name="no_tasks_in_progress">No tasks in progress</string>
+    <string name="no_tasks_completed">No completed tasks</string>
+    <string name="no_tasks">No tasks found</string>
+    <string name="add_note_with_tasks">Add a note with tasks to see them here</string>
+    <string name="tasks_completed_count">%1$d/%2$d tasks completed</string>
+    <string name="tasks_count_label">%1$d tasks</string>
+    <string name="unspecified">Unspecified</string>
+    <string name="no_search_results">No tasks found matching your search</string>
     /////////////////////////
     <!-- Notes Screen -->
     <string name="notes_screen_title_bar">Intellectual Sanctuary</string>
@@ -161,6 +168,9 @@
     <string name="notes_count">%1$d Notes</string>
     <string name="ai_summary_badge">AI Summary</string>
     <string name="retry_button">Retry</string>
+    <string name="todays_summary">Today\'s Summary</string>
+    <string name="no_notes_today_title">No Notes Today</string>
+    <string name="no_notes_today_desc">You haven\'t added any notes today. Start writing to get your daily AI summary!</string>
     ///////////////////////////////////////////////
     <string name="audio_recording">Voice Recording</string>
     <string name="recording_in_progress">Recording in progress...</string>

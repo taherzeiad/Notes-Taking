@@ -1,9 +1,6 @@
 @file:Suppress(
-    "INFERRED_TYPE_VARIABLE_INTO_EMPTY_INTERSECTION_WARNING", "TYPE_INTERSECTION_AS_REIFIED_WARNING"
-)
-
+    "INFERRED_TYPE_VARIABLE_INTO_EMPTY_INTERSECTION_WARNING", "TYPE_INTERSECTION_AS_REIFIED_WARNING")
 package com.example.notes_taking.Navmain
-
 
 import TasksViewModel
 import android.annotation.SuppressLint
@@ -13,6 +10,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.edit
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -39,7 +37,6 @@ import com.example.notes_taking.Screens.presentations.Splash.SplashScreen
 import com.example.notes_taking.Screens.presentations.Summary.SummaryScreen
 import com.example.notes_taking.Screens.presentations.Summary.SummaryViewModel
 import com.example.notes_taking.Screens.presentations.Tasks.TasksScreen
-import androidx.core.content.edit
 
 @SuppressLint("NewApi", "UseKtx")
 @RequiresApi(Build.VERSION_CODES.N)
