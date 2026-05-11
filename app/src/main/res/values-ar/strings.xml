@@ -114,8 +114,15 @@
     <string name="task_4_source">المصدر: قائمة المشتريات واللوازم</string>
     <string name="task_5_title">The Almanack of Naval Ravikant</string>
     <string name="task_5_source">المصدر: مكتبة القراءة الذكية</string>
-    <string name="task_empty_time"></string>
-
+    <string name="search_tasks">بحث عن مهمة..</string>
+    <string name="no_tasks_in_progress">لا توجد مهام قيد التنفيذ</string>
+    <string name="no_tasks_completed">لا توجد مهام مكتملة</string>
+    <string name="no_tasks">لا توجد مهام</string>
+    <string name="add_note_with_tasks">أضف ملاحظة تحتوي على مهام لتظهر هنا</string>
+    <string name="tasks_completed_count">%1$d/%2$d مهمة مكتملة</string>
+    <string name="tasks_count_label">%1$d مهام</string>
+    <string name="unspecified">غير محدد</string>
+    <string name="no_search_results">لم يتم العثور على مهام تطابق بحثك</string>
     ////////////////////////////////////////////
     <!-- Notes Screen -->
     <string name="notes_screen_title_bar">الملاذ الفكري</string>

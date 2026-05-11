@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
@@ -21,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -43,9 +45,10 @@ fun TasksScreen(
     viewModel: TasksViewModel,
     navController: NavHostController
 ) {
-    // ← هذا هو المهم: جلب المهام من Room عبر TasksViewModel
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
     val allTasks by viewModel.allTasks.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val isSearchActive = viewModel.isSearchActive  // ← أضف
 
     val tabs = listOf(
         stringResource(R.string.tab_in_progress),
@@ -67,55 +70,111 @@ fun TasksScreen(
 
             // ======= 1. Top Bar =======
             item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Search,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(26.dp)
-                    )
-                    Text(
-                        text = stringResource(R.string.notes_screen_title_bar),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = ManropeFontFamily,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.MenuBook,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(26.dp)
-                    )
+                if (isSearchActive) {
+                    // ← Search Bar
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { viewModel.onSearchQueryChange(it) },
+                            placeholder = {
+                                Text(
+                                    text = stringResource(R.string.search_tasks),
+                                    fontFamily = ManropeFontFamily,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Search,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = { viewModel.closeSearch() }) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Close,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                            ),
+                            singleLine = true
+                        )
+                    }
+                } else {
+                    // ← Normal Top Bar
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            onClick = { viewModel.openSearch() },
+                            modifier = Modifier.size(26.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Search,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.size(26.dp)
+                            )
+                        }
+                        Text(
+                            text = stringResource(R.string.notes_screen_title_bar),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = ManropeFontFamily,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(26.dp)
+                        )
+                    }
                 }
             }
 
-            // ======= 2. Page Title =======
-            item {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = stringResource(R.string.tasks_title),
-                        fontSize = 36.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = MansalvaFontFamily,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = stringResource(R.string.tasks_subtitle),
-                        fontSize = 13.sp,
-                        fontFamily = ManropeFontFamily,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 20.sp,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+            // ======= 2. Page Title — يختفي أثناء البحث =======
+            if (!isSearchActive) {
+                item {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = stringResource(R.string.tasks_title),
+                            fontSize = 36.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = MansalvaFontFamily,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = stringResource(R.string.tasks_subtitle),
+                            fontSize = 13.sp,
+                            fontFamily = ManropeFontFamily,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 20.sp,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             }
 
@@ -138,65 +197,70 @@ fun TasksScreen(
                 }
             }
 
-            // ======= 4. AI Insights Card =======
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Icon(
-                                Icons.Outlined.AutoAwesome,
-                                null,
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(18.dp)
-                            )
+            // ======= 4. AI Insights Card — يختفي أثناء البحث =======
+            if (!isSearchActive) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    Icons.Outlined.AutoAwesome,
+                                    null,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.ai_insights_title),
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = MansalvaFontFamily,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = stringResource(R.string.ai_insights_title),
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = MansalvaFontFamily,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                text = stringResource(R.string.ai_insights_body),
+                                fontSize = 14.sp,
+                                fontFamily = ManropeFontFamily,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                                lineHeight = 22.sp
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            LinearProgressIndicator(
+                                progress = { viewModel.aiProgress },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(6.dp)
+                                    .clip(CircleShape),
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(
+                                    R.string.tasks_completed_count,
+                                    allTasks.count { it.isCompleted },
+                                    allTasks.size
+                                ),
+                                fontSize = 12.sp,
+                                fontFamily = ManropeFontFamily,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                             )
                         }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = stringResource(R.string.ai_insights_body),
-                            fontSize = 14.sp,
-                            fontFamily = ManropeFontFamily,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-                            lineHeight = 22.sp
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        LinearProgressIndicator(
-                            progress = { viewModel.aiProgress },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(6.dp)
-                                .clip(CircleShape),
-                            color = MaterialTheme.colorScheme.primary,
-                            trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f)
-                        )
-                        // ← عداد المهام
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "${allTasks.count { it.isCompleted }}/${allTasks.size} مهمة مكتملة",
-                            fontSize = 12.sp,
-                            fontFamily = ManropeFontFamily,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                        )
                     }
                 }
             }
 
-            // ======= 5. Tasks List من Room =======
+            // ======= 5. Tasks List =======
             if (tasks.isEmpty()) {
                 item {
                     Column(
@@ -207,10 +271,12 @@ fun TasksScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = when (viewModel.selectedTab) {
-                                0 -> "لا توجد مهام قيد التنفيذ"
-                                1 -> "لا توجد مهام مكتملة"
-                                else -> "لا توجد مهام"
+                            text = if (searchQuery.isNotBlank())
+                             stringResource(R.string.no_search_results)
+                            else when (viewModel.selectedTab) {
+                                0 -> stringResource(R.string.no_tasks_in_progress)
+                                1 -> stringResource(R.string.no_tasks_completed)
+                                else -> stringResource(R.string.no_tasks)
                             },
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -218,21 +284,19 @@ fun TasksScreen(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium
                         )
-                        Text(
-                            text = "أضف ملاحظة تحتوي على مهام لتظهر هنا",
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            fontFamily = ManropeFontFamily,
-                            fontSize = 13.sp
-                        )
+                        if (searchQuery.isBlank()) {
+                            Text(
+                                text = stringResource(R.string.add_note_with_tasks),
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                fontFamily = ManropeFontFamily,
+                                fontSize = 13.sp
+                            )
+                        }
                     }
                 }
             } else {
-                // ← items تأخذ TaskEntity من Room
-                items(
-                    items = tasks,
-                    key = { it.id }
-                ) { task ->
+                items(items = tasks, key = { it.id }) { task ->
                     RoomTaskCard(
                         task = task,
                         onCheck = { viewModel.toggleTaskCompletion(task.id) }
@@ -240,8 +304,8 @@ fun TasksScreen(
                 }
             }
 
-            // ======= 6. Source Categories ديناميكية من Room =======
-            if (allTasks.isNotEmpty()) {
+            // ======= 6. Source Categories =======
+            if (allTasks.isNotEmpty() && !isSearchActive) {
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -253,11 +317,9 @@ fun TasksScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // ← تجميع المهام حسب المصدر (اسم الملاحظة)
                     val sourceGroups = allTasks
-                        .groupBy { it.source.ifBlank { "غير محدد" } }
-                        .entries
-                        .toList()
+                        .groupBy { it.source.ifBlank { stringResource(R.string.unspecified) } }
+                        .entries.toList()
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -285,7 +347,10 @@ fun TasksScreen(
                                         modifier = Modifier.weight(1f)
                                     )
                                     Text(
-                                        text = "${sourceTasks.size} مهام",
+                                        text = stringResource(
+                                            R.string.tasks_count_label,
+                                            sourceTasks.size
+                                        ),
                                         fontSize = 14.sp,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold,
