@@ -453,33 +453,33 @@ fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
         tabs.forEachIndexed { index, (_, icon, route) ->
             NavigationBarItem(
                 selected = selectedTab == index, onClick = {
-                if (selectedTab != index) {
-                    navController.navigate(route) {
-                        popUpTo(Route.Home.route) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                    if (selectedTab != index) {
+                        navController.navigate(route) {
+                            popUpTo(Route.Home.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
-                }
-            }, icon = {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = labels[index],
-                    modifier = Modifier.size(24.dp)
+                }, icon = {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = labels[index],
+                        modifier = Modifier.size(24.dp)
+                    )
+                }, label = {
+                    Text(
+                        text = labels[index],
+                        fontSize = 10.sp,
+                        fontFamily = ManropeFontFamily,
+                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                    )
+                }, colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                 )
-            }, label = {
-                Text(
-                    text = labels[index],
-                    fontSize = 10.sp,
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
-                )
-            }, colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = MaterialTheme.colorScheme.primary,
-                selectedTextColor = MaterialTheme.colorScheme.primary,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-            )
             )
         }
     }
