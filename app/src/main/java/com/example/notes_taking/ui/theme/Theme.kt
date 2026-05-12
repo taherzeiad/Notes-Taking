@@ -70,10 +70,10 @@ private val LightColorScheme = lightColorScheme(
     outline = OutlineLight,
     error = ErrorRed
 )
+
 @Composable
 fun NotesTakingTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit
+    darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
@@ -88,8 +88,6 @@ fun NotesTakingTheme(
     }
 
     MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
+        colorScheme = colorScheme, typography = Typography, content = content
     )
 }

@@ -46,6 +46,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -88,36 +89,32 @@ fun HomeScreen(
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // 1. الترويسة والترحيب
-            item { HomeTopBarSection() }
-            item { WelcomeSection() }
-
-            // 2. بطاقة الذكاء الاصطناعي
-            item { AICardSection(navController = navController) }
-
-
-
-            // 3. آخر ملاحظة (البيانات تأتي من الـ ViewModel)
-            item {
+            item(key = "topbar") { HomeTopBarSection() }
+            item(key = "welcome") { WelcomeSection() }
+            item(key = "ai_card") { AICardSection(navController = navController) }
+            item(key = "last_note") {
                 LastEditedNoteSection(
-                    note = lastNote, onEditClick = { id ->
-                        navController.navigate(Route.NoteEditor.createRoute(id))
-                    }, onAddNote = onAddNote
+                    note = lastNote,
+                    onEditClick = { id -> navController.navigate(Route.NoteEditor.createRoute(id)) },
+                    onAddNote = onAddNote
                 )
             }
-
-            item {
-                QuickActionsSection(
-                    onAddNote = onAddNote,
-                    onVoiceRecord = {
-                        navController.navigate(Route.NoteEditor.createRoute(0, true))
-                    },
-                    onAddDocument = {
-                        navController.navigate(Route.NoteEditor.createRoute(0, false, true))
-                    }
-                )
+            item(key = "quick_actions") {
+                QuickActionsSection(onAddNote = onAddNote, onVoiceRecord = {
+                    navController.navigate(
+                        Route.NoteEditor.createRoute(
+                            0, true
+                        )
+                    )
+                }, onAddDocument = {
+                    navController.navigate(
+                        Route.NoteEditor.createRoute(
+                            0, false, true
+                        )
+                    )
+                })
             }
-            item { Spacer(modifier = Modifier.height(10.dp)) }
+            item(key = "spacer") { Spacer(modifier = Modifier.height(10.dp)) }
         }
     }
 }
@@ -144,9 +141,7 @@ fun WelcomeSection() {
 // ======= QuickActionsSection =======
 @Composable
 fun QuickActionsSection(
-    onAddNote: () -> Unit,
-    onVoiceRecord: () -> Unit,
-    onAddDocument: () -> Unit
+    onAddNote: () -> Unit, onVoiceRecord: () -> Unit, onAddDocument: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -173,8 +168,11 @@ fun QuickActionsSection(
 }
 
 // ======= المكونات المنفصلة (Components) =======
+// ← أضف remember للـ lambdas لمنع recomposition
 @Composable
-fun LastEditedNoteSection(note: Note?, onEditClick: (Int) -> Unit, onAddNote: () -> Unit) {
+fun LastEditedNoteSection(
+    note: Note?, onEditClick: (Int) -> Unit, onAddNote: () -> Unit
+) {
     Column {
         Text(
             text = stringResource(R.string.last_edited_note),
@@ -187,12 +185,17 @@ fun LastEditedNoteSection(note: Note?, onEditClick: (Int) -> Unit, onAddNote: ()
         if (note == null) {
             EmptyNoteCard(onAddNote = onAddNote)
         } else {
+            // ← استخدم remember للـ onClick
+            val onCardClick = remember(note.id) { { onEditClick(note.id) } }
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onEditClick(note.id) },
+                    .clickable(onClick = onCardClick),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             ) {
                 Column {
                     WaveChart(
@@ -225,7 +228,7 @@ fun LastEditedNoteSection(note: Note?, onEditClick: (Int) -> Unit, onAddNote: ()
                             overflow = TextOverflow.Ellipsis,
                             lineHeight = 22.sp
                         )
-                        NoteCardFooter(onContinueClick = { onEditClick(note.id) })
+                        NoteCardFooter(onContinueClick = onCardClick)
                     }
                 }
             }
@@ -302,8 +305,7 @@ fun HomeTopBarSection() {
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary),
-            contentAlignment = Alignment.Center
+                .background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center
         ) {
             Icon(
                 Icons.Default.Person,
@@ -391,11 +393,12 @@ fun NoteCardFooter(onContinueClick: () -> Unit) {
 // ======= Wave Chart =======
 @Composable
 fun WaveChart(modifier: Modifier = Modifier) {
-    // نستخدم لون الـ Secondary للتناسق مع الموجة
     val waveColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f)
+
     Canvas(modifier = modifier.clipToBounds()) {
         val width = size.width
         val height = size.height
+
         val path = Path().apply {
             moveTo(0f, height * 0.7f)
             cubicTo(
@@ -431,47 +434,52 @@ fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 4.dp
     ) {
-        val tabs = listOf(
-            Triple(
-                stringResource(R.string.nav_settings), Icons.Outlined.Settings, Route.Settings.route
-            ),
-            Triple(
-                stringResource(R.string.nav_tasks), Icons.Outlined.CheckCircle, Route.Tasks.route
-            ),
-            Triple(stringResource(R.string.nav_notes), Icons.Outlined.NoteAlt, Route.Notes.route),
-            Triple(stringResource(R.string.nav_home), Icons.Filled.Home, Route.Home.route)
+        val tabs = remember {
+            listOf(
+                Triple("Settings", Icons.Outlined.Settings, Route.Settings.route),
+                Triple("Tasks", Icons.Outlined.CheckCircle, Route.Tasks.route),
+                Triple("Notes", Icons.Outlined.NoteAlt, Route.Notes.route),
+                Triple("Home", Icons.Filled.Home, Route.Home.route)
+            )
+        }
+
+        val labels = listOf(
+            stringResource(R.string.nav_settings),
+            stringResource(R.string.nav_tasks),
+            stringResource(R.string.nav_notes),
+            stringResource(R.string.nav_home)
         )
 
-        tabs.forEachIndexed { index, (label, icon, route) ->
+        tabs.forEachIndexed { index, (_, icon, route) ->
             NavigationBarItem(
                 selected = selectedTab == index, onClick = {
-                    if (selectedTab != index) {
-                        navController.navigate(route) {
-                            popUpTo(Route.Home.route) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                if (selectedTab != index) {
+                    navController.navigate(route) {
+                        popUpTo(Route.Home.route) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
                     }
-                }, icon = {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = label,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }, label = {
-                    Text(
-                        text = label,
-                        fontSize = 10.sp,
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
-                    )
-                }, colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                }
+            }, icon = {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = labels[index],
+                    modifier = Modifier.size(24.dp)
                 )
+            }, label = {
+                Text(
+                    text = labels[index],
+                    fontSize = 10.sp,
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                )
+            }, colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            )
             )
         }
     }
