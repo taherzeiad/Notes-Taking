@@ -272,7 +272,7 @@ fun TasksScreen(
                     ) {
                         Text(
                             text = if (searchQuery.isNotBlank())
-                             stringResource(R.string.no_search_results)
+                                stringResource(R.string.no_search_results)
                             else when (viewModel.selectedTab) {
                                 0 -> stringResource(R.string.no_tasks_in_progress)
                                 1 -> stringResource(R.string.no_tasks_completed)
