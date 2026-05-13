@@ -1,5 +1,7 @@
 @file:Suppress(
-    "INFERRED_TYPE_VARIABLE_INTO_EMPTY_INTERSECTION_WARNING", "TYPE_INTERSECTION_AS_REIFIED_WARNING")
+    "INFERRED_TYPE_VARIABLE_INTO_EMPTY_INTERSECTION_WARNING", "TYPE_INTERSECTION_AS_REIFIED_WARNING"
+)
+
 package com.example.notes_taking.Navmain
 
 import TasksViewModel
@@ -84,7 +86,7 @@ fun NavGraph(
             OnboardingScreen(
                 viewModel = onboardingViewModel,
                 onFinish = {
-                    prefs.edit {putBoolean("is_first_time", false)}
+                    prefs.edit { putBoolean("is_first_time", false) }
 
                     navController.navigate(Route.Home.route) {
                         popUpTo(Route.Onboarding.route) { inclusive = true }
@@ -173,8 +175,11 @@ fun NavGraph(
         composable(route = Route.Privacy.route) {
             PrivacyPolicyScreen(navController = navController)
         }
-        composable(route = Route.PrivacyCenter.route){
-            PrivacyScreen(navController = navController)
+        composable(route = Route.PrivacyCenter.route) {
+            PrivacyScreen(
+                navController = navController,
+                repository = repository
+            )
         }
     }
 }
