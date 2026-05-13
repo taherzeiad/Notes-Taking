@@ -2,17 +2,7 @@ package com.example.notes_taking.Screens.presentations.Notes
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -24,28 +14,14 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -70,14 +46,32 @@ fun NotesScreen(
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     var isSearchActive by remember { mutableStateOf(false) }
 
-    val categoryMapping = mapOf(
-        stringResource(R.string.note_cat_all) to "All",
-        stringResource(R.string.note_cat_philosophy) to "Philosophy",
-        stringResource(R.string.note_cat_literature) to "Literature",
-        stringResource(R.string.note_cat_self_dev) to "Self-Development"
-    )
+    val categoryMapping = remember {
+        mapOf(
+            "All" to "All",
+            "Philosophy" to "Philosophy",
+            "Literature" to "Literature",
+            "Self-Development" to "Self-Development"
+        )
+    }
 
-    val categoryLabels = categoryMapping.keys.toList()
+    val allLabel = stringResource(R.string.note_cat_all)
+    val philosophyLabel = stringResource(R.string.note_cat_philosophy)
+    val literatureLabel = stringResource(R.string.note_cat_literature)
+    val selfDevLabel = stringResource(R.string.note_cat_self_dev)
+
+    val categoryLabels = remember(allLabel, philosophyLabel, literatureLabel, selfDevLabel) {
+        listOf(allLabel, philosophyLabel, literatureLabel, selfDevLabel)
+    }
+
+    val labelToKey = remember(allLabel, philosophyLabel, literatureLabel, selfDevLabel) {
+        mapOf(
+            allLabel to "All",
+            philosophyLabel to "Philosophy",
+            literatureLabel to "Literature",
+            selfDevLabel to "Self-Development"
+        )
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -93,7 +87,8 @@ fun NotesScreen(
                     .padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                item {
+                // ======= Top Bar =======
+                item(key = "topbar") {
                     TopBarSection(
                         isSearchActive = isSearchActive,
                         searchQuery = searchQuery,
@@ -105,56 +100,68 @@ fun NotesScreen(
                         })
                 }
 
+                // ======= Page Title =======
                 if (!isSearchActive) {
-                    item { PageTitleSection() }
+                    item(key = "title") { PageTitleSection() }
                 }
 
-                // 3. Category Tabs
-                item {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(categoryLabels) { label ->
-                            val isSelected = selectedCategory == categoryMapping[label]
+                // ======= Category Tabs =======
+                item(key = "categories") {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(
+                            items = categoryLabels, key = { it }) { label ->
+                            val isSelected = selectedCategory == labelToKey[label]
                             CategoryTab(
                                 label = label, isSelected = isSelected, onClick = {
-                                    viewModel.onCategoryChange(categoryMapping[label] ?: "All")
+                                    viewModel.onCategoryChange(labelToKey[label] ?: "All")
                                 })
                         }
                     }
                 }
 
+                // ======= Empty State =======
                 if (notes.isEmpty()) {
-                    item { EmptyNotesState() }
+                    item(key = "empty") {
+                        EmptyNotesState(
+                            message = if (searchQuery.isNotBlank()) stringResource(R.string.no_search_results)
+                            else stringResource(R.string.empty_notes_subtitle)
+                        )
+                    }
                 } else {
-                    items(notes) { note ->
+                    items(
+                        items = notes, key = { note -> note.id }) { note ->
                         RoomNoteCard(
-                            note = note, onClick = {
-                                navController.navigate(Route.NoteEditor.createRoute(note.id))
+                            note = note, onClick = remember(note.id) {
+                                { navController.navigate(Route.NoteEditor.createRoute(note.id)) }
                             })
                     }
                 }
 
-                item { Spacer(modifier = Modifier.height(80.dp)) }
+                item(key = "bottom_spacer") { Spacer(modifier = Modifier.height(80.dp)) }
             }
 
-            AddNoteFAB(
-                onAddClick = { navController.navigate(Route.NoteEditor.createRoute(0)) },
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = 24.dp, bottom = 24.dp)
-            )
+            // ← FAB يختفي أثناء البحث
+            if (!isSearchActive) {
+                AddNoteFAB(
+                    onAddClick = remember {
+                        { navController.navigate(Route.NoteEditor.createRoute(0)) }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(start = 24.dp, bottom = 24.dp)
+                )
+            }
         }
     }
 }
 
-// ======= Room Note Card المحدثة =======
+// ======= Room Note Card =======
 @Composable
 fun RoomNoteCard(note: Note, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -162,6 +169,7 @@ fun RoomNoteCard(note: Note, onClick: () -> Unit) {
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -256,7 +264,7 @@ fun RoomNoteCard(note: Note, onClick: () -> Unit) {
     }
 }
 
-// ======= Top Bar Section المحدثة =======
+// ======= Top Bar =======
 @Composable
 fun TopBarSection(
     isSearchActive: Boolean,
@@ -272,6 +280,7 @@ fun TopBarSection(
             placeholder = {
                 Text(
                     text = stringResource(R.string.search),
+                    fontFamily = ManropeFontFamily,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
@@ -283,7 +292,10 @@ fun TopBarSection(
                 )
             },
             trailingIcon = {
-                IconButton(onClick = { onSearchQueryChange(""); onSearchClose() }) {
+                IconButton(onClick = {
+                    onSearchQueryChange("")
+                    onSearchClose()
+                }) {
                     Icon(
                         imageVector = Icons.Outlined.Close,
                         contentDescription = null,
@@ -344,7 +356,7 @@ fun TopBarSection(
     }
 }
 
-// ======= Category Tab المحدثة =======
+// ======= Category Tab =======
 @Composable
 fun CategoryTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
@@ -354,11 +366,13 @@ fun CategoryTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
                 if (isSelected) MaterialTheme.colorScheme.primary
                 else MaterialTheme.colorScheme.secondaryContainer
             )
-            .clickable { onClick() }
-            .padding(horizontal = 18.dp, vertical = 10.dp)) {
+            .clickable(onClick = onClick)
+            .padding(horizontal = 18.dp, vertical = 10.dp)
+    ) {
         Text(
             text = label,
             fontSize = 14.sp,
+            fontFamily = ManropeFontFamily,
             color = if (isSelected) MaterialTheme.colorScheme.onPrimary
             else MaterialTheme.colorScheme.onSecondaryContainer,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
@@ -367,9 +381,11 @@ fun CategoryTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
     }
 }
 
-// ======= Empty State المحدثة =======
+// ======= Empty State =======
 @Composable
-fun EmptyNotesState() {
+fun EmptyNotesState(
+    message: String = stringResource(R.string.empty_notes_subtitle)
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -398,7 +414,7 @@ fun EmptyNotesState() {
             color = MaterialTheme.colorScheme.onBackground
         )
         Text(
-            text = stringResource(R.string.empty_notes_subtitle),
+            text = message,
             fontSize = 14.sp,
             fontFamily = ManropeFontFamily,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -408,7 +424,7 @@ fun EmptyNotesState() {
     }
 }
 
-// ======= Page Title Section =======
+// ======= Page Title =======
 @Composable
 fun PageTitleSection() {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -418,7 +434,6 @@ fun PageTitleSection() {
             fontWeight = FontWeight.Bold,
             fontFamily = MansalvaFontFamily,
             color = MaterialTheme.colorScheme.onBackground,
-            textAlign = TextAlign.Start,
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(4.dp))
@@ -427,13 +442,12 @@ fun PageTitleSection() {
             fontSize = 14.sp,
             fontFamily = ManropeFontFamily,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Start,
             modifier = Modifier.fillMaxWidth()
         )
     }
 }
 
-// ======= Floating Action Button =======
+// ======= FAB =======
 @Composable
 fun AddNoteFAB(onAddClick: () -> Unit, modifier: Modifier = Modifier) {
     FloatingActionButton(
