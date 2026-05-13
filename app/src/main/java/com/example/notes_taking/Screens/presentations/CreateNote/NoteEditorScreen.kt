@@ -220,12 +220,48 @@ fun NoteEditorScreen(
             }
         }
     }
-    var hasAudioPermission by remember { mutableStateOf(false) }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
+    // ======= Permission Launchers =======
+    // إذن قراءة الصور (للأجهزة Android 13+)
+    val readImagesPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        hasAudioPermission = isGranted
+        if (isGranted) {
+            imagePickerLauncher.launch("image/*")
+        } else {
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    if (Locale.getDefault().language == "ar")
+                        "يجب منح صلاحية الوصول للصور"
+                    else
+                        "Images access permission required"
+                )
+            }
+        }
+    }
+
+    // إذن قراءة الملفات الصوتية (للأجهزة Android 13+)
+    val readAudioPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            audioPickerLauncher.launch("audio/*")
+        } else {
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    if (Locale.getDefault().language == "ar")
+                        "يجب منح صلاحية الوصول للملفات الصوتية"
+                    else
+                        "Audio access permission required"
+                )
+            }
+        }
+    }
+
+    // إذن التسجيل الصوتي
+    val recordAudioPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
         if (isGranted) {
             if (openAudio) {
                 showRecordingDialog = true
@@ -243,6 +279,78 @@ fun NoteEditorScreen(
             }
         }
     }
+
+    // ======= Helper Functions =======
+    // دالة للتحقق من الأذونات وطلبها
+    fun checkAndRequestImagePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+ - نحتاج إذن READ_MEDIA_IMAGES
+            val permission = android.Manifest.permission.READ_MEDIA_IMAGES
+            val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+                context, permission
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+            if (granted) {
+                imagePickerLauncher.launch("image/*")
+            } else {
+                readImagesPermissionLauncher.launch(permission)
+            }
+        } else {
+            // الإصدارات الأقدم - نحتاج إذن READ_EXTERNAL_STORAGE
+            val permission = android.Manifest.permission.READ_EXTERNAL_STORAGE
+            val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+                context, permission
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+            if (granted) {
+                imagePickerLauncher.launch("image/*")
+            } else {
+                readImagesPermissionLauncher.launch(permission)
+            }
+        }
+    }
+
+    fun checkAndRequestAudioFilePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+ - نحتاج إذن READ_MEDIA_AUDIO
+            val permission = android.Manifest.permission.READ_MEDIA_AUDIO
+            val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+                context, permission
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+            if (granted) {
+                audioPickerLauncher.launch("audio/*")
+            } else {
+                readAudioPermissionLauncher.launch(permission)
+            }
+        } else {
+            // الإصدارات الأقدم - نحتاج إذن READ_EXTERNAL_STORAGE
+            val permission = android.Manifest.permission.READ_EXTERNAL_STORAGE
+            val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+                context, permission
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+            if (granted) {
+                audioPickerLauncher.launch("audio/*")
+            } else {
+                readAudioPermissionLauncher.launch(permission)
+            }
+        }
+    }
+
+    fun checkAndRequestRecordAudioPermission() {
+        val permission = android.Manifest.permission.RECORD_AUDIO
+        val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+            context, permission
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+        if (granted) {
+            showAudioDialog = true
+        } else {
+            recordAudioPermissionLauncher.launch(permission)
+        }
+    }
+
     // ======= Load Note =======
     LaunchedEffect(noteId) {
         if (noteId > 0) {
@@ -290,24 +398,17 @@ fun NoteEditorScreen(
     LaunchedEffect(key1 = openAudio) {
         if (openAudio) {
             delay(350)
-            val permission = android.Manifest.permission.RECORD_AUDIO
-            val granted = androidx.core.content.ContextCompat.checkSelfPermission(
-                context, permission
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-
-            if (granted) {
-                showRecordingDialog = true
-            } else {
-                permissionLauncher.launch(permission)
-            }
+            checkAndRequestRecordAudioPermission()
         }
     }
+
     LaunchedEffect(key1 = openImage) {
         if (openImage) {
             delay(400)
-            imagePickerLauncher.launch("image/*")
+            checkAndRequestImagePermission()
         }
     }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -1047,30 +1148,19 @@ fun NoteEditorScreen(
                     }
                 }
 
-                // ← Mic - يفتح Audio Dialog
+                // ← Mic - يطلب الإذن أولاً
                 EditorToolbarButton(
-                    icon = Icons.Outlined.Mic, onClick = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            val permission = android.Manifest.permission.RECORD_AUDIO
-                            val granted = androidx.core.content.ContextCompat.checkSelfPermission(
-                                context, permission
-                            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-
-                            if (granted) {
-                                showAudioDialog = true
-                            } else {
-                                permissionLauncher.launch(permission)
-                            }
-                        } else {
-                            showAudioDialog = true
-                        }
-                    })
+                    icon = Icons.Outlined.Mic,
+                    onClick = { checkAndRequestRecordAudioPermission() }
+                )
 
                 EditorToolbarButton(icon = Icons.Outlined.Link, onClick = { showLinkDialog = true })
 
+                // ← Image - يطلب الإذن أولاً
                 EditorToolbarButton(
                     icon = Icons.Outlined.Image,
-                    onClick = { imagePickerLauncher.launch("image/*") })
+                    onClick = { checkAndRequestImagePermission() }
+                )
 
                 Box(
                     modifier = Modifier
@@ -1133,13 +1223,17 @@ fun NoteEditorScreen(
 
     // ======= Audio Source Dialog =======
     if (showAudioDialog) {
-        AudioSourceDialog(onDismiss = { showAudioDialog = false }, onChooseFile = {
-            showAudioDialog = false
-            audioPickerLauncher.launch("audio/*")
-        }, onRecordDirect = {
-            showAudioDialog = false
-            showRecordingDialog = true
-        })
+        AudioSourceDialog(
+            onDismiss = { showAudioDialog = false },
+            onChooseFile = {
+                showAudioDialog = false
+                checkAndRequestAudioFilePermission()
+            },
+            onRecordDirect = {
+                showAudioDialog = false
+                showRecordingDialog = true
+            }
+        )
     }
 
     // ======= Recording Dialog =======
@@ -1366,7 +1460,6 @@ fun AudioSourceDialog(
 }
 
 // ======= Recording Dialog =======
-// ======= Recording Dialog مع إضافة خاصية التشغيل =======
 @Composable
 fun RecordingDialog(
     onDismiss: () -> Unit,
