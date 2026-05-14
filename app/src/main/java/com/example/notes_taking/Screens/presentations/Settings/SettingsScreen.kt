@@ -29,9 +29,8 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.NotificationsActive
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.AlertDialog
@@ -185,10 +184,11 @@ fun NotificationsSection(
                 )
 
                 // ← اختيار الوقت
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onTimeClick() }
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onTimeClick() }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     SettingsIconBox(Icons.Outlined.Schedule)
                     Column(
@@ -238,28 +238,28 @@ fun TimePickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss, title = {
-        Text(
-            text = if (isArabic) "اختر وقت التذكير" else "Choose Reminder Time",
-            fontFamily = ManropeFontFamily,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-    }, text = {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            TimePicker(state = timePickerState)
-        }
-    }, confirmButton = {
-        Button(
-            onClick = { onConfirm(timePickerState.hour, timePickerState.minute) },
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text(stringResource(R.string.add), fontFamily = ManropeFontFamily)
-        }
-    }, dismissButton = {
-        TextButton(onClick = onDismiss) {
-            Text(stringResource(R.string.cancel), fontFamily = ManropeFontFamily)
-        }
-    }, shape = RoundedCornerShape(20.dp)
+            Text(
+                text = if (isArabic) "اختر وقت التذكير" else "Choose Reminder Time",
+                fontFamily = ManropeFontFamily,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+        }, text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                TimePicker(state = timePickerState)
+            }
+        }, confirmButton = {
+            Button(
+                onClick = { onConfirm(timePickerState.hour, timePickerState.minute) },
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(stringResource(R.string.add), fontFamily = ManropeFontFamily)
+            }
+        }, dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel), fontFamily = ManropeFontFamily)
+            }
+        }, shape = RoundedCornerShape(20.dp)
     )
 }
 
@@ -332,7 +332,6 @@ fun SettingsTopBar() {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        ProfileAvatar()
         Text(
             text = stringResource(R.string.app_name_styled),
             fontSize = 16.sp,
@@ -392,25 +391,6 @@ fun PrivacySection(navController: NavHostController) {
 }
 
 @Composable
-fun ProfileAvatar(
-    size: androidx.compose.ui.unit.Dp = 40.dp, iconSize: androidx.compose.ui.unit.Dp = 24.dp
-) {
-    Box(
-        modifier = Modifier
-            .size(size)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Person,
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.size(iconSize)
-        )
-    }
-}
-
-@Composable
 fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -436,10 +416,11 @@ fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) 
 
 @Composable
 fun SettingsItem(label: String, icon: ImageVector, onClick: () -> Unit = {}) {
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .clickable { onClick() }
-        .padding(horizontal = 16.dp, vertical = 14.dp),
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically) {
         SettingsIconBox(icon)
         Text(
