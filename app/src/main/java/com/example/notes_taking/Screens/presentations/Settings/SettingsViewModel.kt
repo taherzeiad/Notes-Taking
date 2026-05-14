@@ -14,11 +14,9 @@ import com.example.notes_taking.Notification.NotificationHelper
 import com.example.notes_taking.Notification.NotificationScheduler
 
 class SettingsViewModel(
-    private val prefs: SharedPreferences,
-    application: Application
+    private val prefs: SharedPreferences, application: Application
 ) : AndroidViewModel(application) {
 
-    // الوصول للـ Context بطريقة آمنة
     private val context get() = getApplication<Application>().applicationContext
 
     // ======= Dark Mode =======
@@ -72,8 +70,7 @@ class SettingsViewModel(
 
     // ======= Factory =======
     class Factory(
-        private val prefs: SharedPreferences,
-        private val application: Application
+        private val prefs: SharedPreferences, private val application: Application
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {

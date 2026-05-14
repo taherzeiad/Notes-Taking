@@ -77,8 +77,7 @@ import com.example.notes_taking.ui.theme.MansalvaFontFamily
 
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel,
-    navController: NavHostController
+    viewModel: SettingsViewModel, navController: NavHostController
 ) {
     // ← Permission Launcher للإشعارات
     val context = LocalContext.current
@@ -102,8 +101,7 @@ fun SettingsScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = { BottomNavBar(navController = navController, selectedTab = 0) }
-    ) { padding ->
+        bottomBar = { BottomNavBar(navController = navController, selectedTab = 0) }) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -117,8 +115,7 @@ fun SettingsScreen(
             item {
                 CustomizationSection(
                     isDarkMode = viewModel.isDarkModeEnabled,
-                    onDarkModeChange = { viewModel.toggleDarkMode(it) }
-                )
+                    onDarkModeChange = { viewModel.toggleDarkMode(it) })
             }
 
             // ← قسم الإشعارات
@@ -134,9 +131,7 @@ fun SettingsScreen(
                             viewModel.toggleNotifications(enabled)
                         }
                     },
-                    onTimeClick = { showTimePickerDialog = true },
-                    onTestClick = { viewModel.sendTestNotification() }
-                )
+                    onTimeClick = { showTimePickerDialog = true })
             }
 
             item { PrivacySection(navController = navController) }
@@ -152,8 +147,7 @@ fun SettingsScreen(
                 viewModel.updateReminderTime(hour, minute)
                 showTimePickerDialog = false
             },
-            onDismiss = { showTimePickerDialog = false }
-        )
+            onDismiss = { showTimePickerDialog = false })
     }
 }
 
@@ -165,7 +159,6 @@ fun NotificationsSection(
     reminderMinute: Int,
     onToggle: (Boolean) -> Unit,
     onTimeClick: () -> Unit,
-    onTestClick: () -> Unit
 ) {
     val isArabic = LocalLayoutDirection.current == LayoutDirection.Rtl
     val timeText = "%02d:%02d".format(reminderHour, reminderMinute)
@@ -183,9 +176,7 @@ fun NotificationsSection(
 
         // ← وقت التذكير (يظهر فقط عند التفعيل)
         AnimatedVisibility(
-            visible = isEnabled,
-            enter = expandVertically(),
-            exit = shrinkVertically()
+            visible = isEnabled, enter = expandVertically(), exit = shrinkVertically()
         ) {
             Column {
                 HorizontalDivider(
@@ -194,17 +185,17 @@ fun NotificationsSection(
                 )
 
                 // ← اختيار الوقت
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onTimeClick() }
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onTimeClick() }
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
                     SettingsIconBox(Icons.Outlined.Schedule)
-                    Column(modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 12.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 12.dp)
+                    ) {
                         Text(
                             text = if (isArabic) "وقت التذكير" else "Reminder Time",
                             fontSize = 15.sp,
@@ -228,37 +219,7 @@ fun NotificationsSection(
                     )
                 }
 
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
 
-                // ← زر اختبار الإشعار
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onTestClick() }
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    SettingsIconBox(Icons.Outlined.NotificationsActive)
-                    Text(
-                        text = if (isArabic) "إرسال إشعار تجريبي" else "Send Test Notification",
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 12.dp),
-                        fontSize = 15.sp,
-                        fontFamily = ManropeFontFamily,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
             }
         }
     }
@@ -268,47 +229,37 @@ fun NotificationsSection(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickerDialog(
-    initialHour: Int,
-    initialMinute: Int,
-    onConfirm: (Int, Int) -> Unit,
-    onDismiss: () -> Unit
+    initialHour: Int, initialMinute: Int, onConfirm: (Int, Int) -> Unit, onDismiss: () -> Unit
 ) {
     val isArabic = LocalLayoutDirection.current == LayoutDirection.Rtl
     val timePickerState = rememberTimePickerState(
-        initialHour = initialHour,
-        initialMinute = initialMinute,
-        is24Hour = true
+        initialHour = initialHour, initialMinute = initialMinute, is24Hour = true
     )
 
     AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = if (isArabic) "اختر وقت التذكير" else "Choose Reminder Time",
-                fontFamily = ManropeFontFamily,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-        },
-        text = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                TimePicker(state = timePickerState)
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = { onConfirm(timePickerState.hour, timePickerState.minute) },
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(stringResource(R.string.add), fontFamily = ManropeFontFamily)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel), fontFamily = ManropeFontFamily)
-            }
-        },
-        shape = RoundedCornerShape(20.dp)
+        onDismissRequest = onDismiss, title = {
+        Text(
+            text = if (isArabic) "اختر وقت التذكير" else "Choose Reminder Time",
+            fontFamily = ManropeFontFamily,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+    }, text = {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            TimePicker(state = timePickerState)
+        }
+    }, confirmButton = {
+        Button(
+            onClick = { onConfirm(timePickerState.hour, timePickerState.minute) },
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text(stringResource(R.string.add), fontFamily = ManropeFontFamily)
+        }
+    }, dismissButton = {
+        TextButton(onClick = onDismiss) {
+            Text(stringResource(R.string.cancel), fontFamily = ManropeFontFamily)
+        }
+    }, shape = RoundedCornerShape(20.dp)
     )
 }
 
@@ -327,8 +278,7 @@ fun CustomizationSection(isDarkMode: Boolean, onDarkModeChange: (Boolean) -> Uni
             modifier = Modifier.padding(horizontal = 16.dp)
         )
         SettingsItem(
-            label = stringResource(R.string.item_notifications),
-            icon = Icons.Outlined.Notifications
+            label = stringResource(R.string.item_notifications), icon = Icons.Outlined.Notifications
         )
     }
 }
@@ -368,9 +318,7 @@ fun SettingsItemWithToggle(
             )
         }
         Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = switchColors()
+            checked = checked, onCheckedChange = onCheckedChange, colors = switchColors()
         )
     }
 }
@@ -429,16 +377,13 @@ fun PrivacySection(navController: NavHostController) {
         SettingsItem(
             label = stringResource(R.string.item_privacy_center),
             icon = Icons.Outlined.Shield,
-            onClick = { navController.navigate(Route.PrivacyCenter.route) }
-        )
+            onClick = { navController.navigate(Route.PrivacyCenter.route) })
         HorizontalDivider(
             color = MaterialTheme.colorScheme.outlineVariant,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
         SettingsItem(
-            label = stringResource(R.string.item_about),
-            icon = Icons.Outlined.Info,
-            onClick = {
+            label = stringResource(R.string.item_about), icon = Icons.Outlined.Info, onClick = {
                 navController.navigate(Route.AboutApp.route)
             }
 
@@ -454,8 +399,7 @@ fun ProfileAvatar(
         modifier = Modifier
             .size(size)
             .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.primary),
-        contentAlignment = Alignment.Center
+            .background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = Icons.Outlined.Person,
@@ -482,7 +426,8 @@ fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) 
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
-            ), elevation = CardDefaults.cardElevation(0.dp)
+            ),
+            elevation = CardDefaults.cardElevation(0.dp)
         ) {
             Column(content = content)
         }
@@ -491,11 +436,10 @@ fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) 
 
 @Composable
 fun SettingsItem(label: String, icon: ImageVector, onClick: () -> Unit = {}) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+    Row(modifier = Modifier
+        .fillMaxWidth()
+        .clickable { onClick() }
+        .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically) {
         SettingsIconBox(icon)
         Text(
@@ -524,10 +468,8 @@ fun SettingsIconBox(icon: ImageVector) {
         modifier = Modifier
             .size(36.dp)
             .background(
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                shape = CircleShape
-            ),
-        contentAlignment = Alignment.Center
+                color = MaterialTheme.colorScheme.secondaryContainer, shape = CircleShape
+            ), contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = icon,

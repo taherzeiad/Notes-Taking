@@ -35,10 +35,9 @@ class MainActivity : ComponentActivity() {
         val deviceLang = Locale.getDefault().language
         val lang = if (deviceLang == "ar") "ar" else "en"
 
-        newBase.getSharedPreferences("settings", Context.MODE_PRIVATE)
-            .edit {
-                putString("language", lang)
-            }
+        newBase.getSharedPreferences("settings", Context.MODE_PRIVATE).edit {
+            putString("language", lang)
+        }
 
         val context = LocaleUtils.setLocale(newBase, lang)
         super.attachBaseContext(context)
@@ -77,8 +76,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     // 4. تمرير الـ ViewModel للـ NavGraph لضمان أن شاشة الإعدادات تستخدم نفس النسخة
                     NavGraph(
-                        navController = navController,
-                        settingsViewModel = settingsViewModel
+                        navController = navController, settingsViewModel = settingsViewModel
                     )
                 }
             }
