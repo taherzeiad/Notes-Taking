@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.notes_taking.R
 import com.example.notes_taking.RoomDatabase.TaskEntity
+import com.example.notes_taking.Screens.presentations.AppTopBar
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
@@ -117,39 +118,10 @@ fun TasksScreen(
                         )
                     }
                 } else {
-                    // ← Normal Top Bar
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(
-                            onClick = { viewModel.openSearch() },
-                            modifier = Modifier.size(26.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Search,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onBackground,
-                                modifier = Modifier.size(26.dp)
-                            )
-                        }
-                        Text(
-                            text = stringResource(R.string.notes_screen_title_bar),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = ManropeFontFamily,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.MenuBook,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.size(26.dp)
-                        )
-                    }
+                    AppTopBar(
+                        title = stringResource(R.string.notes_screen_title_bar),
+                        onSearchClick = { viewModel.openSearch() }
+                    )
                 }
             }
 
