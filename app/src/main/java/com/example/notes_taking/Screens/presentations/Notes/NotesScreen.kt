@@ -344,7 +344,7 @@ fun TopBarSection(
             Icon(
                 Icons.AutoMirrored.Filled.MenuBook,
                 null,
-                tint = MaterialTheme.colorScheme.onPrimary,
+                tint = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.size(24.dp)
             )
         }
