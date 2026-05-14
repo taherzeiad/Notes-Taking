@@ -29,7 +29,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Shield
@@ -55,8 +54,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -70,6 +67,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
+import com.example.notes_taking.Screens.presentations.AppTopBar
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
@@ -184,11 +182,10 @@ fun NotificationsSection(
                 )
 
                 // ← اختيار الوقت
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onTimeClick() }
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onTimeClick() }
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     SettingsIconBox(Icons.Outlined.Schedule)
                     Column(
@@ -238,28 +235,28 @@ fun TimePickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss, title = {
-            Text(
-                text = if (isArabic) "اختر وقت التذكير" else "Choose Reminder Time",
-                fontFamily = ManropeFontFamily,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-        }, text = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                TimePicker(state = timePickerState)
-            }
-        }, confirmButton = {
-            Button(
-                onClick = { onConfirm(timePickerState.hour, timePickerState.minute) },
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(stringResource(R.string.add), fontFamily = ManropeFontFamily)
-            }
-        }, dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel), fontFamily = ManropeFontFamily)
-            }
-        }, shape = RoundedCornerShape(20.dp)
+        Text(
+            text = if (isArabic) "اختر وقت التذكير" else "Choose Reminder Time",
+            fontFamily = ManropeFontFamily,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+    }, text = {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            TimePicker(state = timePickerState)
+        }
+    }, confirmButton = {
+        Button(
+            onClick = { onConfirm(timePickerState.hour, timePickerState.minute) },
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text(stringResource(R.string.add), fontFamily = ManropeFontFamily)
+        }
+    }, dismissButton = {
+        TextButton(onClick = onDismiss) {
+            Text(stringResource(R.string.cancel), fontFamily = ManropeFontFamily)
+        }
+    }, shape = RoundedCornerShape(20.dp)
     )
 }
 
@@ -325,27 +322,7 @@ fun SettingsItemWithToggle(
 
 @Composable
 fun SettingsTopBar() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = stringResource(R.string.app_name_styled),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = ManropeFontFamily,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Icon(
-            imageVector = Icons.AutoMirrored.Outlined.MenuBook,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.size(26.dp)
-        )
-    }
+    AppTopBar(title = stringResource(R.string.app_name_styled))
 }
 
 @Composable
@@ -416,11 +393,10 @@ fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) 
 
 @Composable
 fun SettingsItem(label: String, icon: ImageVector, onClick: () -> Unit = {}) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+    Row(modifier = Modifier
+        .fillMaxWidth()
+        .clickable { onClick() }
+        .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically) {
         SettingsIconBox(icon)
         Text(

@@ -24,7 +24,6 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Image
@@ -49,7 +48,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
@@ -65,6 +63,7 @@ import androidx.navigation.NavHostController
 import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
 import com.example.notes_taking.RoomDatabase.Note
+import com.example.notes_taking.Screens.presentations.AppTopBar
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
 
@@ -291,43 +290,9 @@ fun EmptyNoteCard(onAddNote: () -> Unit) {
         }
     }
 }
-
 @Composable
 fun HomeTopBarSection() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.Default.Person,
-                null,
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-        Text(
-            stringResource(R.string.app_name_styled),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = ManropeFontFamily,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Icon(
-            Icons.AutoMirrored.Outlined.MenuBook,
-            null,
-            tint = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.size(26.dp)
-        )
-    }
+    AppTopBar(title = stringResource(R.string.app_name_styled))
 }
 
 @Composable

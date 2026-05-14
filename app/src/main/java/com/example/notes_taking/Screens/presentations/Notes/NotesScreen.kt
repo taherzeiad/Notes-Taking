@@ -35,6 +35,7 @@ import coil.compose.AsyncImage
 import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
 import com.example.notes_taking.RoomDatabase.Note
+import com.example.notes_taking.Screens.presentations.AppTopBar
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
@@ -318,36 +319,10 @@ fun TopBarSection(
             singleLine = true
         )
     } else {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onSearchClick) {
-                Icon(
-                    Icons.Outlined.Search,
-                    null,
-                    tint = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.size(26.dp)
-                )
-            }
-            Text(
-                text = stringResource(R.string.notes_screen_title_bar),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = ManropeFontFamily,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Icon(
-                Icons.AutoMirrored.Filled.MenuBook,
-                null,
-                tint = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.size(24.dp)
-            )
-        }
+        AppTopBar(
+            title = stringResource(R.string.notes_screen_title_bar),
+            onSearchClick = onSearchClick
+        )
     }
 }
 
