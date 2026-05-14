@@ -1,7 +1,7 @@
 @file:Suppress("DEPRECATION")
 
 package com.example.notes_taking
-// أضف هذه الاستيرادات في الأعلى
+
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.core.content.edit
 import androidx.navigation.compose.rememberNavController
 import com.example.notes_taking.Navmain.NavGraph
+import com.example.notes_taking.Notification.NotificationHelper
+import com.example.notes_taking.Notification.NotificationScheduler
 import com.example.notes_taking.Screens.presentations.Settings.SettingsViewModel
 import com.example.notes_taking.ui.theme.NotesTakingTheme
 import com.example.notes_taking.utils.LocaleUtils
@@ -24,7 +26,10 @@ import java.util.Locale
 class MainActivity : ComponentActivity() {
 
     // 1. تعريف الـ ViewModel على مستوى النشاط (Activity) لضمان مشاركة الحالة
-    private val settingsViewModel: SettingsViewModel by viewModels()
+    private val settingsViewModel: SettingsViewModel by viewModels {
+        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        SettingsViewModel.Factory(prefs, application)
+    }
 
     override fun attachBaseContext(newBase: Context) {
         val deviceLang = Locale.getDefault().language
@@ -45,7 +50,18 @@ class MainActivity : ComponentActivity() {
         setTheme(R.style.Theme_NotesTaking)
         super.onCreate(savedInstanceState)
 
-        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        // ← إنشاء قناة الإشعارات عند بدء التطبيق
+        NotificationHelper.createNotificationChannel(this)
+
+        // ← جدولة الإشعار إذا كان مفعلاً
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
+        if (prefs.getBoolean("notifications_enabled", true)) {
+            val hour = prefs.getInt("reminder_hour", 20)
+            val minute = prefs.getInt("reminder_minute", 0)
+            NotificationScheduler.scheduleDailyReminder(this, hour, minute)
+        }
+
+
         val lang = prefs.getString("language", "en") ?: "en"
 
         setContent {

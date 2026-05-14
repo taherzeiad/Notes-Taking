@@ -258,4 +258,7 @@
     <string name="privacy_delete_confirm_desc">هذا الإجراء لا يمكن التراجع عنه. سيتم حذف جميع ملاحظاتك ومهامك وتسجيلاتك بشكل دائم.</string>
     <string name="privacy_export_confirm_title">تصدير بياناتك</string>
     <string name="privacy_export_confirm_desc">سيتم تصدير ملاحظاتك ومهامك كملف نصي محفوظ على جهازك.</string>
+
+    <string name="notif_daily_reminder">تذكير يومي</string>
+    <string name="notif_daily_reminder_desc">احصل على تذكير يومي لكتابة ملاحظاتك</string>
 </resources>

@@ -55,7 +55,7 @@ fun NavGraph(
     val factory = remember { GenericViewModelFactory(repository) }
 
 
-    val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    val prefs = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
     val lang = prefs.getString("language", "en") ?: "en"
     val isRtl = lang == "ar"
 

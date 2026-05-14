@@ -257,5 +257,8 @@
     <string name="privacy_delete_confirm_desc">This action is irreversible. All your notes, tasks, and recordings will be permanently deleted.</string>
     <string name="privacy_export_confirm_title">Export Your Data</string>
     <string name="privacy_export_confirm_desc">Your notes and tasks will be exported as a text file saved to your device.</string>
+
+    <string name="notif_daily_reminder">Daily Reminder</string>
+    <string name="notif_daily_reminder_desc">Get reminded to write your notes every day</string>
 </resources>
 

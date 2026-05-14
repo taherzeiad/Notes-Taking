@@ -112,8 +112,7 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                             aiTasks.forEach { aiTask ->
                                 val isDuplicate = allTaskTitles.any { existing ->
                                     existing.contains(aiTask, ignoreCase = true) || aiTask.contains(
-                                        existing,
-                                        ignoreCase = true
+                                        existing, ignoreCase = true
                                     )
                                 }
                                 if (!isDuplicate && aiTask.isNotBlank()) {
