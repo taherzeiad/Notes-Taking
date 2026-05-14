@@ -63,11 +63,6 @@ class SettingsViewModel(
         }
     }
 
-    fun sendTestNotification() {
-        NotificationHelper.createNotificationChannel(context)
-        NotificationHelper.showDailyReminderNotification(context)
-    }
-
     // ======= Factory =======
     class Factory(
         private val prefs: SharedPreferences, private val application: Application
