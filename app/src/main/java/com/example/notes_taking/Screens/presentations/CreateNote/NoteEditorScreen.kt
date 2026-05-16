@@ -131,7 +131,6 @@ sealed class ContentBlock {
     ) : ContentBlock()
 }
 
-@SuppressLint("UnrememberedMutableState")
 @Composable
 fun NoteEditorScreen(
     noteId: Int = 0,
@@ -166,14 +165,17 @@ fun NoteEditorScreen(
     val contentBlocks = remember { mutableStateListOf<ContentBlock>(ContentBlock.TextBlock()) }
     val scope = rememberCoroutineScope()
 
-    val wordCount = remember(contentBlocks) {
+    val wordCount by remember {
         derivedStateOf {
             contentBlocks.filterIsInstance<ContentBlock.TextBlock>().sumOf {
                 it.text.trim().split("\\s+".toRegex()).filter { w -> w.isNotEmpty() }.size
             }
         }
     }
-    val readingMinutes = derivedStateOf { maxOf(1, wordCount.value / 200) }
+
+    val readingMinutes by remember {
+        derivedStateOf { maxOf(1, wordCount / 200) }
+    }
 
     val characterCount = remember {
         derivedStateOf {
@@ -605,7 +607,7 @@ fun NoteEditorScreen(
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
-                        text = stringResource(R.string.editor_reading_time, readingMinutes.value),
+                        text = stringResource(R.string.editor_reading_time, readingMinutes),
                         fontSize = 12.sp,
                         fontFamily = ManropeFontFamily,
                         color = colorScheme.onSurfaceVariant
@@ -1010,34 +1012,37 @@ fun NoteEditorScreen(
             ) {
 
                 // ======= AI Button =======
-                // ======= AI Button - النسخة النهائية المعدلة =======
                 Box {
-                    IconButton(
-                        onClick = {
-                            // فحص إعدادات الخصوصية قبل فتح القائمة
-                            if (!viewModel.isAiProcessingEnabled()) {
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        if (Locale.getDefault().language == "ar")
-                                            "معالجة AI معطلة من مركز الخصوصية"
-                                        else
-                                            "AI processing is disabled in Privacy Center"
-                                    )
-                                }
-                                return@IconButton
-                            }
-                            aiMenuExpanded = true
-                        },
-                        modifier = Modifier.size(36.dp),
-                        enabled = !isAiLoading && viewModel.isAiProcessingEnabled()
-                    ) {
-                        if (isAiLoading) {
+                    // بدل IconButton الحالي، استخدم هذا:
+                    if (isAiLoading) {
+                        Box(
+                            modifier = Modifier.size(36.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
                             CircularProgressIndicator(
                                 color = colorScheme.primary,
                                 modifier = Modifier.size(20.dp),
                                 strokeWidth = 2.dp
                             )
-                        } else {
+                        }
+                    } else {
+                        IconButton(
+                            onClick = {
+                                if (!viewModel.isAiProcessingEnabled()) {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar(
+                                            if (Locale.getDefault().language == "ar")
+                                                "معالجة AI معطلة من مركز الخصوصية"
+                                            else
+                                                "AI processing is disabled in Privacy Center"
+                                        )
+                                    }
+                                    return@IconButton
+                                }
+                                aiMenuExpanded = true
+                            },
+                            modifier = Modifier.size(36.dp)
+                        ) {
                             Icon(
                                 imageVector = Icons.Outlined.AutoAwesome,
                                 contentDescription = null,
@@ -1049,12 +1054,8 @@ fun NoteEditorScreen(
                     }
 
                     DropdownMenu(
-                        expanded = aiMenuExpanded,
-                        onDismissRequest = {
-                            if (!isAiLoading) {
-                                aiMenuExpanded = false
-                            }
-                        },
+                        expanded = aiMenuExpanded && !isAiLoading,
+                        onDismissRequest = { aiMenuExpanded = false },
                         modifier = Modifier.background(colorScheme.surface)
                     ) {
                         // خيار إعادة الصياغة
@@ -1086,43 +1087,27 @@ fun NoteEditorScreen(
                                     .trim()
 
                                 if (currentText.isBlank()) {
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar("لا يوجد نص لإعادة صياغته")
-                                    }
+                                    scope.launch { snackbarHostState.showSnackbar("لا يوجد نص لإعادة صياغته") }
                                     return@DropdownMenuItem
                                 }
 
-                                // تعيين حالة التحميل مباشرة
                                 isAiLoading = true
-
-                                // استخدام coroutine منفصل مع التأكد من إعادة التعيين
                                 scope.launch {
                                     try {
                                         val result = withContext(Dispatchers.IO) {
                                             GroqService.rephraseText(currentText)
                                         }
-
-                                        // تحديث النص على الـ Main Thread
-                                        withContext(Dispatchers.Main) {
-                                            val firstTextIndex =
-                                                contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
-                                            if (firstTextIndex != -1) {
-                                                contentBlocks[firstTextIndex] =
-                                                    ContentBlock.TextBlock(text = result)
-                                                snackbarHostState.showSnackbar("تمت إعادة الصياغة بنجاح")
-                                            }
+                                        val firstTextIndex =
+                                            contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
+                                        if (firstTextIndex != -1) {
+                                            contentBlocks[firstTextIndex] =
+                                                ContentBlock.TextBlock(text = result)
+                                            snackbarHostState.showSnackbar("تمت إعادة الصياغة بنجاح")
                                         }
                                     } catch (e: Exception) {
-                                        withContext(Dispatchers.Main) {
-                                            snackbarHostState.showSnackbar("فشل في إعادة الصياغة: ${e.message}")
-                                        }
-                                        e.printStackTrace()
+                                        snackbarHostState.showSnackbar("فشل: ${e.message}")
                                     } finally {
-                                        // إعادة تعيين حالة التحميل مع تأخير بسيط
-                                        delay(100)
-                                        withContext(Dispatchers.Main) {
-                                            isAiLoading = false
-                                        }
+                                        isAiLoading = false
                                     }
                                 }
                             }
@@ -1159,43 +1144,27 @@ fun NoteEditorScreen(
                                     .trim()
 
                                 if (currentText.isBlank()) {
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar("لا يوجد نص لتشكيله")
-                                    }
+                                    scope.launch { snackbarHostState.showSnackbar("لا يوجد نص لتشكيله") }
                                     return@DropdownMenuItem
                                 }
 
-                                // تعيين حالة التحميل مباشرة
                                 isAiLoading = true
-
-                                // استخدام coroutine منفصل مع التأكد من إعادة التعيين
                                 scope.launch {
                                     try {
                                         val result = withContext(Dispatchers.IO) {
                                             GroqService.diacritizeText(currentText)
                                         }
-
-                                        // تحديث النص على الـ Main Thread
-                                        withContext(Dispatchers.Main) {
-                                            val firstTextIndex =
-                                                contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
-                                            if (firstTextIndex != -1) {
-                                                contentBlocks[firstTextIndex] =
-                                                    ContentBlock.TextBlock(text = result)
-                                                snackbarHostState.showSnackbar("تم تشكيل النص بنجاح")
-                                            }
+                                        val firstTextIndex =
+                                            contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
+                                        if (firstTextIndex != -1) {
+                                            contentBlocks[firstTextIndex] =
+                                                ContentBlock.TextBlock(text = result)
+                                            snackbarHostState.showSnackbar("تم تشكيل النص بنجاح")
                                         }
                                     } catch (e: Exception) {
-                                        withContext(Dispatchers.Main) {
-                                            snackbarHostState.showSnackbar("فشل في تشكيل النص: ${e.message}")
-                                        }
-                                        e.printStackTrace()
+                                        snackbarHostState.showSnackbar("فشل: ${e.message}")
                                     } finally {
-                                        // إعادة تعيين حالة التحميل مع تأخير بسيط
-                                        delay(100)
-                                        withContext(Dispatchers.Main) {
-                                            isAiLoading = false
-                                        }
+                                        isAiLoading = false
                                     }
                                 }
                             }

@@ -11,7 +11,7 @@ import retrofit2.http.POST
 interface OpenAIApi {
     @POST("v1/chat/completions")
     suspend fun generateChatCompletion(
-        @Header("Authorization") token: String, // OpenAI يطلب المفتاح في الـ Header
+        @Header("Authorization") token: String,
         @Body request: ChatRequest
     ): retrofit2.Response<ChatResponse>
 }
@@ -19,13 +19,20 @@ interface OpenAIApi {
 object RetrofitClient {
     private const val BASE_URL = "https://api.groq.com/openai/"
 
-    private val client = OkHttpClient.Builder().addInterceptor(HttpLoggingInterceptor().apply {
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .writeTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }).build()
 
     val instance: OpenAIApi by lazy {
-        Retrofit.Builder().baseUrl(BASE_URL).client(client)
-            .addConverterFactory(GsonConverterFactory.create()).build()
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
             .create(OpenAIApi::class.java)
     }
 }
