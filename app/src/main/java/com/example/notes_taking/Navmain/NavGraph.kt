@@ -104,8 +104,6 @@ fun NavGraph(
                 viewModel = homeViewModel,
                 navController = navController,
                 onAddNote = { navController.navigate(Route.NoteEditor.createRoute(0)) },
-                onEditNote = { id -> navController.navigate(Route.NoteEditor.createRoute(id)) },
-                onNavigateToTasks = { navController.navigate(Route.Tasks.route) },
             )
         }
 
