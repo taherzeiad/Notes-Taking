@@ -104,7 +104,7 @@ fun HomeScreen(
                             0, true
                         )
                     )
-                }, onAddDocument = {
+                }, onAddImage = {
                     navController.navigate(
                         Route.NoteEditor.createRoute(
                             0, false, true
@@ -139,7 +139,7 @@ fun WelcomeSection() {
 // ======= QuickActionsSection =======
 @Composable
 fun QuickActionsSection(
-    onAddNote: () -> Unit, onVoiceRecord: () -> Unit, onAddDocument: () -> Unit
+    onAddNote: () -> Unit, onVoiceRecord: () -> Unit, onAddImage: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -160,13 +160,12 @@ fun QuickActionsSection(
             label = stringResource(R.string.add_image),
             icon = Icons.Outlined.Image,
             modifier = Modifier.fillMaxWidth(),
-            onClick = onAddDocument
+            onClick = onAddImage
         )
     }
 }
 
 // ======= المكونات المنفصلة (Components) =======
-// ← أضف remember للـ lambdas لمنع recomposition
 @Composable
 fun LastEditedNoteSection(
     note: Note?, onEditClick: (Int) -> Unit, onAddNote: () -> Unit
@@ -183,7 +182,6 @@ fun LastEditedNoteSection(
         if (note == null) {
             EmptyNoteCard(onAddNote = onAddNote)
         } else {
-            // ← استخدم remember للـ onClick
             val onCardClick = remember(note.id) { { onEditClick(note.id) } }
 
             Card(
@@ -418,33 +416,33 @@ fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
         tabs.forEachIndexed { index, (_, icon, route) ->
             NavigationBarItem(
                 selected = selectedTab == index, onClick = {
-                if (selectedTab != index) {
-                    navController.navigate(route) {
-                        popUpTo(Route.Home.route) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                    if (selectedTab != index) {
+                        navController.navigate(route) {
+                            popUpTo(Route.Home.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
-                }
-            }, icon = {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = labels[index],
-                    modifier = Modifier.size(24.dp)
+                }, icon = {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = labels[index],
+                        modifier = Modifier.size(24.dp)
+                    )
+                }, label = {
+                    Text(
+                        text = labels[index],
+                        fontSize = 10.sp,
+                        fontFamily = ManropeFontFamily,
+                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                    )
+                }, colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                 )
-            }, label = {
-                Text(
-                    text = labels[index],
-                    fontSize = 10.sp,
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
-                )
-            }, colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = MaterialTheme.colorScheme.primary,
-                selectedTextColor = MaterialTheme.colorScheme.primary,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-            )
             )
         }
     }
