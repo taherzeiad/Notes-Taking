@@ -1,6 +1,8 @@
 package com.example.notes_taking.Screens.presentations.Editor
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -15,7 +17,27 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
-class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
+class NoteViewModel(
+    private val repository: NoteRepository, private val context: Context
+) : ViewModel() {
+
+    // ← إضافة SharedPreferences للوصول لإعدادات الخصوصية
+    private val privacyPrefs: SharedPreferences by lazy {
+        context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    }
+
+    // ======= دوال مساعدة لقراءة إعدادات الخصوصية =======
+    fun isAiProcessingEnabled(): Boolean {
+        return privacyPrefs.getBoolean("privacy_ai_processing", true)
+    }
+
+    fun isVoiceStorageEnabled(): Boolean {
+        return privacyPrefs.getBoolean("privacy_voice_storage", true)
+    }
+
+    fun isAnalyticsEnabled(): Boolean {
+        return privacyPrefs.getBoolean("privacy_analytics", false)
+    }
 
     suspend fun getNoteById(id: Int): Note? {
         return if (id > 0) {
@@ -48,9 +70,9 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                 }
                 val finalContent = content.trim()
 
-                // 1. تصنيف الملاحظة بالـ AI
+                // 1. تصنيف الملاحظة بالـ AI - مع احترام إعدادات الخصوصية
                 var autoCategory = "General"
-                if (finalContent.isNotBlank()) {
+                if (isAiProcessingEnabled() && finalContent.isNotBlank()) {
                     try {
                         val classification = GroqService.classifyNoteContent(finalContent)
                         autoCategory = when {
@@ -61,17 +83,29 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                             classification.contains("Work", ignoreCase = true) -> "Work"
                             else -> "General"
                         }
+
+                        // ← Analytics (إذا مفعل)
+                        if (isAnalyticsEnabled()) {
+                            logAnalytics(
+                                "note_classified", mapOf(
+                                    "category" to autoCategory,
+                                    "content_length" to finalContent.length.toString()
+                                )
+                            )
+                        }
                     } catch (e: Exception) {
                         Log.e("NoteViewModel", "AI classification failed: ${e.message}")
                     }
                 }
 
-                // 2. حفظ الملاحظة
+                // 2. حفظ الملاحظة - مع احترام إعدادات الصوت
+                val finalAudioPaths = if (isVoiceStorageEnabled()) audioPaths else null
+
                 val noteToSave = Note(
                     id = if (id > 0) id else 0,
                     title = finalTitle,
                     content = finalContent,
-                    audioPaths = audioPaths,
+                    audioPaths = finalAudioPaths,
                     category = autoCategory,
                     imageUri = imageUri,
                     date = date
@@ -93,14 +127,14 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                     repository.deleteTasksByNoteId(savedNoteId)
                 }
 
-                // 5. بناء قائمة المهام
+                // 5. بناء قائمة المهام - مع احترام إعدادات AI
                 val allTaskTitles = mutableListOf<String>()
 
                 // أولاً: المهام اليدوية من BulletBlocks
                 allTaskTitles.addAll(manualTasks.filter { it.isNotBlank() })
 
-                // ثانياً: إذا كانت الملاحظة من نوع Task أو تحتوي على مهام في النص
-                if (finalContent.isNotBlank()) {
+                // ثانياً: استخراج المهام بالـ AI (فقط إذا مفعل)
+                if (isAiProcessingEnabled() && finalContent.isNotBlank()) {
                     val textOnlyContent =
                         finalContent.lines().filter { !it.startsWith("•") }.joinToString("\n")
                             .trim()
@@ -118,6 +152,16 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                                 if (!isDuplicate && aiTask.isNotBlank()) {
                                     allTaskTitles.add(aiTask)
                                 }
+                            }
+
+                            // ← Analytics
+                            if (isAnalyticsEnabled()) {
+                                logAnalytics(
+                                    "tasks_extracted", mapOf(
+                                        "ai_tasks_count" to aiTasks.size.toString(),
+                                        "manual_tasks_count" to manualTasks.size.toString()
+                                    )
+                                )
                             }
                         } catch (e: Exception) {
                             Log.e("NoteViewModel", "AI task extraction failed: ${e.message}")
@@ -143,7 +187,8 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
 
             } catch (e: Exception) {
                 Log.e("NoteViewModel", "Error during save: ${e.message}")
-                // Fallback
+
+                // Fallback - حفظ بدون AI
                 try {
                     val fallbackNote = Note(
                         id = if (id > 0) id else 0,
@@ -151,6 +196,7 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                         content = content.trim(),
                         category = "General",
                         imageUri = imageUri,
+                        audioPaths = if (isVoiceStorageEnabled()) audioPaths else null,
                         date = date
                     )
                     if (id > 0) repository.updateNote(fallbackNote)
@@ -181,6 +227,17 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                 }
             }
         }
+    }
+
+    // ======= وظيفة Analytics (بسيطة) =======
+    private fun logAnalytics(event: String, params: Map<String, String>) {
+        // يمكن استبدالها بـ Firebase Analytics أو أي خدمة أخرى
+        Log.d("NoteAnalytics", "Event: $event, Params: $params")
+
+        // حفظ في SharedPreferences للمراقبة المحلية
+        val analyticsLog = privacyPrefs.getString("analytics_log", "") ?: ""
+        val newLog = "$analyticsLog\n${System.currentTimeMillis()}: $event - $params"
+        privacyPrefs.edit().putString("analytics_log", newLog).apply()
     }
 
     fun saveImageToInternalStorage(context: Context, uri: Uri): String? {

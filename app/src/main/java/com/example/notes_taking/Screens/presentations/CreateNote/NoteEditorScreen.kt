@@ -1010,11 +1010,26 @@ fun NoteEditorScreen(
             ) {
 
                 // ======= AI Button =======
+                // ======= AI Button - النسخة النهائية المعدلة =======
                 Box {
                     IconButton(
-                        onClick = { aiMenuExpanded = true },
+                        onClick = {
+                            // فحص إعدادات الخصوصية قبل فتح القائمة
+                            if (!viewModel.isAiProcessingEnabled()) {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        if (Locale.getDefault().language == "ar")
+                                            "معالجة AI معطلة من مركز الخصوصية"
+                                        else
+                                            "AI processing is disabled in Privacy Center"
+                                    )
+                                }
+                                return@IconButton
+                            }
+                            aiMenuExpanded = true
+                        },
                         modifier = Modifier.size(36.dp),
-                        enabled = !isAiLoading
+                        enabled = !isAiLoading && viewModel.isAiProcessingEnabled()
                     ) {
                         if (isAiLoading) {
                             CircularProgressIndicator(
@@ -1026,7 +1041,8 @@ fun NoteEditorScreen(
                             Icon(
                                 imageVector = Icons.Outlined.AutoAwesome,
                                 contentDescription = null,
-                                tint = colorScheme.primary,
+                                tint = if (viewModel.isAiProcessingEnabled()) colorScheme.primary
+                                else colorScheme.outline,
                                 modifier = Modifier.size(22.dp)
                             )
                         }
@@ -1034,102 +1050,156 @@ fun NoteEditorScreen(
 
                     DropdownMenu(
                         expanded = aiMenuExpanded,
-                        onDismissRequest = { aiMenuExpanded = false },
+                        onDismissRequest = {
+                            if (!isAiLoading) {
+                                aiMenuExpanded = false
+                            }
+                        },
                         modifier = Modifier.background(colorScheme.surface)
                     ) {
-                        DropdownMenuItem(text = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.AutoAwesome,
-                                    contentDescription = null,
-                                    tint = colorScheme.primary,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    text = stringResource(R.string.rephrase_text),
-                                    fontFamily = ManropeFontFamily,
-                                    fontSize = 14.sp,
-                                    color = colorScheme.onSurface
-                                )
-                            }
-                        }, onClick = {
-                            aiMenuExpanded = false
-                            val currentText =
-                                contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
-                                    .joinToString("\n") { it.text }.trim()
-                            if (currentText.isBlank()) {
-                                scope.launch { snackbarHostState.showSnackbar("لا يوجد نص لإعادة صياغته") }
-                                return@DropdownMenuItem
-                            }
-                            scope.launch {
-                                isAiLoading = true
-                                try {
-                                    val result = GroqService.rephraseText(currentText)
-                                    val firstTextIndex =
-                                        contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
-                                    if (firstTextIndex != -1) {
-                                        contentBlocks[firstTextIndex] =
-                                            ContentBlock.TextBlock(text = result)
-                                        snackbarHostState.showSnackbar("تمت إعادة الصياغة بنجاح")
+                        // خيار إعادة الصياغة
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = colorScheme.primary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.rephrase_text),
+                                        fontFamily = ManropeFontFamily,
+                                        fontSize = 14.sp,
+                                        color = colorScheme.onSurface
+                                    )
+                                }
+                            },
+                            onClick = {
+                                aiMenuExpanded = false
+                                val currentText = contentBlocks
+                                    .filterIsInstance<ContentBlock.TextBlock>()
+                                    .joinToString("\n") { it.text }
+                                    .trim()
+
+                                if (currentText.isBlank()) {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("لا يوجد نص لإعادة صياغته")
                                     }
-                                } catch (e: Exception) {
-                                    snackbarHostState.showSnackbar("فشل في إعادة الصياغة")
-                                } finally {
-                                    isAiLoading = false
+                                    return@DropdownMenuItem
+                                }
+
+                                // تعيين حالة التحميل مباشرة
+                                isAiLoading = true
+
+                                // استخدام coroutine منفصل مع التأكد من إعادة التعيين
+                                scope.launch {
+                                    try {
+                                        val result = withContext(Dispatchers.IO) {
+                                            GroqService.rephraseText(currentText)
+                                        }
+
+                                        // تحديث النص على الـ Main Thread
+                                        withContext(Dispatchers.Main) {
+                                            val firstTextIndex =
+                                                contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
+                                            if (firstTextIndex != -1) {
+                                                contentBlocks[firstTextIndex] =
+                                                    ContentBlock.TextBlock(text = result)
+                                                snackbarHostState.showSnackbar("تمت إعادة الصياغة بنجاح")
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        withContext(Dispatchers.Main) {
+                                            snackbarHostState.showSnackbar("فشل في إعادة الصياغة: ${e.message}")
+                                        }
+                                        e.printStackTrace()
+                                    } finally {
+                                        // إعادة تعيين حالة التحميل مع تأخير بسيط
+                                        delay(100)
+                                        withContext(Dispatchers.Main) {
+                                            isAiLoading = false
+                                        }
+                                    }
                                 }
                             }
-                        })
+                        )
 
                         HorizontalDivider(color = colorScheme.outlineVariant)
 
-                        DropdownMenuItem(text = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Spellcheck,
-                                    contentDescription = null,
-                                    tint = colorScheme.primary,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    text = stringResource(R.string.diacritize_text),
-                                    fontFamily = ManropeFontFamily,
-                                    fontSize = 14.sp,
-                                    color = colorScheme.onSurface
-                                )
-                            }
-                        }, onClick = {
-                            aiMenuExpanded = false
-                            val currentText =
-                                contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
-                                    .joinToString("\n") { it.text }.trim()
-                            if (currentText.isBlank()) {
-                                scope.launch { snackbarHostState.showSnackbar("لا يوجد نص لتشكيله") }
-                                return@DropdownMenuItem
-                            }
-                            scope.launch {
-                                isAiLoading = true
-                                try {
-                                    val result = GroqService.diacritizeText(currentText)
-                                    val firstTextIndex =
-                                        contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
-                                    if (firstTextIndex != -1) {
-                                        contentBlocks[firstTextIndex] =
-                                            ContentBlock.TextBlock(text = result)
-                                        snackbarHostState.showSnackbar("تم تشكيل النص بنجاح")
+                        // خيار التشكيل
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Spellcheck,
+                                        contentDescription = null,
+                                        tint = colorScheme.primary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.diacritize_text),
+                                        fontFamily = ManropeFontFamily,
+                                        fontSize = 14.sp,
+                                        color = colorScheme.onSurface
+                                    )
+                                }
+                            },
+                            onClick = {
+                                aiMenuExpanded = false
+                                val currentText = contentBlocks
+                                    .filterIsInstance<ContentBlock.TextBlock>()
+                                    .joinToString("\n") { it.text }
+                                    .trim()
+
+                                if (currentText.isBlank()) {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("لا يوجد نص لتشكيله")
                                     }
-                                } catch (e: Exception) {
-                                    snackbarHostState.showSnackbar("فشل في تشكيل النص")
-                                } finally {
-                                    isAiLoading = false
+                                    return@DropdownMenuItem
+                                }
+
+                                // تعيين حالة التحميل مباشرة
+                                isAiLoading = true
+
+                                // استخدام coroutine منفصل مع التأكد من إعادة التعيين
+                                scope.launch {
+                                    try {
+                                        val result = withContext(Dispatchers.IO) {
+                                            GroqService.diacritizeText(currentText)
+                                        }
+
+                                        // تحديث النص على الـ Main Thread
+                                        withContext(Dispatchers.Main) {
+                                            val firstTextIndex =
+                                                contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
+                                            if (firstTextIndex != -1) {
+                                                contentBlocks[firstTextIndex] =
+                                                    ContentBlock.TextBlock(text = result)
+                                                snackbarHostState.showSnackbar("تم تشكيل النص بنجاح")
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        withContext(Dispatchers.Main) {
+                                            snackbarHostState.showSnackbar("فشل في تشكيل النص: ${e.message}")
+                                        }
+                                        e.printStackTrace()
+                                    } finally {
+                                        // إعادة تعيين حالة التحميل مع تأخير بسيط
+                                        delay(100)
+                                        withContext(Dispatchers.Main) {
+                                            isAiLoading = false
+                                        }
+                                    }
                                 }
                             }
-                        })
+                        )
                     }
                 }
 

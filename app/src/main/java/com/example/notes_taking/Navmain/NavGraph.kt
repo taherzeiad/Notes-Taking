@@ -52,7 +52,7 @@ fun NavGraph(
     val taskDao = remember { NoteDatabase.getDatabase(context).taskDao() }
     val repository = remember { NoteRepositoryImpl(dao, taskDao) }
 
-    val factory = remember { GenericViewModelFactory(repository) }
+    val factory = remember { GenericViewModelFactory(repository,context) }
 
 
     val prefs = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
