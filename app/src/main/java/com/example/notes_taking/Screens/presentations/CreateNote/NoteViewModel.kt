@@ -1,8 +1,10 @@
 package com.example.notes_taking.Screens.presentations.Editor
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.notes_taking.API.GroqService
@@ -15,7 +17,69 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
-class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
+class NoteViewModel(
+    private val repository: NoteRepository, private val context: Context
+) : ViewModel() {
+
+    private val privacyPrefs: SharedPreferences by lazy {
+        context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    }
+
+    // ======= isAiLoading - المتغير الرئيسي للتحميل =======
+    private val _isAiLoading = mutableStateOf(false)
+    val isAiLoading: androidx.compose.runtime.State<Boolean> = _isAiLoading
+
+    // ======= دوال AI للـ Editor =======
+    fun rephraseText(
+        text: String, onResult: (String) -> Unit, onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isAiLoading.value = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    GroqService.rephraseText(text)
+                }
+                onResult(result)
+            } catch (e: Exception) {
+                Log.e("NoteViewModel", "rephraseText failed: ${e.message}")
+                onError(e.message ?: "خطأ غير معروف")
+            } finally {
+                _isAiLoading.value = false
+            }
+        }
+    }
+
+    fun diacritizeText(
+        text: String, onResult: (String) -> Unit, onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isAiLoading.value = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    GroqService.diacritizeText(text)
+                }
+                onResult(result)
+            } catch (e: Exception) {
+                Log.e("NoteViewModel", "diacritizeText failed: ${e.message}")
+                onError(e.message ?: "خطأ غير معروف")
+            } finally {
+                _isAiLoading.value = false
+            }
+        }
+    }
+
+    // ======= دوال مساعدة لقراءة إعدادات الخصوصية =======
+    fun isAiProcessingEnabled(): Boolean {
+        return privacyPrefs.getBoolean("privacy_ai_processing", true)
+    }
+
+    fun isVoiceStorageEnabled(): Boolean {
+        return privacyPrefs.getBoolean("privacy_voice_storage", true)
+    }
+
+    fun isAnalyticsEnabled(): Boolean {
+        return privacyPrefs.getBoolean("privacy_analytics", false)
+    }
 
     suspend fun getNoteById(id: Int): Note? {
         return if (id > 0) {
@@ -48,9 +112,8 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                 }
                 val finalContent = content.trim()
 
-                // 1. تصنيف الملاحظة بالـ AI
                 var autoCategory = "General"
-                if (finalContent.isNotBlank()) {
+                if (isAiProcessingEnabled() && finalContent.isNotBlank()) {
                     try {
                         val classification = GroqService.classifyNoteContent(finalContent)
                         autoCategory = when {
@@ -61,46 +124,42 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                             classification.contains("Work", ignoreCase = true) -> "Work"
                             else -> "General"
                         }
+                        if (isAnalyticsEnabled()) {
+                            logAnalytics(
+                                "note_classified", mapOf(
+                                    "category" to autoCategory,
+                                    "content_length" to finalContent.length.toString()
+                                )
+                            )
+                        }
                     } catch (e: Exception) {
                         Log.e("NoteViewModel", "AI classification failed: ${e.message}")
                     }
                 }
 
-                // 2. حفظ الملاحظة
+                val finalAudioPaths = if (isVoiceStorageEnabled()) audioPaths else null
+
                 val noteToSave = Note(
                     id = if (id > 0) id else 0,
                     title = finalTitle,
                     content = finalContent,
-                    audioPaths = audioPaths,
+                    audioPaths = finalAudioPaths,
                     category = autoCategory,
                     imageUri = imageUri,
                     date = date
                 )
 
-                if (id > 0) {
-                    repository.updateNote(noteToSave)
-                } else {
-                    repository.insertNote(noteToSave)
-                }
+                if (id > 0) repository.updateNote(noteToSave)
+                else repository.insertNote(noteToSave)
 
-                // 3. جلب ID الملاحظة المحفوظة
-                val savedNoteId = if (id > 0) id else {
-                    repository.getLastNote()?.id ?: 0
-                }
+                val savedNoteId = if (id > 0) id else repository.getLastNote()?.id ?: 0
 
-                // 4. حذف المهام القديمة لهذه الملاحظة
-                if (savedNoteId > 0) {
-                    repository.deleteTasksByNoteId(savedNoteId)
-                }
+                if (savedNoteId > 0) repository.deleteTasksByNoteId(savedNoteId)
 
-                // 5. بناء قائمة المهام
                 val allTaskTitles = mutableListOf<String>()
-
-                // أولاً: المهام اليدوية من BulletBlocks
                 allTaskTitles.addAll(manualTasks.filter { it.isNotBlank() })
 
-                // ثانياً: إذا كانت الملاحظة من نوع Task أو تحتوي على مهام في النص
-                if (finalContent.isNotBlank()) {
+                if (isAiProcessingEnabled() && finalContent.isNotBlank()) {
                     val textOnlyContent =
                         finalContent.lines().filter { !it.startsWith("•") }.joinToString("\n")
                             .trim()
@@ -112,12 +171,19 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                             aiTasks.forEach { aiTask ->
                                 val isDuplicate = allTaskTitles.any { existing ->
                                     existing.contains(aiTask, ignoreCase = true) || aiTask.contains(
-                                        existing, ignoreCase = true
+                                        existing,
+                                        ignoreCase = true
                                     )
                                 }
-                                if (!isDuplicate && aiTask.isNotBlank()) {
-                                    allTaskTitles.add(aiTask)
-                                }
+                                if (!isDuplicate && aiTask.isNotBlank()) allTaskTitles.add(aiTask)
+                            }
+                            if (isAnalyticsEnabled()) {
+                                logAnalytics(
+                                    "tasks_extracted", mapOf(
+                                        "ai_tasks_count" to aiTasks.size.toString(),
+                                        "manual_tasks_count" to manualTasks.size.toString()
+                                    )
+                                )
                             }
                         } catch (e: Exception) {
                             Log.e("NoteViewModel", "AI task extraction failed: ${e.message}")
@@ -125,7 +191,6 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                     }
                 }
 
-                // 6. حفظ المهام في Room
                 if (allTaskTitles.isNotEmpty() && savedNoteId > 0) {
                     val taskEntities = allTaskTitles.mapIndexed { index, taskTitle ->
                         TaskEntity(
@@ -143,7 +208,6 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
 
             } catch (e: Exception) {
                 Log.e("NoteViewModel", "Error during save: ${e.message}")
-                // Fallback
                 try {
                     val fallbackNote = Note(
                         id = if (id > 0) id else 0,
@@ -151,12 +215,12 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                         content = content.trim(),
                         category = "General",
                         imageUri = imageUri,
+                        audioPaths = if (isVoiceStorageEnabled()) audioPaths else null,
                         date = date
                     )
                     if (id > 0) repository.updateNote(fallbackNote)
                     else repository.insertNote(fallbackNote)
 
-                    // حفظ المهام اليدوية على الأقل
                     if (manualTasks.isNotEmpty()) {
                         val savedNoteId = if (id > 0) id else repository.getLastNote()?.id ?: 0
                         if (savedNoteId > 0) {
@@ -172,7 +236,6 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                                 })
                         }
                     }
-
                     withContext(Dispatchers.Main) { onComplete() }
                 } catch (fallbackError: Exception) {
                     withContext(Dispatchers.Main) {
@@ -181,6 +244,13 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
                 }
             }
         }
+    }
+
+    private fun logAnalytics(event: String, params: Map<String, String>) {
+        Log.d("NoteAnalytics", "Event: $event, Params: $params")
+        val analyticsLog = privacyPrefs.getString("analytics_log", "") ?: ""
+        val newLog = "$analyticsLog\n${System.currentTimeMillis()}: $event - $params"
+        privacyPrefs.edit().putString("analytics_log", newLog).apply()
     }
 
     fun saveImageToInternalStorage(context: Context, uri: Uri): String? {

@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.outlined.AutoAwesome
@@ -105,7 +104,7 @@ fun HomeScreen(
                             0, true
                         )
                     )
-                }, onAddDocument = {
+                }, onAddImage = {
                     navController.navigate(
                         Route.NoteEditor.createRoute(
                             0, false, true
@@ -140,7 +139,7 @@ fun WelcomeSection() {
 // ======= QuickActionsSection =======
 @Composable
 fun QuickActionsSection(
-    onAddNote: () -> Unit, onVoiceRecord: () -> Unit, onAddDocument: () -> Unit
+    onAddNote: () -> Unit, onVoiceRecord: () -> Unit, onAddImage: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -158,16 +157,15 @@ fun QuickActionsSection(
             )
         }
         QuickActionButton(
-            label = stringResource(R.string.add_document),
+            label = stringResource(R.string.add_image),
             icon = Icons.Outlined.Image,
             modifier = Modifier.fillMaxWidth(),
-            onClick = onAddDocument
+            onClick = onAddImage
         )
     }
 }
 
 // ======= المكونات المنفصلة (Components) =======
-// ← أضف remember للـ lambdas لمنع recomposition
 @Composable
 fun LastEditedNoteSection(
     note: Note?, onEditClick: (Int) -> Unit, onAddNote: () -> Unit
@@ -184,7 +182,6 @@ fun LastEditedNoteSection(
         if (note == null) {
             EmptyNoteCard(onAddNote = onAddNote)
         } else {
-            // ← استخدم remember للـ onClick
             val onCardClick = remember(note.id) { { onEditClick(note.id) } }
 
             Card(
@@ -290,6 +287,7 @@ fun EmptyNoteCard(onAddNote: () -> Unit) {
         }
     }
 }
+
 @Composable
 fun HomeTopBarSection() {
     AppTopBar(title = stringResource(R.string.app_name_styled))

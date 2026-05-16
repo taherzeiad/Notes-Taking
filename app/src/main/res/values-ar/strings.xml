@@ -63,7 +63,7 @@
     <string name="last_edited_note">آخر ملاحظة تم تعديلها</string>
     <string name="continue_writing">أكمل الكتابة</string>
     <string name="edited_time_ago">تم التعديل منذ %1$s دقيقة</string>
-    <string name="add_document">إضافة وثيقة</string>
+    <string name="add_image">إضافة صورة</string>
     <string name="task_book_review">مراجعة مسودة كتاب \"عصر الذكاء\"</string>
     <string name="location_library">المكتبة المركزية</string>
     <string name="tag_philosophy">فلسفة</string>
