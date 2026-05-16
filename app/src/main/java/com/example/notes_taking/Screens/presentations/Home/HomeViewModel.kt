@@ -11,23 +11,16 @@ import kotlinx.coroutines.flow.stateIn
 
 class HomeViewModel(private val repository: NoteRepository) : ViewModel() {
 
-    private val dbNotes = repository.getAllNotes().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
-
-    val lastEditedNote: StateFlow<Note?> = dbNotes.map { notes ->
-        notes.maxByOrNull { it.id }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = null
-    )
-
-    val isEmpty: StateFlow<Boolean> = dbNotes.map { it.isEmpty() }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = true
-    )
+    val uiState: StateFlow<HomeUiState> = repository.getAllNotes()
+        .map { notes ->
+            HomeUiState(
+                lastEditedNote = notes.maxByOrNull { it.id },
+                isEmpty = notes.isEmpty(),
+                isLoading = false
+            )
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = HomeUiState()
+        )
 }

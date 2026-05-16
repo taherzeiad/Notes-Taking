@@ -34,6 +34,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -75,44 +76,60 @@ fun HomeScreen(
     onEditNote: (Int) -> Unit,
     onNavigateToTasks: () -> Unit
 ) {
-    val lastNote by viewModel.lastEditedNote.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = { BottomNavBar(navController = navController, selectedTab = 3) }) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            item(key = "topbar") { HomeTopBarSection() }
-            item(key = "welcome") { WelcomeSection() }
-            item(key = "ai_card") { AICardSection(navController = navController) }
-            item(key = "last_note") {
-                LastEditedNoteSection(
-                    note = lastNote,
-                    onEditClick = { id -> navController.navigate(Route.NoteEditor.createRoute(id)) },
-                    onAddNote = onAddNote
-                )
+        bottomBar = { BottomNavBar(navController = navController, selectedTab = 3) }
+    ) { padding ->
+
+        if (uiState.isLoading) {
+            // مؤشر تحميل نظيف في حال كانت البيانات تُجلب لأول مرة
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
-            item(key = "quick_actions") {
-                QuickActionsSection(onAddNote = onAddNote, onVoiceRecord = {
-                    navController.navigate(
-                        Route.NoteEditor.createRoute(
-                            0, true
-                        )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                item(key = "topbar") { HomeTopBarSection() }
+                item(key = "welcome") { WelcomeSection() }
+                item(key = "ai_card") { AICardSection(navController = navController) }
+                item(key = "last_note") {
+                    LastEditedNoteSection(
+                        note = uiState.lastEditedNote,
+                        onEditClick = { id -> navController.navigate(Route.NoteEditor.createRoute(id)) },
+                        onAddNote = onAddNote
                     )
-                }, onAddImage = {
-                    navController.navigate(
-                        Route.NoteEditor.createRoute(
-                            0, false, true
-                        )
+                }
+                item(key = "quick_actions") {
+                    QuickActionsSection(
+                        onAddNote = onAddNote,
+                        onVoiceRecord = {
+                            navController.navigate(
+                                Route.NoteEditor.createRoute(
+                                    0,
+                                    true
+                                )
+                            )
+                        },
+                        onAddImage = {
+                            navController.navigate(
+                                Route.NoteEditor.createRoute(
+                                    0,
+                                    false,
+                                    true
+                                )
+                            )
+                        }
                     )
-                })
+                }
+                item(key = "spacer") { Spacer(modifier = Modifier.height(10.dp)) }
             }
-            item(key = "spacer") { Spacer(modifier = Modifier.height(10.dp)) }
         }
     }
 }
@@ -224,7 +241,7 @@ fun LastEditedNoteSection(
                             overflow = TextOverflow.Ellipsis,
                             lineHeight = 22.sp
                         )
-                        NoteCardFooter(onContinueClick = onCardClick)
+                        NoteCardFooter(note = note, onContinueClick = onCardClick)
                     }
                 }
             }
@@ -316,7 +333,7 @@ fun NoteTagsRow(tags: List<String>) {
 }
 
 @Composable
-fun NoteCardFooter(onContinueClick: () -> Unit) {
+fun NoteCardFooter(note: Note, onContinueClick: () -> Unit) {
     Spacer(modifier = Modifier.height(12.dp))
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     Spacer(modifier = Modifier.height(12.dp))
@@ -344,8 +361,9 @@ fun NoteCardFooter(onContinueClick: () -> Unit) {
                 modifier = Modifier.size(16.dp)
             )
         }
+        val formattedTime = remember(note) { "15" }
         Text(
-            stringResource(R.string.edited_time_ago, "15"),
+            stringResource(R.string.edited_time_ago, formattedTime),
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontFamily = ManropeFontFamily
