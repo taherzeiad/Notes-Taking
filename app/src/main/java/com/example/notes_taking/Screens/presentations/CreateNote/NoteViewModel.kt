@@ -1,10 +1,10 @@
 package com.example.notes_taking.Screens.presentations.Editor
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.notes_taking.API.GroqService
@@ -21,9 +21,55 @@ class NoteViewModel(
     private val repository: NoteRepository, private val context: Context
 ) : ViewModel() {
 
-    // ← إضافة SharedPreferences للوصول لإعدادات الخصوصية
     private val privacyPrefs: SharedPreferences by lazy {
         context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    }
+
+    // ======= isAiLoading - المتغير الرئيسي للتحميل =======
+    private val _isAiLoading = mutableStateOf(false)
+    val isAiLoading: androidx.compose.runtime.State<Boolean> = _isAiLoading
+
+    // ======= دوال AI للـ Editor =======
+    fun rephraseText(
+        text: String,
+        onResult: (String) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isAiLoading.value = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    GroqService.rephraseText(text)
+                }
+                onResult(result)
+            } catch (e: Exception) {
+                Log.e("NoteViewModel", "rephraseText failed: ${e.message}")
+                onError(e.message ?: "خطأ غير معروف")
+            } finally {
+                _isAiLoading.value = false
+            }
+        }
+    }
+
+    fun diacritizeText(
+        text: String,
+        onResult: (String) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isAiLoading.value = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    GroqService.diacritizeText(text)
+                }
+                onResult(result)
+            } catch (e: Exception) {
+                Log.e("NoteViewModel", "diacritizeText failed: ${e.message}")
+                onError(e.message ?: "خطأ غير معروف")
+            } finally {
+                _isAiLoading.value = false
+            }
+        }
     }
 
     // ======= دوال مساعدة لقراءة إعدادات الخصوصية =======
@@ -70,7 +116,6 @@ class NoteViewModel(
                 }
                 val finalContent = content.trim()
 
-                // 1. تصنيف الملاحظة بالـ AI - مع احترام إعدادات الخصوصية
                 var autoCategory = "General"
                 if (isAiProcessingEnabled() && finalContent.isNotBlank()) {
                     try {
@@ -83,8 +128,6 @@ class NoteViewModel(
                             classification.contains("Work", ignoreCase = true) -> "Work"
                             else -> "General"
                         }
-
-                        // ← Analytics (إذا مفعل)
                         if (isAnalyticsEnabled()) {
                             logAnalytics(
                                 "note_classified", mapOf(
@@ -98,7 +141,6 @@ class NoteViewModel(
                     }
                 }
 
-                // 2. حفظ الملاحظة - مع احترام إعدادات الصوت
                 val finalAudioPaths = if (isVoiceStorageEnabled()) audioPaths else null
 
                 val noteToSave = Note(
@@ -111,50 +153,31 @@ class NoteViewModel(
                     date = date
                 )
 
-                if (id > 0) {
-                    repository.updateNote(noteToSave)
-                } else {
-                    repository.insertNote(noteToSave)
-                }
+                if (id > 0) repository.updateNote(noteToSave)
+                else repository.insertNote(noteToSave)
 
-                // 3. جلب ID الملاحظة المحفوظة
-                val savedNoteId = if (id > 0) id else {
-                    repository.getLastNote()?.id ?: 0
-                }
+                val savedNoteId = if (id > 0) id else repository.getLastNote()?.id ?: 0
 
-                // 4. حذف المهام القديمة لهذه الملاحظة
-                if (savedNoteId > 0) {
-                    repository.deleteTasksByNoteId(savedNoteId)
-                }
+                if (savedNoteId > 0) repository.deleteTasksByNoteId(savedNoteId)
 
-                // 5. بناء قائمة المهام - مع احترام إعدادات AI
                 val allTaskTitles = mutableListOf<String>()
-
-                // أولاً: المهام اليدوية من BulletBlocks
                 allTaskTitles.addAll(manualTasks.filter { it.isNotBlank() })
 
-                // ثانياً: استخراج المهام بالـ AI (فقط إذا مفعل)
                 if (isAiProcessingEnabled() && finalContent.isNotBlank()) {
-                    val textOnlyContent =
-                        finalContent.lines().filter { !it.startsWith("•") }.joinToString("\n")
-                            .trim()
+                    val textOnlyContent = finalContent.lines()
+                        .filter { !it.startsWith("•") }
+                        .joinToString("\n").trim()
 
                     if (textOnlyContent.isNotBlank()) {
                         try {
-                            val aiTasks =
-                                GroqService.extractTasksFromNote(finalTitle, textOnlyContent)
+                            val aiTasks = GroqService.extractTasksFromNote(finalTitle, textOnlyContent)
                             aiTasks.forEach { aiTask ->
                                 val isDuplicate = allTaskTitles.any { existing ->
-                                    existing.contains(aiTask, ignoreCase = true) || aiTask.contains(
-                                        existing, ignoreCase = true
-                                    )
+                                    existing.contains(aiTask, ignoreCase = true) ||
+                                            aiTask.contains(existing, ignoreCase = true)
                                 }
-                                if (!isDuplicate && aiTask.isNotBlank()) {
-                                    allTaskTitles.add(aiTask)
-                                }
+                                if (!isDuplicate && aiTask.isNotBlank()) allTaskTitles.add(aiTask)
                             }
-
-                            // ← Analytics
                             if (isAnalyticsEnabled()) {
                                 logAnalytics(
                                     "tasks_extracted", mapOf(
@@ -169,7 +192,6 @@ class NoteViewModel(
                     }
                 }
 
-                // 6. حفظ المهام في Room
                 if (allTaskTitles.isNotEmpty() && savedNoteId > 0) {
                     val taskEntities = allTaskTitles.mapIndexed { index, taskTitle ->
                         TaskEntity(
@@ -187,8 +209,6 @@ class NoteViewModel(
 
             } catch (e: Exception) {
                 Log.e("NoteViewModel", "Error during save: ${e.message}")
-
-                // Fallback - حفظ بدون AI
                 try {
                     val fallbackNote = Note(
                         id = if (id > 0) id else 0,
@@ -202,7 +222,6 @@ class NoteViewModel(
                     if (id > 0) repository.updateNote(fallbackNote)
                     else repository.insertNote(fallbackNote)
 
-                    // حفظ المهام اليدوية على الأقل
                     if (manualTasks.isNotEmpty()) {
                         val savedNoteId = if (id > 0) id else repository.getLastNote()?.id ?: 0
                         if (savedNoteId > 0) {
@@ -218,7 +237,6 @@ class NoteViewModel(
                                 })
                         }
                     }
-
                     withContext(Dispatchers.Main) { onComplete() }
                 } catch (fallbackError: Exception) {
                     withContext(Dispatchers.Main) {
@@ -229,12 +247,8 @@ class NoteViewModel(
         }
     }
 
-    // ======= وظيفة Analytics (بسيطة) =======
     private fun logAnalytics(event: String, params: Map<String, String>) {
-        // يمكن استبدالها بـ Firebase Analytics أو أي خدمة أخرى
         Log.d("NoteAnalytics", "Event: $event, Params: $params")
-
-        // حفظ في SharedPreferences للمراقبة المحلية
         val analyticsLog = privacyPrefs.getString("analytics_log", "") ?: ""
         val newLog = "$analyticsLog\n${System.currentTimeMillis()}: $event - $params"
         privacyPrefs.edit().putString("analytics_log", newLog).apply()
