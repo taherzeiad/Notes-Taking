@@ -9,11 +9,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
@@ -40,115 +37,108 @@ import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
 
+data class CategoryItem(val key: String, val labelRes: Int)
+
 @Composable
 fun NotesScreen(
     viewModel: NotesViewModel, navController: NavHostController
 ) {
-    val notes by viewModel.notesState.collectAsStateWithLifecycle()
+    // جلب الـ uiState الموحد الذي يحتوي على (notes و isLoading)
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     var isSearchActive by remember { mutableStateOf(false) }
 
-    val categoryMapping = remember {
-        mapOf(
-            "All" to "All",
-            "Philosophy" to "Philosophy",
-            "Literature" to "Literature",
-            "Self-Development" to "Self-Development"
-        )
-    }
-
-    val allLabel = stringResource(R.string.note_cat_all)
-    val philosophyLabel = stringResource(R.string.note_cat_philosophy)
-    val literatureLabel = stringResource(R.string.note_cat_literature)
-    val selfDevLabel = stringResource(R.string.note_cat_self_dev)
-
-    val categoryLabels = remember(allLabel, philosophyLabel, literatureLabel, selfDevLabel) {
-        listOf(allLabel, philosophyLabel, literatureLabel, selfDevLabel)
-    }
-
-    val labelToKey = remember(allLabel, philosophyLabel, literatureLabel, selfDevLabel) {
-        mapOf(
-            allLabel to "All",
-            philosophyLabel to "Philosophy",
-            literatureLabel to "Literature",
-            selfDevLabel to "Self-Development"
+    val categories = remember {
+        listOf(
+            CategoryItem("All", R.string.note_cat_all),
+            CategoryItem("Philosophy", R.string.note_cat_philosophy),
+            CategoryItem("Literature", R.string.note_cat_literature),
+            CategoryItem("Self-Development", R.string.note_cat_self_dev)
         )
     }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = { BottomNavBar(navController = navController, selectedTab = 2) }) { padding ->
+        bottomBar = { BottomNavBar(navController = navController, selectedTab = 2) }
+    ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // ======= Top Bar =======
-                item(key = "topbar") {
-                    TopBarSection(
-                        isSearchActive = isSearchActive,
-                        searchQuery = searchQuery,
-                        onSearchClick = { isSearchActive = true },
-                        onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
-                        onSearchClose = {
-                            isSearchActive = false
-                            viewModel.onSearchQueryChange("")
-                        })
-                }
-
-                // ======= Page Title =======
-                if (!isSearchActive) {
-                    item(key = "title") { PageTitleSection() }
-                }
-
-                // ======= Category Tabs =======
-                item(key = "categories") {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(
-                            items = categoryLabels, key = { it }) { label ->
-                            val isSelected = selectedCategory == labelToKey[label]
-                            CategoryTab(
-                                label = label, isSelected = isSelected, onClick = {
-                                    viewModel.onCategoryChange(labelToKey[label] ?: "All")
-                                })
-                        }
-                    }
-                }
-
-                // ======= Empty State =======
-                if (notes.isEmpty()) {
-                    item(key = "empty") {
-                        EmptyNotesState(
-                            message = if (searchQuery.isNotBlank()) stringResource(R.string.no_search_results)
-                            else stringResource(R.string.empty_notes_subtitle)
-                        )
-                    }
-                } else {
-                    items(
-                        items = notes, key = { note -> note.id }) { note ->
-                        RoomNoteCard(
-                            note = note, onClick = remember(note.id) {
-                                { navController.navigate(Route.NoteEditor.createRoute(note.id)) }
+            // 1. عرض مؤشر التحميل إذا كانت قاعدة البيانات تجلب الملاحظات لأول مرة
+            if (uiState.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            } else {
+                // 2. عرض القائمة والبيانات بعد انتهاء التحميل
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // ======= Top Bar =======
+                    item(key = "topbar") {
+                        TopBarSection(
+                            isSearchActive = isSearchActive,
+                            searchQuery = searchQuery,
+                            onSearchClick = { isSearchActive = true },
+                            onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
+                            onSearchClose = {
+                                isSearchActive = false
+                                viewModel.onSearchQueryChange("")
                             })
                     }
-                }
 
-                item(key = "bottom_spacer") { Spacer(modifier = Modifier.height(80.dp)) }
+                    // ======= Page Title =======
+                    if (!isSearchActive) {
+                        item(key = "title") { PageTitleSection() }
+                    }
+
+                    // ======= Category Tabs =======
+                    item(key = "categories") {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(items = categories, key = { it.key }) { category ->
+                                CategoryTab(
+                                    label = stringResource(id = category.labelRes),
+                                    isSelected = selectedCategory == category.key,
+                                    onClick = { viewModel.onCategoryChange(category.key) })
+                            }
+                        }
+                    }
+
+                    // ======= Notes List / Empty State =======
+                    // تم إصلاح الخطأ البرمي هنا بالاعتماد على uiState.notes المخزنة داخل الـ State الموحد
+                    if (uiState.notes.isEmpty()) {
+                        item(key = "empty") {
+                            EmptyNotesState(
+                                message = if (searchQuery.isNotBlank()) stringResource(R.string.no_search_results)
+                                else stringResource(R.string.empty_notes_subtitle)
+                            )
+                        }
+                    } else {
+                        items(items = uiState.notes, key = { note -> note.id }) { note ->
+                            RoomNoteCard(
+                                note = note,
+                                onClick = remember(note.id) {
+                                    { navController.navigate(Route.NoteEditor.createRoute(note.id)) }
+                                }
+                            )
+                        }
+                    }
+
+                    item(key = "bottom_spacer") { Spacer(modifier = Modifier.height(80.dp)) }
+                }
             }
 
-            // ← FAB يختفي أثناء البحث
+            // ======= FAB =======
             if (!isSearchActive) {
                 AddNoteFAB(
-                    onAddClick = remember {
-                        { navController.navigate(Route.NoteEditor.createRoute(0)) }
-                    },
+                    onAddClick = remember { { navController.navigate(Route.NoteEditor.createRoute(0)) } },
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .padding(start = 24.dp, bottom = 24.dp)
@@ -158,7 +148,6 @@ fun NotesScreen(
     }
 }
 
-// ======= Room Note Card =======
 @Composable
 fun RoomNoteCard(note: Note, onClick: () -> Unit) {
     Card(
@@ -166,13 +155,9 @@ fun RoomNoteCard(note: Note, onClick: () -> Unit) {
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(0.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -211,8 +196,7 @@ fun RoomNoteCard(note: Note, onClick: () -> Unit) {
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = ManropeFontFamily,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.fillMaxWidth()
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             if (note.content.isNotBlank()) {
@@ -224,8 +208,7 @@ fun RoomNoteCard(note: Note, onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     lineHeight = 22.sp,
                     maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.fillMaxWidth()
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
@@ -267,7 +250,6 @@ fun RoomNoteCard(note: Note, onClick: () -> Unit) {
     }
 }
 
-// ======= Top Bar =======
 @Composable
 fun TopBarSection(
     isSearchActive: Boolean,
@@ -289,9 +271,7 @@ fun TopBarSection(
             },
             leadingIcon = {
                 Icon(
-                    imageVector = Icons.Outlined.Search,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onBackground
+                    Icons.Outlined.Search, null, tint = MaterialTheme.colorScheme.onBackground
                 )
             },
             trailingIcon = {
@@ -300,8 +280,8 @@ fun TopBarSection(
                     onSearchClose()
                 }) {
                     Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = null,
+                        Icons.Outlined.Close,
+                        null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -312,30 +292,23 @@ fun TopBarSection(
                 unfocusedBorderColor = Color.Transparent,
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
             ),
             singleLine = true
         )
     } else {
         AppTopBar(
-            title = stringResource(R.string.notes_screen_title_bar),
-            onSearchClick = onSearchClick
+            title = stringResource(R.string.notes_screen_title_bar), onSearchClick = onSearchClick
         )
     }
 }
 
-// ======= Category Tab =======
 @Composable
 fun CategoryTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(
-                if (isSelected) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.secondaryContainer
-            )
+            .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer)
             .clickable(onClick = onClick)
             .padding(horizontal = 18.dp, vertical = 10.dp)
     ) {
@@ -343,19 +316,14 @@ fun CategoryTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
             text = label,
             fontSize = 14.sp,
             fontFamily = ManropeFontFamily,
-            color = if (isSelected) MaterialTheme.colorScheme.onPrimary
-            else MaterialTheme.colorScheme.onSecondaryContainer,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            maxLines = 1
+            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
         )
     }
 }
 
-// ======= Empty State =======
 @Composable
-fun EmptyNotesState(
-    message: String = stringResource(R.string.empty_notes_subtitle)
-) {
+fun EmptyNotesState(message: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -394,7 +362,6 @@ fun EmptyNotesState(
     }
 }
 
-// ======= Page Title =======
 @Composable
 fun PageTitleSection() {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -403,21 +370,18 @@ fun PageTitleSection() {
             fontSize = 36.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = MansalvaFontFamily,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.fillMaxWidth()
+            color = MaterialTheme.colorScheme.onBackground
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = stringResource(R.string.notes_subtitle),
             fontSize = 14.sp,
             fontFamily = ManropeFontFamily,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.fillMaxWidth()
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
 
-// ======= FAB =======
 @Composable
 fun AddNoteFAB(onAddClick: () -> Unit, modifier: Modifier = Modifier) {
     FloatingActionButton(
@@ -426,10 +390,6 @@ fun AddNoteFAB(onAddClick: () -> Unit, modifier: Modifier = Modifier) {
         shape = CircleShape,
         modifier = modifier
     ) {
-        Icon(
-            imageVector = Icons.Default.Add,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onPrimary
-        )
+        Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.onPrimary)
     }
 }
