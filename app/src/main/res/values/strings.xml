@@ -62,7 +62,7 @@
     <string name="last_edited_note">Last edited note</string>
     <string name="continue_writing">Continue writing</string>
     <string name="edited_time_ago">Edited %1$s mins ago</string>
-    <string name="add_document">Add Document</string>
+    <string name="add_image">Add Image</string>
     <string name="task_book_review">Review \"Age of Intelligence\" draft</string>
     <string name="location_library">Central Library</string>
     <string name="tag_philosophy">Philosophy</string>

@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.outlined.AutoAwesome
@@ -158,7 +157,7 @@ fun QuickActionsSection(
             )
         }
         QuickActionButton(
-            label = stringResource(R.string.add_document),
+            label = stringResource(R.string.add_image),
             icon = Icons.Outlined.Image,
             modifier = Modifier.fillMaxWidth(),
             onClick = onAddDocument
@@ -290,6 +289,7 @@ fun EmptyNoteCard(onAddNote: () -> Unit) {
         }
     }
 }
+
 @Composable
 fun HomeTopBarSection() {
     AppTopBar(title = stringResource(R.string.app_name_styled))
@@ -418,33 +418,33 @@ fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
         tabs.forEachIndexed { index, (_, icon, route) ->
             NavigationBarItem(
                 selected = selectedTab == index, onClick = {
-                    if (selectedTab != index) {
-                        navController.navigate(route) {
-                            popUpTo(Route.Home.route) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                if (selectedTab != index) {
+                    navController.navigate(route) {
+                        popUpTo(Route.Home.route) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
                     }
-                }, icon = {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = labels[index],
-                        modifier = Modifier.size(24.dp)
-                    )
-                }, label = {
-                    Text(
-                        text = labels[index],
-                        fontSize = 10.sp,
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
-                    )
-                }, colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                }
+            }, icon = {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = labels[index],
+                    modifier = Modifier.size(24.dp)
                 )
+            }, label = {
+                Text(
+                    text = labels[index],
+                    fontSize = 10.sp,
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                )
+            }, colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            )
             )
         }
     }

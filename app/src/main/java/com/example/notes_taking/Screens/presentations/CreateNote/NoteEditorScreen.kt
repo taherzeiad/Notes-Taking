@@ -327,7 +327,13 @@ fun NoteEditorScreen(
                     else contentBlocks.add(ContentBlock.TextBlock())
                     it.imageUri?.let { path ->
                         val imageFile = File(path)
-                        if (imageFile.exists()) contentBlocks.add(ContentBlock.ImageBlock(uri = Uri.fromFile(imageFile)))
+                        if (imageFile.exists()) contentBlocks.add(
+                            ContentBlock.ImageBlock(
+                                uri = Uri.fromFile(
+                                    imageFile
+                                )
+                            )
+                        )
                     }
                     it.audioPaths?.split(",")?.forEach { audioPath ->
                         if (audioPath.isNotBlank()) {
@@ -420,7 +426,8 @@ fun NoteEditorScreen(
                             return@Button
                         }
                         isSavingInternally = true
-                        val firstImageBlock = contentBlocks.filterIsInstance<ContentBlock.ImageBlock>().firstOrNull()
+                        val firstImageBlock =
+                            contentBlocks.filterIsInstance<ContentBlock.ImageBlock>().firstOrNull()
                         val imagePathToSave = firstImageBlock?.uri?.path
                         val fullContent = contentBlocks.joinToString("\n") { block ->
                             when (block) {
@@ -431,10 +438,8 @@ fun NoteEditorScreen(
                         }
                         val manualTasks = contentBlocks.filterIsInstance<ContentBlock.BulletBlock>()
                             .map { it.text.trim() }.filter { it.isNotBlank() }
-                        val audioPaths = contentBlocks
-                            .filterIsInstance<ContentBlock.AudioBlock>()
-                            .map { it.filePath }
-                            .joinToString(",")
+                        val audioPaths = contentBlocks.filterIsInstance<ContentBlock.AudioBlock>()
+                            .map { it.filePath }.joinToString(",")
                         viewModel.saveNoteWithAI(
                             id = noteId,
                             title = title,
@@ -451,13 +456,11 @@ fun NoteEditorScreen(
                             onError = { error ->
                                 isSavingInternally = false
                                 scope.launch { snackbarHostState.showSnackbar(error) }
-                            }
-                        )
+                            })
                     },
                     shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colorScheme.primary,
-                        contentColor = colorScheme.onPrimary
+                        containerColor = colorScheme.primary, contentColor = colorScheme.onPrimary
                     ),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     modifier = Modifier.height(36.dp),
@@ -481,8 +484,7 @@ fun NoteEditorScreen(
         }
 
         HorizontalDivider(
-            color = colorScheme.outlineVariant,
-            modifier = Modifier.padding(horizontal = 40.dp)
+            color = colorScheme.outlineVariant, modifier = Modifier.padding(horizontal = 40.dp)
         )
 
         // ======= Content Area =======
@@ -523,8 +525,7 @@ fun NoteEditorScreen(
                         }
                         innerTextField()
                     }
-                }
-            )
+                })
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -620,8 +621,7 @@ fun NoteEditorScreen(
                                     }
                                     innerTextField()
                                 }
-                            }
-                        )
+                            })
                     }
 
                     is ContentBlock.BulletBlock -> {
@@ -707,7 +707,11 @@ fun NoteEditorScreen(
                     is ContentBlock.AudioBlock -> {
                         Spacer(modifier = Modifier.height(8.dp))
                         var isPlaying by remember { mutableStateOf(false) }
-                        var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+                        var mediaPlayer by remember {
+                            mutableStateOf<android.media.MediaPlayer?>(
+                                null
+                            )
+                        }
                         var currentPosition by remember { mutableStateOf(0) }
                         var duration by remember { mutableStateOf(0) }
                         val audioScope = rememberCoroutineScope()
@@ -744,7 +748,9 @@ fun NoteEditorScreen(
                                     }
                                     mediaPlayer = player
                                 } catch (e: Exception) {
-                                    Log.e("AudioBlock", "Error initializing MediaPlayer: ${e.message}")
+                                    Log.e(
+                                        "AudioBlock", "Error initializing MediaPlayer: ${e.message}"
+                                    )
                                     return
                                 }
                             }
@@ -782,10 +788,8 @@ fun NoteEditorScreen(
                                             .size(44.dp)
                                             .background(
                                                 if (isPlaying) colorScheme.tertiaryContainer
-                                                else colorScheme.primaryContainer,
-                                                CircleShape
-                                            ),
-                                        contentAlignment = Alignment.Center
+                                                else colorScheme.primaryContainer, CircleShape
+                                            ), contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
                                             imageVector = if (isPlaying) Icons.Outlined.Stop else Icons.Outlined.Mic,
@@ -859,8 +863,9 @@ fun NoteEditorScreen(
                                                 }
                                             },
                                             onValueChangeFinished = {
-                                                if (!isPlaying && mediaPlayer != null)
-                                                    mediaPlayer?.seekTo(currentPosition)
+                                                if (!isPlaying && mediaPlayer != null) mediaPlayer?.seekTo(
+                                                    currentPosition
+                                                )
                                             },
                                             valueRange = 0f..duration.toFloat(),
                                             modifier = Modifier.weight(1f),
@@ -929,9 +934,7 @@ fun NoteEditorScreen(
 
         // ======= Bottom Toolbar =======
         Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = colorScheme.surface,
-            shadowElevation = 8.dp
+            modifier = Modifier.fillMaxWidth(), color = colorScheme.surface, shadowElevation = 8.dp
         ) {
             Row(
                 modifier = Modifier
@@ -946,8 +949,7 @@ fun NoteEditorScreen(
                     if (isAiLoading) {
                         // عند التحميل: اعرض المؤشر فقط بدون IconButton
                         Box(
-                            modifier = Modifier.size(36.dp),
-                            contentAlignment = Alignment.Center
+                            modifier = Modifier.size(36.dp), contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(
                                 color = colorScheme.primary,
@@ -962,17 +964,14 @@ fun NoteEditorScreen(
                                 if (!viewModel.isAiProcessingEnabled()) {
                                     scope.launch {
                                         snackbarHostState.showSnackbar(
-                                            if (Locale.getDefault().language == "ar")
-                                                "معالجة AI معطلة من مركز الخصوصية"
-                                            else
-                                                "AI processing is disabled in Privacy Center"
+                                            if (Locale.getDefault().language == "ar") "معالجة AI معطلة من مركز الخصوصية"
+                                            else "AI processing is disabled in Privacy Center"
                                         )
                                     }
                                     return@IconButton
                                 }
                                 aiMenuExpanded = true
-                            },
-                            modifier = Modifier.size(36.dp)
+                            }, modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.AutoAwesome,
@@ -990,116 +989,98 @@ fun NoteEditorScreen(
                         modifier = Modifier.background(colorScheme.surface)
                     ) {
                         // ======= إعادة الصياغة =======
-                        DropdownMenuItem(
-                            text = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.AutoAwesome,
-                                        contentDescription = null,
-                                        tint = colorScheme.primary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.rephrase_text),
-                                        fontFamily = ManropeFontFamily,
-                                        fontSize = 14.sp,
-                                        color = colorScheme.onSurface
-                                    )
-                                }
-                            },
-                            onClick = {
-                                aiMenuExpanded = false
-                                val currentText = contentBlocks
-                                    .filterIsInstance<ContentBlock.TextBlock>()
-                                    .joinToString("\n") { it.text }
-                                    .trim()
-
-                                if (currentText.isBlank()) {
-                                    scope.launch { snackbarHostState.showSnackbar("لا يوجد نص لإعادة صياغته") }
-                                    return@DropdownMenuItem
-                                }
-
-                                // استدعاء الـ ViewModel مباشرة - هو يتحكم في isAiLoading
-                                viewModel.rephraseText(
-                                    text = currentText,
-                                    onResult = { result ->
-                                        val i = contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
-                                        if (i != -1) contentBlocks[i] = ContentBlock.TextBlock(text = result)
-                                        scope.launch { snackbarHostState.showSnackbar("تمت إعادة الصياغة بنجاح") }
-                                    },
-                                    onError = { error ->
-                                        scope.launch { snackbarHostState.showSnackbar("فشل: $error") }
-                                    }
+                        DropdownMenuItem(text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.rephrase_text),
+                                    fontFamily = ManropeFontFamily,
+                                    fontSize = 14.sp,
+                                    color = colorScheme.onSurface
                                 )
                             }
-                        )
+                        }, onClick = {
+                            aiMenuExpanded = false
+                            val currentText =
+                                contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
+                                    .joinToString("\n") { it.text }.trim()
+
+                            if (currentText.isBlank()) {
+                                scope.launch { snackbarHostState.showSnackbar("لا يوجد نص لإعادة صياغته") }
+                                return@DropdownMenuItem
+                            }
+
+                            // استدعاء الـ ViewModel مباشرة - هو يتحكم في isAiLoading
+                            viewModel.rephraseText(text = currentText, onResult = { result ->
+                                val i = contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
+                                if (i != -1) contentBlocks[i] =
+                                    ContentBlock.TextBlock(text = result)
+                                scope.launch { snackbarHostState.showSnackbar("تمت إعادة الصياغة بنجاح") }
+                            }, onError = { error ->
+                                scope.launch { snackbarHostState.showSnackbar("فشل: $error") }
+                            })
+                        })
 
                         HorizontalDivider(color = colorScheme.outlineVariant)
 
                         // ======= التشكيل =======
-                        DropdownMenuItem(
-                            text = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Spellcheck,
-                                        contentDescription = null,
-                                        tint = colorScheme.primary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.diacritize_text),
-                                        fontFamily = ManropeFontFamily,
-                                        fontSize = 14.sp,
-                                        color = colorScheme.onSurface
-                                    )
-                                }
-                            },
-                            onClick = {
-                                aiMenuExpanded = false
-                                val currentText = contentBlocks
-                                    .filterIsInstance<ContentBlock.TextBlock>()
-                                    .joinToString("\n") { it.text }
-                                    .trim()
-
-                                if (currentText.isBlank()) {
-                                    scope.launch { snackbarHostState.showSnackbar("لا يوجد نص لتشكيله") }
-                                    return@DropdownMenuItem
-                                }
-
-                                // استدعاء الـ ViewModel مباشرة - هو يتحكم في isAiLoading
-                                viewModel.diacritizeText(
-                                    text = currentText,
-                                    onResult = { result ->
-                                        val i = contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
-                                        if (i != -1) contentBlocks[i] = ContentBlock.TextBlock(text = result)
-                                        scope.launch { snackbarHostState.showSnackbar("تم تشكيل النص بنجاح") }
-                                    },
-                                    onError = { error ->
-                                        scope.launch { snackbarHostState.showSnackbar("فشل: $error") }
-                                    }
+                        DropdownMenuItem(text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Spellcheck,
+                                    contentDescription = null,
+                                    tint = colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.diacritize_text),
+                                    fontFamily = ManropeFontFamily,
+                                    fontSize = 14.sp,
+                                    color = colorScheme.onSurface
                                 )
                             }
-                        )
+                        }, onClick = {
+                            aiMenuExpanded = false
+                            val currentText =
+                                contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
+                                    .joinToString("\n") { it.text }.trim()
+
+                            if (currentText.isBlank()) {
+                                scope.launch { snackbarHostState.showSnackbar("لا يوجد نص لتشكيله") }
+                                return@DropdownMenuItem
+                            }
+
+                            // استدعاء الـ ViewModel مباشرة - هو يتحكم في isAiLoading
+                            viewModel.diacritizeText(text = currentText, onResult = { result ->
+                                val i = contentBlocks.indexOfFirst { it is ContentBlock.TextBlock }
+                                if (i != -1) contentBlocks[i] =
+                                    ContentBlock.TextBlock(text = result)
+                                scope.launch { snackbarHostState.showSnackbar("تم تشكيل النص بنجاح") }
+                            }, onError = { error ->
+                                scope.launch { snackbarHostState.showSnackbar("فشل: $error") }
+                            })
+                        })
                     }
                 }
 
                 EditorToolbarButton(
-                    icon = Icons.Outlined.Mic,
-                    onClick = { checkAndRequestRecordAudioPermission() }
-                )
+                    icon = Icons.Outlined.Mic, onClick = { checkAndRequestRecordAudioPermission() })
 
                 EditorToolbarButton(icon = Icons.Outlined.Link, onClick = { showLinkDialog = true })
 
                 EditorToolbarButton(
-                    icon = Icons.Outlined.Image,
-                    onClick = { checkAndRequestImagePermission() }
-                )
+                    icon = Icons.Outlined.Image, onClick = { checkAndRequestImagePermission() })
 
                 Box(
                     modifier = Modifier
@@ -1118,8 +1099,7 @@ fun NoteEditorScreen(
 
                 EditorToolbarButton(
                     icon = Icons.AutoMirrored.Outlined.FormatListBulleted,
-                    onClick = { contentBlocks.add(ContentBlock.BulletBlock()) }
-                )
+                    onClick = { contentBlocks.add(ContentBlock.BulletBlock()) })
 
                 Box(
                     modifier = Modifier
@@ -1128,7 +1108,9 @@ fun NoteEditorScreen(
                         .background(if (isItalic) colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent),
                     contentAlignment = Alignment.Center
                 ) {
-                    IconButton(onClick = { isItalic = !isItalic }, modifier = Modifier.size(36.dp)) {
+                    IconButton(
+                        onClick = { isItalic = !isItalic }, modifier = Modifier.size(36.dp)
+                    ) {
                         Text(
                             text = "I",
                             fontSize = 16.sp,
@@ -1161,89 +1143,85 @@ fun NoteEditorScreen(
 
     // ======= Audio Source Dialog =======
     if (showAudioDialog) {
-        AudioSourceDialog(
-            onDismiss = { showAudioDialog = false },
-            onChooseFile = {
-                showAudioDialog = false
-                checkAndRequestAudioFilePermission()
-            },
-            onRecordDirect = {
-                showAudioDialog = false
-                showRecordingDialog = true
-            }
-        )
+        AudioSourceDialog(onDismiss = { showAudioDialog = false }, onChooseFile = {
+            showAudioDialog = false
+            checkAndRequestAudioFilePermission()
+        }, onRecordDirect = {
+            showAudioDialog = false
+            showRecordingDialog = true
+        })
     }
 
     // ======= Recording Dialog =======
     if (showRecordingDialog) {
         RecordingDialog(
             onDismiss = {
-                showRecordingDialog = false
-                mediaRecorder.value?.apply {
-                    try { stop(); release() } catch (e: Exception) { e.printStackTrace() }
-                }
-                mediaRecorder.value = null
-                isRecording = false
-                recordingSeconds = 0
-            },
-            onSave = { filePath ->
-                showRecordingDialog = false
-                isRecording = false
-                recordingSeconds = 0
-                mediaRecorder.value = null
-                val file = File(filePath)
-                if (file.exists()) {
-                    contentBlocks.add(
-                        ContentBlock.AudioBlock(
-                            uri = Uri.fromFile(file),
-                            name = file.name,
-                            filePath = file.absolutePath
-                        )
-                    )
-                    contentBlocks.add(ContentBlock.TextBlock())
-                }
-            },
-            isRecording = isRecording,
-            recordingSeconds = recordingSeconds,
-            onStartRecording = {
-                val fileName = "record_${System.currentTimeMillis()}.mp4"
-                val file = File(context.filesDir, fileName)
-                recordedFilePath = file.absolutePath
+            showRecordingDialog = false
+            mediaRecorder.value?.apply {
                 try {
-                    val recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        android.media.MediaRecorder(context)
-                    } else {
-                        @Suppress("DEPRECATION") android.media.MediaRecorder()
-                    }
-                    recorder.apply {
-                        setAudioSource(android.media.MediaRecorder.AudioSource.MIC)
-                        setOutputFormat(android.media.MediaRecorder.OutputFormat.MPEG_4)
-                        setAudioEncoder(android.media.MediaRecorder.AudioEncoder.AAC)
-                        setOutputFile(file.absolutePath)
-                        prepare()
-                        start()
-                    }
-                    mediaRecorder.value = recorder
-                    isRecording = true
-                    scope.launch {
-                        while (isRecording) {
-                            delay(1000)
-                            recordingSeconds++
-                        }
-                    }
+                    stop(); release()
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    scope.launch { snackbarHostState.showSnackbar("فشل في بدء التسجيل") }
                 }
-            },
-            onStopRecording = {
-                mediaRecorder.value?.apply {
-                    try { stop(); release() } catch (e: Exception) { e.printStackTrace() }
+            }
+            mediaRecorder.value = null
+            isRecording = false
+            recordingSeconds = 0
+        }, onSave = { filePath ->
+            showRecordingDialog = false
+            isRecording = false
+            recordingSeconds = 0
+            mediaRecorder.value = null
+            val file = File(filePath)
+            if (file.exists()) {
+                contentBlocks.add(
+                    ContentBlock.AudioBlock(
+                        uri = Uri.fromFile(file), name = file.name, filePath = file.absolutePath
+                    )
+                )
+                contentBlocks.add(ContentBlock.TextBlock())
+            }
+        }, isRecording = isRecording, recordingSeconds = recordingSeconds, onStartRecording = {
+            val fileName = "record_${System.currentTimeMillis()}.mp4"
+            val file = File(context.filesDir, fileName)
+            recordedFilePath = file.absolutePath
+            try {
+                val recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    android.media.MediaRecorder(context)
+                } else {
+                    @Suppress("DEPRECATION") android.media.MediaRecorder()
                 }
-                mediaRecorder.value = null
-                isRecording = false
-            },
-            recordedFilePath = recordedFilePath
+                recorder.apply {
+                    setAudioSource(android.media.MediaRecorder.AudioSource.MIC)
+                    setOutputFormat(android.media.MediaRecorder.OutputFormat.MPEG_4)
+                    setAudioEncoder(android.media.MediaRecorder.AudioEncoder.AAC)
+                    setOutputFile(file.absolutePath)
+                    prepare()
+                    start()
+                }
+                mediaRecorder.value = recorder
+                isRecording = true
+                scope.launch {
+                    while (isRecording) {
+                        delay(1000)
+                        recordingSeconds++
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                scope.launch { snackbarHostState.showSnackbar("فشل في بدء التسجيل") }
+            }
+        }, onStopRecording = {
+            mediaRecorder.value?.apply {
+                try {
+                    stop(); release()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+            mediaRecorder.value = null
+            isRecording = false
+        }, recordedFilePath = recordedFilePath
         )
     }
 
@@ -1487,24 +1465,19 @@ fun RecordingDialog(
                         .background(
                             if (isRecording) colorScheme.errorContainer
                             else if (isPlaying) colorScheme.tertiaryContainer
-                            else colorScheme.primaryContainer,
-                            CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
+                            else colorScheme.primaryContainer, CircleShape
+                        ), contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = when {
                             isRecording -> Icons.Outlined.Mic
                             isPlaying -> Icons.Outlined.Stop
                             else -> Icons.Outlined.Mic
-                        },
-                        contentDescription = null,
-                        tint = when {
+                        }, contentDescription = null, tint = when {
                             isRecording -> colorScheme.error
                             isPlaying -> colorScheme.tertiary
                             else -> colorScheme.primary
-                        },
-                        modifier = Modifier.size(40.dp)
+                        }, modifier = Modifier.size(40.dp)
                     )
                 }
                 Text(
@@ -1532,7 +1505,9 @@ fun RecordingDialog(
                             }
                         },
                         onValueChangeFinished = {
-                            if (!isPlaying && mediaPlayer != null) mediaPlayer?.seekTo(currentPosition)
+                            if (!isPlaying && mediaPlayer != null) mediaPlayer?.seekTo(
+                                currentPosition
+                            )
                         },
                         valueRange = 0f..duration.toFloat(),
                         modifier = Modifier.fillMaxWidth(),
@@ -1560,8 +1535,11 @@ fun RecordingDialog(
                 ) {
                     Button(
                         onClick = {
-                            if (isRecording) { onStopRecording(); stopPlayback() }
-                            else { onStartRecording(); stopPlayback() }
+                            if (isRecording) {
+                                onStopRecording(); stopPlayback()
+                            } else {
+                                onStartRecording(); stopPlayback()
+                            }
                         },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
@@ -1714,8 +1692,7 @@ fun AddLinkDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
                             )
                         }
                         innerTextField()
-                    }
-                )
+                    })
                 Spacer(modifier = Modifier.height(24.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1738,18 +1715,14 @@ fun AddLinkDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
                         onClick = {
                             if (text.isNotBlank()) {
                                 var url = text.trim()
-                                if (!url.startsWith("http://") && !url.startsWith("https://"))
-                                    url = "https://$url"
+                                if (!url.startsWith("http://") && !url.startsWith("https://")) url =
+                                    "https://$url"
                                 onConfirm(url)
                             }
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
+                        }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(
                             containerColor = colorScheme.primary,
                             contentColor = colorScheme.onPrimary
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        enabled = text.isNotBlank()
+                        ), shape = RoundedCornerShape(12.dp), enabled = text.isNotBlank()
                     ) {
                         Text(
                             text = stringResource(R.string.add),

@@ -31,9 +31,7 @@ class NoteViewModel(
 
     // ======= دوال AI للـ Editor =======
     fun rephraseText(
-        text: String,
-        onResult: (String) -> Unit,
-        onError: (String) -> Unit
+        text: String, onResult: (String) -> Unit, onError: (String) -> Unit
     ) {
         viewModelScope.launch {
             _isAiLoading.value = true
@@ -52,9 +50,7 @@ class NoteViewModel(
     }
 
     fun diacritizeText(
-        text: String,
-        onResult: (String) -> Unit,
-        onError: (String) -> Unit
+        text: String, onResult: (String) -> Unit, onError: (String) -> Unit
     ) {
         viewModelScope.launch {
             _isAiLoading.value = true
@@ -164,17 +160,20 @@ class NoteViewModel(
                 allTaskTitles.addAll(manualTasks.filter { it.isNotBlank() })
 
                 if (isAiProcessingEnabled() && finalContent.isNotBlank()) {
-                    val textOnlyContent = finalContent.lines()
-                        .filter { !it.startsWith("•") }
-                        .joinToString("\n").trim()
+                    val textOnlyContent =
+                        finalContent.lines().filter { !it.startsWith("•") }.joinToString("\n")
+                            .trim()
 
                     if (textOnlyContent.isNotBlank()) {
                         try {
-                            val aiTasks = GroqService.extractTasksFromNote(finalTitle, textOnlyContent)
+                            val aiTasks =
+                                GroqService.extractTasksFromNote(finalTitle, textOnlyContent)
                             aiTasks.forEach { aiTask ->
                                 val isDuplicate = allTaskTitles.any { existing ->
-                                    existing.contains(aiTask, ignoreCase = true) ||
-                                            aiTask.contains(existing, ignoreCase = true)
+                                    existing.contains(aiTask, ignoreCase = true) || aiTask.contains(
+                                        existing,
+                                        ignoreCase = true
+                                    )
                                 }
                                 if (!isDuplicate && aiTask.isNotBlank()) allTaskTitles.add(aiTask)
                             }
