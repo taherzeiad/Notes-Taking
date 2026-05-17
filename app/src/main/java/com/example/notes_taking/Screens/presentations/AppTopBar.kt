@@ -20,16 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 
-/**
- * TopBar موحد لجميع الشاشات
- *
- * @param title العنوان الظاهر في المنتصف
- * @param onSearchClick إذا كان null لن يظهر زر البحث (يُعوَّض بمسافة فارغة)
- */
 @Composable
 fun AppTopBar(
-    title: String,
-    onSearchClick: (() -> Unit)? = null
+    title: String, onSearchClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
@@ -38,11 +31,9 @@ fun AppTopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // الجانب الأيسر: زر البحث أو مسافة بنفس الحجم
         if (onSearchClick != null) {
             IconButton(
-                onClick = onSearchClick,
-                modifier = Modifier.size(40.dp)
+                onClick = onSearchClick, modifier = Modifier.size(40.dp)
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Search,
@@ -52,11 +43,9 @@ fun AppTopBar(
                 )
             }
         } else {
-            // مسافة فارغة بنفس حجم الأيقونة لإبقاء العنوان في المنتصف
             androidx.compose.foundation.layout.Spacer(modifier = Modifier.size(40.dp))
         }
 
-        // العنوان في المنتصف دائماً
         Text(
             text = title,
             fontSize = 16.sp,
@@ -65,7 +54,6 @@ fun AppTopBar(
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        // الجانب الأيمن: أيقونة الكتاب دائماً
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.MenuBook,
             contentDescription = null,

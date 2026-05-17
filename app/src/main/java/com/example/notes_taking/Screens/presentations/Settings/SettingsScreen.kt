@@ -76,7 +76,6 @@ import com.example.notes_taking.ui.theme.MansalvaFontFamily
 fun SettingsScreen(
     viewModel: SettingsViewModel, navController: NavHostController
 ) {
-    // ← Permission Launcher للإشعارات
     val context = LocalContext.current
     var showTimePickerDialog by remember { mutableStateOf(false) }
     var hasNotifPermission by remember {
@@ -182,10 +181,11 @@ fun NotificationsSection(
                 )
 
                 // ← اختيار الوقت
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onTimeClick() }
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onTimeClick() }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     SettingsIconBox(Icons.Outlined.Schedule)
                     Column(
@@ -393,10 +393,11 @@ fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) 
 
 @Composable
 fun SettingsItem(label: String, icon: ImageVector, onClick: () -> Unit = {}) {
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .clickable { onClick() }
-        .padding(horizontal = 16.dp, vertical = 14.dp),
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically) {
         SettingsIconBox(icon)
         Text(

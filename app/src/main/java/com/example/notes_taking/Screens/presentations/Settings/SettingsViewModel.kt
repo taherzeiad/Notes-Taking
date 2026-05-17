@@ -16,7 +16,6 @@ import com.example.notes_taking.Notification.NotificationScheduler
 class SettingsViewModel(
     private val prefs: SharedPreferences, application: Application
 ) : AndroidViewModel(application) {
-
     private val context get() = getApplication<Application>().applicationContext
 
     // ======= Dark Mode =======
