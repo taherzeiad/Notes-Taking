@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,15 +40,17 @@ import com.example.notes_taking.ui.theme.MansalvaFontFamily
 
 data class CategoryItem(val key: String, val labelRes: Int)
 
+
 @Composable
 fun NotesScreen(
-    viewModel: NotesViewModel, navController: NavHostController
+    viewModel: NotesViewModel,
+    navController: NavHostController
 ) {
-    // جلب الـ uiState الموحد الذي يحتوي على (notes و isLoading)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     var isSearchActive by remember { mutableStateOf(false) }
+    var noteToDelete by remember { mutableStateOf<Note?>(null) }
 
     val categories = remember {
         listOf(
@@ -62,26 +65,21 @@ fun NotesScreen(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = { BottomNavBar(navController = navController, selectedTab = 2) }
     ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            // 1. عرض مؤشر التحميل إذا كانت قاعدة البيانات تجلب الملاحظات لأول مرة
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)) {
             if (uiState.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
                     color = MaterialTheme.colorScheme.primary
                 )
             } else {
-                // 2. عرض القائمة والبيانات بعد انتهاء التحميل
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // ======= Top Bar =======
                     item(key = "topbar") {
                         TopBarSection(
                             isSearchActive = isSearchActive,
@@ -91,42 +89,42 @@ fun NotesScreen(
                             onSearchClose = {
                                 isSearchActive = false
                                 viewModel.onSearchQueryChange("")
-                            })
+                            }
+                        )
                     }
 
-                    // ======= Page Title =======
                     if (!isSearchActive) {
                         item(key = "title") { PageTitleSection() }
                     }
 
-                    // ======= Category Tabs =======
                     item(key = "categories") {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             items(items = categories, key = { it.key }) { category ->
                                 CategoryTab(
                                     label = stringResource(id = category.labelRes),
                                     isSelected = selectedCategory == category.key,
-                                    onClick = { viewModel.onCategoryChange(category.key) })
+                                    onClick = { viewModel.onCategoryChange(category.key) }
+                                )
                             }
                         }
                     }
 
-                    // ======= Notes List / Empty State =======
-                    // تم إصلاح الخطأ البرمي هنا بالاعتماد على uiState.notes المخزنة داخل الـ State الموحد
                     if (uiState.notes.isEmpty()) {
                         item(key = "empty") {
                             EmptyNotesState(
-                                message = if (searchQuery.isNotBlank()) stringResource(R.string.no_search_results)
+                                message = if (searchQuery.isNotBlank())
+                                    stringResource(R.string.no_search_results)
                                 else stringResource(R.string.empty_notes_subtitle)
                             )
                         }
                     } else {
-                        items(items = uiState.notes, key = { note -> note.id }) { note ->
+                        items(items = uiState.notes, key = { it.id }) { note ->
                             RoomNoteCard(
                                 note = note,
                                 onClick = remember(note.id) {
                                     { navController.navigate(Route.NoteEditor.createRoute(note.id)) }
-                                }
+                                },
+                                onDelete = { noteToDelete = note }
                             )
                         }
                     }
@@ -135,10 +133,11 @@ fun NotesScreen(
                 }
             }
 
-            // ======= FAB =======
             if (!isSearchActive) {
                 AddNoteFAB(
-                    onAddClick = remember { { navController.navigate(Route.NoteEditor.createRoute(0)) } },
+                    onAddClick = remember {
+                        { navController.navigate(Route.NoteEditor.createRoute(0)) }
+                    },
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .padding(start = 24.dp, bottom = 24.dp)
@@ -146,10 +145,62 @@ fun NotesScreen(
             }
         }
     }
+
+    // ======= Delete Dialog =======
+    noteToDelete?.let { note ->
+        AlertDialog(
+            onDismissRequest = { noteToDelete = null },
+            icon = {
+                Icon(
+                    Icons.Outlined.DeleteOutline,
+                    null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.delete_note_title),
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.delete_note_desc),
+                    fontFamily = ManropeFontFamily,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 22.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteNote(note)
+                        noteToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.delete), fontFamily = ManropeFontFamily)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { noteToDelete = null }) {
+                    Text(stringResource(R.string.cancel), fontFamily = ManropeFontFamily)
+                }
+            },
+            shape = RoundedCornerShape(20.dp)
+        )
+    }
 }
 
+// ======= Note Card =======
 @Composable
-fun RoomNoteCard(note: Note, onClick: () -> Unit) {
+fun RoomNoteCard(note: Note, onClick: () -> Unit, onDelete: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -169,21 +220,38 @@ fun RoomNoteCard(note: Note, onClick: () -> Unit) {
                     fontFamily = ManropeFontFamily,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                if (note.isPinned) {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                MaterialTheme.colorScheme.secondaryContainer,
-                                RoundedCornerShape(20.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (note.isPinned) {
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    MaterialTheme.colorScheme.secondaryContainer,
+                                    RoundedCornerShape(20.dp)
+                                )
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.pinned),
+                                fontSize = 12.sp,
+                                fontFamily = ManropeFontFamily,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Medium
                             )
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                        }
+                    }
+                    // ← زر الحذف
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(28.dp)
                     ) {
-                        Text(
-                            text = stringResource(R.string.pinned),
-                            fontSize = 12.sp,
-                            fontFamily = ManropeFontFamily,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Medium
+                        Icon(
+                            imageVector = Icons.Outlined.DeleteOutline,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
@@ -239,8 +307,8 @@ fun RoomNoteCard(note: Note, onClick: () -> Unit) {
                         fontWeight = FontWeight.Medium
                     )
                     Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.MenuBook,
-                        contentDescription = null,
+                        Icons.AutoMirrored.Outlined.MenuBook,
+                        null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(14.dp)
                     )
