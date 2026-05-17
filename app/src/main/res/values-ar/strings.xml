@@ -138,6 +138,9 @@
     <string name="note_tag_projects">مشاريع</string>
     <string name="note_date_1">أكتوبر</string>
     <string name="read_more">اقرأ المزيد</string>
+    <string name="delete_note_title">حذف الملاحظة؟</string>
+    <string name="delete_note_desc">سيتم حذف هذه الملاحظة بشكل دائم ولا يمكن استرجاعها.</string>
+    <string name="delete">حذف</string>
 
     ///////////////////////////////////////////////////
     <!-- Edit Notes Screen -->

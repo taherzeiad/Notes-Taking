@@ -1,11 +1,7 @@
 package com.example.notes_taking.Screens.presentations.Notes
 
-import androidx.compose.animation.*
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -15,9 +11,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,13 +33,14 @@ import coil.compose.AsyncImage
 import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
 import com.example.notes_taking.RoomDatabase.Note
+import com.example.notes_taking.Screens.presentations.AppTopBar
 import com.example.notes_taking.Screens.presentations.Home.BottomNavBar
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
 
 data class CategoryItem(val key: String, val labelRes: Int)
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 fun NotesScreen(
     viewModel: NotesViewModel,
@@ -53,10 +50,7 @@ fun NotesScreen(
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     var isSearchActive by remember { mutableStateOf(false) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
     var noteToDelete by remember { mutableStateOf<Note?>(null) }
-
-    val snackbarHostState = remember { SnackbarHostState() }
 
     val categories = remember {
         listOf(
@@ -69,19 +63,11 @@ fun NotesScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = {
-            // ← إخفاء BottomBar في وضع التحديد
-            if (!uiState.isSelectionMode) {
-                BottomNavBar(navController = navController, selectedTab = 2)
-            }
-        }
+        bottomBar = { BottomNavBar(navController = navController, selectedTab = 2) }
     ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)) {
             if (uiState.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
@@ -94,59 +80,35 @@ fun NotesScreen(
                         .padding(horizontal = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // ======= Top Bar =======
                     item(key = "topbar") {
-                        AnimatedContent(
-                            targetState = uiState.isSelectionMode,
-                            transitionSpec = { fadeIn() togetherWith fadeOut() },
-                            label = "topbar"
-                        ) { isSelectionMode ->
-                            if (isSelectionMode) {
-                                // ← Top Bar وضع التحديد
-                                SelectionTopBar(
-                                    selectedCount = uiState.selectedNoteIds.size,
-                                    totalCount = uiState.notes.size,
-                                    onClose = { viewModel.clearSelection() },
-                                    onSelectAll = { viewModel.selectAll() },
-                                    onDelete = { showDeleteDialog = true }
-                                )
-                            } else {
-                                // ← Top Bar عادي
-                                TopBarSection(
-                                    isSearchActive = isSearchActive,
-                                    searchQuery = searchQuery,
-                                    onSearchClick = { isSearchActive = true },
-                                    onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
-                                    onSearchClose = {
-                                        isSearchActive = false
-                                        viewModel.onSearchQueryChange("")
-                                    }
-                                )
+                        TopBarSection(
+                            isSearchActive = isSearchActive,
+                            searchQuery = searchQuery,
+                            onSearchClick = { isSearchActive = true },
+                            onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
+                            onSearchClose = {
+                                isSearchActive = false
+                                viewModel.onSearchQueryChange("")
                             }
-                        }
+                        )
                     }
 
-                    // ======= Page Title =======
-                    if (!isSearchActive && !uiState.isSelectionMode) {
+                    if (!isSearchActive) {
                         item(key = "title") { PageTitleSection() }
                     }
 
-                    // ======= Category Tabs =======
-                    if (!uiState.isSelectionMode) {
-                        item(key = "categories") {
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                items(items = categories, key = { it.key }) { category ->
-                                    CategoryTab(
-                                        label = stringResource(id = category.labelRes),
-                                        isSelected = selectedCategory == category.key,
-                                        onClick = { viewModel.onCategoryChange(category.key) }
-                                    )
-                                }
+                    item(key = "categories") {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(items = categories, key = { it.key }) { category ->
+                                CategoryTab(
+                                    label = stringResource(id = category.labelRes),
+                                    isSelected = selectedCategory == category.key,
+                                    onClick = { viewModel.onCategoryChange(category.key) }
+                                )
                             }
                         }
                     }
 
-                    // ======= Notes List =======
                     if (uiState.notes.isEmpty()) {
                         item(key = "empty") {
                             EmptyNotesState(
@@ -156,31 +118,13 @@ fun NotesScreen(
                             )
                         }
                     } else {
-                        items(items = uiState.notes, key = { note -> note.id }) { note ->
-                            val isSelected = note.id in uiState.selectedNoteIds
-
-                            SelectableNoteCard(
+                        items(items = uiState.notes, key = { it.id }) { note ->
+                            RoomNoteCard(
                                 note = note,
-                                isSelected = isSelected,
-                                isSelectionMode = uiState.isSelectionMode,
-                                onClick = {
-                                    if (uiState.isSelectionMode) {
-                                        viewModel.toggleNoteSelection(note.id)
-                                    } else {
-                                        navController.navigate(
-                                            Route.NoteEditor.createRoute(note.id)
-                                        )
-                                    }
+                                onClick = remember(note.id) {
+                                    { navController.navigate(Route.NoteEditor.createRoute(note.id)) }
                                 },
-                                onLongClick = {
-                                    if (!uiState.isSelectionMode) {
-                                        viewModel.enterSelectionMode(note.id)
-                                    }
-                                },
-                                onDeleteSingle = {
-                                    noteToDelete = note
-                                    showDeleteDialog = true
-                                }
+                                onDelete = { noteToDelete = note }
                             )
                         }
                     }
@@ -189,8 +133,7 @@ fun NotesScreen(
                 }
             }
 
-            // ======= FAB =======
-            if (!isSearchActive && !uiState.isSelectionMode) {
+            if (!isSearchActive) {
                 AddNoteFAB(
                     onAddClick = remember {
                         { navController.navigate(Route.NoteEditor.createRoute(0)) }
@@ -200,36 +143,16 @@ fun NotesScreen(
                         .padding(start = 24.dp, bottom = 24.dp)
                 )
             }
-
-            // ======= Bottom Action Bar في وضع التحديد =======
-            AnimatedVisibility(
-                visible = uiState.isSelectionMode,
-                enter = slideInVertically { it },
-                exit = slideOutVertically { it },
-                modifier = Modifier.align(Alignment.BottomCenter)
-            ) {
-                SelectionBottomBar(
-                    selectedCount = uiState.selectedNoteIds.size,
-                    onDelete = { showDeleteDialog = true },
-                    onCancel = { viewModel.clearSelection() }
-                )
-            }
         }
     }
 
     // ======= Delete Dialog =======
-    if (showDeleteDialog) {
-        val isMultiple = uiState.isSelectionMode && uiState.selectedNoteIds.size > 1
-        val isSingle = noteToDelete != null
-
+    noteToDelete?.let { note ->
         AlertDialog(
-            onDismissRequest = {
-                showDeleteDialog = false
-                noteToDelete = null
-            },
+            onDismissRequest = { noteToDelete = null },
             icon = {
                 Icon(
-                    Icons.Default.Delete,
+                    Icons.Outlined.DeleteOutline,
                     null,
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(32.dp)
@@ -237,13 +160,7 @@ fun NotesScreen(
             },
             title = {
                 Text(
-                    text = when {
-                        isSingle -> if (isArabicLocale()) "حذف الملاحظة" else "Delete Note"
-                        isMultiple -> if (isArabicLocale())
-                            "حذف ${uiState.selectedNoteIds.size} ملاحظات"
-                        else "Delete ${uiState.selectedNoteIds.size} Notes"
-                        else -> if (isArabicLocale()) "حذف الملاحظة" else "Delete Note"
-                    },
+                    text = stringResource(R.string.delete_note_title),
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
@@ -251,10 +168,7 @@ fun NotesScreen(
             },
             text = {
                 Text(
-                    text = if (isArabicLocale())
-                        "هذا الإجراء لا يمكن التراجع عنه. هل أنت متأكد؟"
-                    else
-                        "This action cannot be undone. Are you sure?",
+                    text = stringResource(R.string.delete_note_desc),
                     fontFamily = ManropeFontFamily,
                     textAlign = TextAlign.Center,
                     lineHeight = 22.sp
@@ -263,35 +177,20 @@ fun NotesScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        showDeleteDialog = false
-                        if (noteToDelete != null) {
-                            val note = noteToDelete!!
-                            noteToDelete = null
-                            viewModel.deleteSingleNote(note)
-                        } else {
-                            viewModel.deleteSelectedNotes()
-                        }
+                        viewModel.deleteNote(note)
+                        noteToDelete = null
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(
-                        if (isArabicLocale()) "حذف" else "Delete",
-                        fontFamily = ManropeFontFamily
-                    )
+                    Text(stringResource(R.string.delete), fontFamily = ManropeFontFamily)
                 }
             },
             dismissButton = {
-                TextButton(onClick = {
-                    showDeleteDialog = false
-                    noteToDelete = null
-                }) {
-                    Text(
-                        if (isArabicLocale()) "إلغاء" else "Cancel",
-                        fontFamily = ManropeFontFamily
-                    )
+                TextButton(onClick = { noteToDelete = null }) {
+                    Text(stringResource(R.string.cancel), fontFamily = ManropeFontFamily)
                 }
             },
             shape = RoundedCornerShape(20.dp)
@@ -299,311 +198,126 @@ fun NotesScreen(
     }
 }
 
-// ======= Helper =======
-fun isArabicLocale() = java.util.Locale.getDefault().language == "ar"
-
-// ======= Selection Top Bar =======
+// ======= Note Card =======
 @Composable
-fun SelectionTopBar(
-    selectedCount: Int,
-    totalCount: Int,
-    onClose: () -> Unit,
-    onSelectAll: () -> Unit,
-    onDelete: () -> Unit
-) {
-    Row(
+fun RoomNoteCard(note: Note, onClick: () -> Unit, onDelete: () -> Unit) {
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        // ← زر الإغلاق
-        IconButton(onClick = onClose) {
-            Icon(
-                Icons.Outlined.Close,
-                null,
-                tint = MaterialTheme.colorScheme.onBackground
-            )
-        }
-
-        // ← عدد المحدد
-        Text(
-            text = if (isArabicLocale()) "تم تحديد $selectedCount"
-            else "$selectedCount selected",
-            fontFamily = ManropeFontFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        Row {
-            // ← تحديد الكل
-            TextButton(onClick = onSelectAll) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = if (isArabicLocale()) "الكل" else "All",
+                    text = note.date,
+                    fontSize = 12.sp,
                     fontFamily = ManropeFontFamily,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            }
-            // ← حذف
-            IconButton(onClick = onDelete) {
-                Icon(
-                    Icons.Default.Delete,
-                    null,
-                    tint = MaterialTheme.colorScheme.error
-                )
-            }
-        }
-    }
-}
-
-// ======= Selection Bottom Bar =======
-@Composable
-fun SelectionBottomBar(
-    selectedCount: Int,
-    onDelete: () -> Unit,
-    onCancel: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 8.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // ← زر إلغاء
-            OutlinedButton(
-                onClick = onCancel,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(
-                    text = if (isArabicLocale()) "إلغاء" else "Cancel",
-                    fontFamily = ManropeFontFamily
-                )
-            }
-
-            // ← زر حذف
-            Button(
-                onClick = onDelete,
-                enabled = selectedCount > 0,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Icon(
-                    Icons.Default.Delete,
-                    null,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = if (isArabicLocale()) "حذف ($selectedCount)"
-                    else "Delete ($selectedCount)",
-                    fontFamily = ManropeFontFamily
-                )
-            }
-        }
-    }
-}
-
-// ======= Selectable Note Card =======
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun SelectableNoteCard(
-    note: Note,
-    isSelected: Boolean,
-    isSelectionMode: Boolean,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-    onDeleteSingle: () -> Unit
-) {
-    var showSwipeActions by remember { mutableStateOf(false) }
-
-    Box {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .combinedClickable(
-                    onClick = onClick,
-                    onLongClick = onLongClick
-                )
-                // ← Border عند التحديد
-                .then(
-                    if (isSelected) Modifier.border(
-                        width = 2.dp,
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = RoundedCornerShape(20.dp)
-                    ) else Modifier
-                ),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (isSelected)
-                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                else
-                    MaterialTheme.colorScheme.surface
-            )
-        ) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                // ← Checkbox في وضع التحديد
-                AnimatedVisibility(
-                    visible = isSelectionMode,
-                    enter = slideInHorizontally { -it } + fadeIn(),
-                    exit = slideOutHorizontally { -it } + fadeOut()
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 12.dp)
-                            .align(Alignment.CenterVertically)
-                    ) {
-                        if (isSelected) {
-                            Icon(
-                                Icons.Filled.CheckCircle,
-                                null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        } else {
-                            Icon(
-                                Icons.Outlined.RadioButtonUnchecked,
-                                null,
-                                tint = MaterialTheme.colorScheme.outline,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
-                }
-
-                // ← محتوى الكارد
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = note.date,
-                            fontSize = 12.sp,
-                            fontFamily = ManropeFontFamily,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            if (note.isPinned) {
-                                Box(
-                                    modifier = Modifier
-                                        .background(
-                                            MaterialTheme.colorScheme.secondaryContainer,
-                                            RoundedCornerShape(20.dp)
-                                        )
-                                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.pinned),
-                                        fontSize = 12.sp,
-                                        fontFamily = ManropeFontFamily,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                            }
-                            // ← زر حذف سريع (يظهر فقط في الوضع العادي)
-                            if (!isSelectionMode) {
-                                IconButton(
-                                    onClick = onDeleteSingle,
-                                    modifier = Modifier.size(28.dp)
-                                ) {
-                                    Icon(
-                                        Icons.Outlined.DeleteOutline,
-                                        null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                            alpha = 0.5f
-                                        ),
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text(
-                        text = note.title.ifBlank { stringResource(R.string.editor_title_hint) },
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = ManropeFontFamily,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    if (note.content.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = note.content,
-                            fontSize = 14.sp,
-                            fontFamily = ManropeFontFamily,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            lineHeight = 22.sp,
-                            maxLines = 3,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    if (!note.imageUri.isNullOrEmpty()) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        AsyncImage(
-                            model = note.imageUri,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
+                    if (note.isPinned) {
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(160.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                        )
-                    }
-
-                    if (note.content.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.secondaryContainer,
+                                    RoundedCornerShape(20.dp)
+                                )
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
                         ) {
                             Text(
-                                text = stringResource(R.string.read_more),
-                                fontSize = 13.sp,
+                                text = stringResource(R.string.pinned),
+                                fontSize = 12.sp,
                                 fontFamily = ManropeFontFamily,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Medium
                             )
-                            Icon(
-                                Icons.AutoMirrored.Outlined.MenuBook,
-                                null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(14.dp)
-                            )
                         }
                     }
+                    // ← زر الحذف
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.DeleteOutline,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = note.title.ifBlank { stringResource(R.string.editor_title_hint) },
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = ManropeFontFamily,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            if (note.content.isNotBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = note.content,
+                    fontSize = 14.sp,
+                    fontFamily = ManropeFontFamily,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    lineHeight = 22.sp,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            if (!note.imageUri.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(10.dp))
+                AsyncImage(
+                    model = note.imageUri,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                )
+            }
+
+            if (note.content.isNotBlank()) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.read_more),
+                        fontSize = 13.sp,
+                        fontFamily = ManropeFontFamily,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Icon(
+                        Icons.AutoMirrored.Outlined.MenuBook,
+                        null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(14.dp)
+                    )
                 }
             }
         }
     }
 }
 
-// ======= باقي الـ Composables =======
 @Composable
 fun TopBarSection(
     isSearchActive: Boolean,
@@ -617,15 +331,27 @@ fun TopBarSection(
             value = searchQuery,
             onValueChange = onSearchQueryChange,
             placeholder = {
-                Text(stringResource(R.string.search), fontFamily = ManropeFontFamily,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    text = stringResource(R.string.search),
+                    fontFamily = ManropeFontFamily,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             },
             leadingIcon = {
-                Icon(Icons.Outlined.Search, null, tint = MaterialTheme.colorScheme.onBackground)
+                Icon(
+                    Icons.Outlined.Search, null, tint = MaterialTheme.colorScheme.onBackground
+                )
             },
             trailingIcon = {
-                IconButton(onClick = { onSearchQueryChange(""); onSearchClose() }) {
-                    Icon(Icons.Outlined.Close, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                IconButton(onClick = {
+                    onSearchQueryChange("")
+                    onSearchClose()
+                }) {
+                    Icon(
+                        Icons.Outlined.Close,
+                        null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             },
             modifier = Modifier.fillMaxWidth(),
@@ -639,32 +365,9 @@ fun TopBarSection(
             singleLine = true
         )
     } else {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onSearchClick) {
-                Icon(Icons.Outlined.Search, null,
-                    tint = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.size(26.dp))
-            }
-            Text(
-                text = stringResource(R.string.notes_screen_title_bar),
-                fontSize = 16.sp, fontWeight = FontWeight.Bold,
-                fontFamily = ManropeFontFamily,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Box(
-                modifier = Modifier.size(40.dp).clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Outlined.Person, null,
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(24.dp))
-            }
-        }
+        AppTopBar(
+            title = stringResource(R.string.notes_screen_title_bar), onSearchClick = onSearchClick
+        )
     }
 }
 
@@ -673,17 +376,15 @@ fun CategoryTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(
-                if (isSelected) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.secondaryContainer
-            )
+            .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer)
             .clickable(onClick = onClick)
             .padding(horizontal = 18.dp, vertical = 10.dp)
     ) {
         Text(
-            text = label, fontSize = 14.sp, fontFamily = ManropeFontFamily,
-            color = if (isSelected) MaterialTheme.colorScheme.onPrimary
-            else MaterialTheme.colorScheme.onSecondaryContainer,
+            text = label,
+            fontSize = 14.sp,
+            fontFamily = ManropeFontFamily,
+            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
         )
     }
@@ -692,39 +393,60 @@ fun CategoryTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
 @Composable
 fun EmptyNotesState(message: String) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 60.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 60.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Box(
-            modifier = Modifier.size(72.dp)
+            modifier = Modifier
+                .size(72.dp)
                 .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.AutoMirrored.Outlined.MenuBook, null,
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                modifier = Modifier.size(36.dp))
+                modifier = Modifier.size(36.dp)
+            )
         }
-        Text(stringResource(R.string.empty_notes_title), fontSize = 18.sp,
-            fontWeight = FontWeight.Bold, fontFamily = MansalvaFontFamily,
-            color = MaterialTheme.colorScheme.onBackground)
-        Text(message, fontSize = 14.sp, fontFamily = ManropeFontFamily,
+        Text(
+            text = stringResource(R.string.empty_notes_title),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = MansalvaFontFamily,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Text(
+            text = message,
+            fontSize = 14.sp,
+            fontFamily = ManropeFontFamily,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 32.dp))
+            modifier = Modifier.padding(horizontal = 32.dp)
+        )
     }
 }
 
 @Composable
 fun PageTitleSection() {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.notes_title), fontSize = 36.sp,
-            fontWeight = FontWeight.Bold, fontFamily = MansalvaFontFamily,
-            color = MaterialTheme.colorScheme.onBackground)
+        Text(
+            text = stringResource(R.string.notes_title),
+            fontSize = 36.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = MansalvaFontFamily,
+            color = MaterialTheme.colorScheme.onBackground
+        )
         Spacer(modifier = Modifier.height(4.dp))
-        Text(stringResource(R.string.notes_subtitle), fontSize = 14.sp,
+        Text(
+            text = stringResource(R.string.notes_subtitle),
+            fontSize = 14.sp,
             fontFamily = ManropeFontFamily,
-            color = MaterialTheme.colorScheme.onSurfaceVariant)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
