@@ -1,8 +1,5 @@
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+package com.example.notes_taking.Screens.presentations.Tasks
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.notes_taking.Repository.NoteRepository
@@ -12,60 +9,34 @@ import kotlinx.coroutines.launch
 
 class TasksViewModel(private val repository: NoteRepository) : ViewModel() {
 
-    var selectedTab by mutableIntStateOf(0)
-        private set
-    var aiProgress by mutableFloatStateOf(0f)
-        private set
-    private val _selectedTabFlow = MutableStateFlow(0)
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-    var isSearchActive by mutableStateOf(false)
-        private set
-    val allTasks: StateFlow<List<TaskEntity>> = repository.getAllTasks()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    // ── Private mutable intents ───────────────────────────────────────────────
+    private val _selectedTab   = MutableStateFlow(0)
+    private val _searchQuery   = MutableStateFlow("")
+    private val _isSearchActive = MutableStateFlow(false)
 
-    // ← أضف البحث للفلترة
-    val tasks: StateFlow<List<TaskEntity>> = combine(
-        allTasks,
-        _selectedTabFlow,
-        _searchQuery
-    ) { all, tab, query ->
-        val filteredByTab = when (tab) {
-            0 -> all.filter { !it.isCompleted }
-            1 -> all.filter { it.isCompleted }
-            else -> all
-        }
-        // ← فلترة بالبحث
-        if (query.isBlank()) {
-            filteredByTab
-        } else {
-            filteredByTab.filter { task ->
-                task.title.contains(query, ignoreCase = true) ||
-                        task.source.contains(query, ignoreCase = true)
-            }
-        }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    // ── Single source of truth exposed to the UI ──────────────────────────────
+    val uiState: StateFlow<TasksUiState> = combine(
+        repository.getAllTasks(),
+        _selectedTab,
+        _searchQuery,
+        _isSearchActive,
+    ) { all, tab, query, searchActive ->
+        buildUiState(
+            allTasks      = all,
+            selectedTab   = tab,
+            searchQuery   = query,
+            isSearchActive = searchActive,
+        )
+    }.stateIn(
+        scope         = viewModelScope,
+        started       = SharingStarted.WhileSubscribed(5_000),
+        initialValue  = TasksUiState(),
+    )
 
-    init {
-        viewModelScope.launch {
-            allTasks.collect { all ->
-                val total = all.size
-                val completed = all.count { it.isCompleted }
-                aiProgress = if (total > 0) completed.toFloat() / total.toFloat() else 0f
-            }
-        }
-    }
+    // ── User intents ──────────────────────────────────────────────────────────
 
     fun onTabSelected(index: Int) {
-        selectedTab = index
-        _selectedTabFlow.value = index
-    }
-
-    fun toggleTaskCompletion(taskId: Int) {
-        viewModelScope.launch {
-            val task = allTasks.value.find { it.id == taskId } ?: return@launch
-            repository.updateTask(task.copy(isCompleted = !task.isCompleted))
-        }
+        _selectedTab.value = index
     }
 
     fun onSearchQueryChange(query: String) {
@@ -73,11 +44,62 @@ class TasksViewModel(private val repository: NoteRepository) : ViewModel() {
     }
 
     fun openSearch() {
-        isSearchActive = true
+        _isSearchActive.value = true
     }
 
     fun closeSearch() {
-        isSearchActive = false
+        _isSearchActive.value = false
         _searchQuery.value = ""
+    }
+
+    fun toggleTaskCompletion(taskId: Int) {
+        viewModelScope.launch {
+            val task = uiState.value.allTasks.find { it.id == taskId } ?: return@launch
+            repository.updateTask(task.copy(isCompleted = !task.isCompleted))
+        }
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────────
+
+    private fun buildUiState(
+        allTasks: List<TaskEntity>,
+        selectedTab: Int,
+        searchQuery: String,
+        isSearchActive: Boolean,
+    ): TasksUiState {
+        val completedCount = allTasks.count { it.isCompleted }
+        val totalCount     = allTasks.size
+        val aiProgress     = if (totalCount > 0) completedCount.toFloat() / totalCount else 0f
+
+        val filteredByTab = when (selectedTab) {
+            0    -> allTasks.filter { !it.isCompleted }
+            1    -> allTasks.filter { it.isCompleted }
+            else -> allTasks
+        }
+
+        val filteredTasks = if (searchQuery.isBlank()) {
+            filteredByTab
+        } else {
+            filteredByTab.filter { task ->
+                task.title.contains(searchQuery, ignoreCase = true) ||
+                        task.source.contains(searchQuery, ignoreCase = true)
+            }
+        }
+
+        val sourceGroups = allTasks
+            .groupBy { it.source.ifBlank { "غير محدد" } }
+            .map { (source, tasks) -> SourceGroup(source, tasks) }
+
+        return TasksUiState(
+            selectedTab    = selectedTab,
+            filteredTasks  = filteredTasks,
+            allTasks       = allTasks,
+            isSearchActive = isSearchActive,
+            searchQuery    = searchQuery,
+            aiProgress     = aiProgress,
+            completedCount = completedCount,
+            totalCount     = totalCount,
+            sourceGroups   = sourceGroups,
+        )
     }
 }

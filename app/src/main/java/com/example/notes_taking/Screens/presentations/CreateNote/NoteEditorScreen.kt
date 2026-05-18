@@ -112,8 +112,10 @@ fun NoteEditorScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    // ✅ الـ UI تقرأ فقط من ViewModel - لا يوجد state محلي للبيانات
     val uiState by viewModel.uiState.collectAsState()
 
+    // ✅ state محلي للـ UI فقط - dialogs وrecording وهي ليست business logic
     var aiMenuExpanded by remember { mutableStateOf(false) }
     var showLinkDialog by remember { mutableStateOf(false) }
     var showAudioDialog by remember { mutableStateOf(false) }
@@ -170,26 +172,20 @@ fun NoteEditorScreen(
     val readImagesPermissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) imagePickerLauncher.launch("image/*")
-            else scope.launch {
-                snackbarHostState.showSnackbar(stringResource(R.string.images_permission_required))
-            }
+            else scope.launch { snackbarHostState.showSnackbar(if (Locale.getDefault().language == "ar") "يجب منح صلاحية الوصول للصور" else "Images permission required") }
         }
 
     val readAudioPermissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) audioPickerLauncher.launch("audio/*")
-            else scope.launch {
-                snackbarHostState.showSnackbar(stringResource(R.string.audio_permission_required))
-            }
+            else scope.launch { snackbarHostState.showSnackbar(if (Locale.getDefault().language == "ar") "يجب منح صلاحية الوصول للملفات الصوتية" else "Audio permission required") }
         }
 
     val recordPermissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
                 if (openAudio) showRecordingDialog = true else showAudioDialog = true
-            } else scope.launch {
-                snackbarHostState.showSnackbar(stringResource(R.string.microphone_permission_required))
-            }
+            } else scope.launch { snackbarHostState.showSnackbar(if (Locale.getDefault().language == "ar") "يجب منح صلاحية الميكروفون" else "Microphone permission required") }
         }
 
     // ======= Permission Helpers =======
@@ -489,11 +485,9 @@ fun NoteEditorScreen(
 
                         is ContentBlock.ImageBlock -> {
                             Spacer(modifier = Modifier.height(8.dp))
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(220.dp)
-                            ) {
+                            Box(modifier = Modifier
+                                .fillMaxWidth()
+                                .height(220.dp)) {
                                 AsyncImage(
                                     model = block.uri, contentDescription = null,
                                     contentScale = ContentScale.Crop,
@@ -522,6 +516,7 @@ fun NoteEditorScreen(
 
                         is ContentBlock.AudioBlock -> {
                             Spacer(modifier = Modifier.height(8.dp))
+                            // ✅ مستخلص كـ Composable منفصل
                             AudioBlockItem(
                                 block = block,
                                 onRemove = { viewModel.removeBlock(index) })
@@ -598,7 +593,8 @@ fun NoteEditorScreen(
                             IconButton(
                                 onClick = {
                                     if (!viewModel.isAiProcessingEnabled()) {
-                                        viewModel.showSnackbar(stringResource(R.string.ai_processing_disabled))
+                                        // ✅ الرسالة تروح للـ ViewModel - ما نستخدم snackbarHostState مباشرة
+                                        viewModel.showSnackbar(if (Locale.getDefault().language == "ar") "معالجة AI معطلة من مركز الخصوصية" else "AI processing is disabled in Privacy Center")
                                         return@IconButton
                                     }
                                     aiMenuExpanded = true
@@ -638,6 +634,7 @@ fun NoteEditorScreen(
                                         )
                                     }
                                 },
+                                // ✅ استدعاء مباشر للـ ViewModel بدون منطق في الـ UI
                                 onClick = { aiMenuExpanded = false; viewModel.rephraseText() }
                             )
 
@@ -672,6 +669,7 @@ fun NoteEditorScreen(
                     EditorToolbarButton(Icons.Outlined.Link) { showLinkDialog = true }
                     EditorToolbarButton(Icons.Outlined.Image) { launchImagePicker() }
 
+                    // ✅ characterCount تأتي من ViewModel
                     Box(
                         modifier = Modifier
                             .size(36.dp)
@@ -763,7 +761,7 @@ fun NoteEditorScreen(
             onSave = { filePath ->
                 showRecordingDialog = false; isRecording = false; recordingSeconds =
                 0; mediaRecorder.value = null
-                viewModel.addRecordedAudioBlock(filePath)
+                viewModel.addRecordedAudioBlock(filePath) // ✅ ViewModel يتولى الأمر
             },
             isRecording = isRecording,
             recordingSeconds = recordingSeconds,
@@ -865,11 +863,9 @@ private fun AudioBlockItem(block: ContentBlock.AudioBlock, onRemove: () -> Unit)
         colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceVariant.copy(alpha = 0.5f)),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
-        ) {
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -1420,5 +1416,6 @@ fun AddLinkDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     }
 }
 
+// helper لتجنب استخدام context خارج Composable
 private fun launchImagePicker(context: android.content.Context) { /* placeholder */
 }

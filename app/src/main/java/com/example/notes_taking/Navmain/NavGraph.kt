@@ -4,7 +4,6 @@
 
 package com.example.notes_taking.Navmain
 
-import TasksViewModel
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
@@ -39,6 +38,7 @@ import com.example.notes_taking.Screens.presentations.Splash.SplashScreen
 import com.example.notes_taking.Screens.presentations.Summary.SummaryScreen
 import com.example.notes_taking.Screens.presentations.Summary.SummaryViewModel
 import com.example.notes_taking.Screens.presentations.Tasks.TasksScreen
+import com.example.notes_taking.Screens.presentations.Tasks.TasksViewModel
 
 @SuppressLint("NewApi", "UseKtx")
 @RequiresApi(Build.VERSION_CODES.N)
