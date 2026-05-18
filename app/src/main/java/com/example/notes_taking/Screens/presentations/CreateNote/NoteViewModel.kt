@@ -46,7 +46,7 @@ class NoteViewModel(
 
     // ── Formatting ────────────────────────────────────────────────────────────
 
-    fun toggleBold()   = _uiState.update { it.copy(isBold   = !it.isBold) }
+    fun toggleBold() = _uiState.update { it.copy(isBold = !it.isBold) }
     fun toggleItalic() = _uiState.update { it.copy(isItalic = !it.isItalic) }
 
     // ── Content Blocks ────────────────────────────────────────────────────────
@@ -85,8 +85,8 @@ class NoteViewModel(
 
     fun addLinkBlock(url: String) {
         if (url.isBlank()) return
-        val finalUrl = if (!url.startsWith("http://") && !url.startsWith("https://"))
-            "https://$url" else url
+        val finalUrl =
+            if (!url.startsWith("http://") && !url.startsWith("https://")) "https://$url" else url
         val updated = _uiState.value.contentBlocks.toMutableList().also {
             it.add(ContentBlock.LinkBlock(url = finalUrl))
             it.add(ContentBlock.TextBlock())
@@ -111,8 +111,8 @@ class NoteViewModel(
     }
 
     fun addAudioBlock(uri: Uri) {
-        val name = uri.lastPathSegment?.substringAfterLast("/")
-            ?: "تسجيل_${System.currentTimeMillis()}"
+        val name =
+            uri.lastPathSegment?.substringAfterLast("/") ?: "تسجيل_${System.currentTimeMillis()}"
         val updated = _uiState.value.contentBlocks.toMutableList().also {
             it.add(ContentBlock.AudioBlock(uri = uri, name = name))
             it.add(ContentBlock.TextBlock())
@@ -124,11 +124,13 @@ class NoteViewModel(
         val file = File(filePath)
         if (!file.exists()) return
         val updated = _uiState.value.contentBlocks.toMutableList().also {
-            it.add(ContentBlock.AudioBlock(
-                uri      = Uri.fromFile(file),
-                name     = file.name,
-                filePath = file.absolutePath,
-            ))
+            it.add(
+                ContentBlock.AudioBlock(
+                    uri = Uri.fromFile(file),
+                    name = file.name,
+                    filePath = file.absolutePath,
+                )
+            )
             it.add(ContentBlock.TextBlock())
         }
         _uiState.update { it.copy(contentBlocks = updated) }
@@ -144,8 +146,10 @@ class NoteViewModel(
                 val note = withContext(Dispatchers.IO) { repository.getNoteById(noteId) }
                 note?.let {
                     val blocks = buildList {
-                        add(if (it.content.isNotBlank()) ContentBlock.TextBlock(text = it.content)
-                        else ContentBlock.TextBlock())
+                        add(
+                            if (it.content.isNotBlank()) ContentBlock.TextBlock(text = it.content)
+                            else ContentBlock.TextBlock()
+                        )
                         it.imageUri?.let { path ->
                             val f = File(path)
                             if (f.exists()) add(ContentBlock.ImageBlock(uri = Uri.fromFile(f)))
@@ -153,15 +157,21 @@ class NoteViewModel(
                         it.audioPaths?.split(",")?.forEach { audioPath ->
                             if (audioPath.isNotBlank()) {
                                 val f = File(audioPath)
-                                if (f.exists()) add(ContentBlock.AudioBlock(
-                                    uri      = Uri.fromFile(f),
-                                    name     = f.name,
-                                    filePath = audioPath,
-                                ))
+                                if (f.exists()) add(
+                                    ContentBlock.AudioBlock(
+                                        uri = Uri.fromFile(f),
+                                        name = f.name,
+                                        filePath = audioPath,
+                                    )
+                                )
                             }
                         }
                     }
-                    _uiState.update { _ -> EditorUiState(title = note.title, contentBlocks = blocks) }
+                    _uiState.update { _ ->
+                        EditorUiState(
+                            title = note.title, contentBlocks = blocks
+                        )
+                    }
                     recalculateCounts(blocks)
                 }
             } catch (e: Exception) {
@@ -185,11 +195,12 @@ class NoteViewModel(
     // ── AI — Rephrase ─────────────────────────────────────────────────────────
 
     fun rephraseText() {
-        val text = _uiState.value.contentBlocks
-            .filterIsInstance<ContentBlock.TextBlock>()
+        val text = _uiState.value.contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
             .joinToString("\n") { it.text }.trim()
 
-        if (text.isBlank()) { showSnackbar(str(R.string.error_no_text_rephrase)); return }
+        if (text.isBlank()) {
+            showSnackbar(str(R.string.error_no_text_rephrase)); return
+        }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isAiLoading = true) }
@@ -212,11 +223,12 @@ class NoteViewModel(
     // ── AI — Diacritize ───────────────────────────────────────────────────────
 
     fun diacritizeText() {
-        val text = _uiState.value.contentBlocks
-            .filterIsInstance<ContentBlock.TextBlock>()
+        val text = _uiState.value.contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
             .joinToString("\n") { it.text }.trim()
 
-        if (text.isBlank()) { showSnackbar(str(R.string.error_no_text_diacritize)); return }
+        if (text.isBlank()) {
+            showSnackbar(str(R.string.error_no_text_diacritize)); return
+        }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isAiLoading = true) }
@@ -239,32 +251,34 @@ class NoteViewModel(
     // ── Save Note ─────────────────────────────────────────────────────────────
 
     fun saveNote(noteId: Int, date: String) {
-        if (!hasContent()) { showSnackbar(str(R.string.error_no_content_save)); return }
+        if (!hasContent()) {
+            showSnackbar(str(R.string.error_no_content_save)); return
+        }
 
         viewModelScope.launch(Dispatchers.IO) {
             withContext(Dispatchers.Main) { _uiState.update { it.copy(isSaving = true) } }
             val state = _uiState.value
             try {
-                val blocks    = state.contentBlocks
+                val blocks = state.contentBlocks
                 val finalTitle = state.title.trim().ifBlank {
-                    blocks.filterIsInstance<ContentBlock.TextBlock>()
-                        .firstOrNull()?.text?.take(30)?.trim()
-                        ?: str(R.string.default_note_title2)
+                    blocks.filterIsInstance<ContentBlock.TextBlock>().firstOrNull()?.text?.take(30)
+                        ?.trim() ?: str(R.string.default_note_title2)
                 }
                 val fullContent = blocks.joinToString("\n") { b ->
                     when (b) {
-                        is ContentBlock.TextBlock   -> b.text
+                        is ContentBlock.TextBlock -> b.text
                         is ContentBlock.BulletBlock -> "• ${b.text}"
-                        else                        -> ""
+                        else -> ""
                     }
                 }.trim()
 
-                val imageUri   = blocks.filterIsInstance<ContentBlock.ImageBlock>()
-                    .firstOrNull()?.uri?.path
+                val imageUri =
+                    blocks.filterIsInstance<ContentBlock.ImageBlock>().firstOrNull()?.uri?.path
                 val audioPaths = blocks.filterIsInstance<ContentBlock.AudioBlock>()
                     .joinToString(",") { it.filePath }.takeIf { isVoiceStorageEnabled() }
-                val manualTasks = blocks.filterIsInstance<ContentBlock.BulletBlock>()
-                    .map { it.text.trim() }.filter { it.isNotBlank() }
+                val manualTasks =
+                    blocks.filterIsInstance<ContentBlock.BulletBlock>().map { it.text.trim() }
+                        .filter { it.isNotBlank() }
 
                 var autoCategory = "General"
                 if (isAiProcessingEnabled() && fullContent.isNotBlank()) {
@@ -273,23 +287,23 @@ class NoteViewModel(
                             autoCategory = when {
                                 c.contains("Philo", ignoreCase = true) -> "Philosophy"
                                 c.contains("Liter", ignoreCase = true) -> "Literature"
-                                c.contains("Dev",   ignoreCase = true) -> "Self-Development"
-                                c.contains("Task",  ignoreCase = true) -> "Task"
-                                c.contains("Work",  ignoreCase = true) -> "Work"
-                                else                                    -> "General"
+                                c.contains("Dev", ignoreCase = true) -> "Self-Development"
+                                c.contains("Task", ignoreCase = true) -> "Task"
+                                c.contains("Work", ignoreCase = true) -> "Work"
+                                else -> "General"
                             }
                         }
                     }.onFailure { Log.e("NoteViewModel", "classify: ${it.message}") }
                 }
 
                 val note = Note(
-                    id         = if (noteId > 0) noteId else 0,
-                    title      = finalTitle,
-                    content    = fullContent,
+                    id = if (noteId > 0) noteId else 0,
+                    title = finalTitle,
+                    content = fullContent,
                     audioPaths = audioPaths,
-                    category   = autoCategory,
-                    imageUri   = imageUri,
-                    date       = date,
+                    category = autoCategory,
+                    imageUri = imageUri,
+                    date = date,
                 )
                 if (noteId > 0) repository.updateNote(note) else repository.insertNote(note)
 
@@ -298,14 +312,19 @@ class NoteViewModel(
 
                 val allTasks = manualTasks.toMutableList()
                 if (isAiProcessingEnabled() && fullContent.isNotBlank()) {
-                    val textOnly = fullContent.lines()
-                        .filter { !it.startsWith("•") }.joinToString("\n").trim()
+                    val textOnly =
+                        fullContent.lines().filter { !it.startsWith("•") }.joinToString("\n").trim()
                     if (textOnly.isNotBlank()) {
                         runCatching {
-                            GroqService.extractTasksFromNote(finalTitle, textOnly).forEach { aiTask ->
-                                val dup = allTasks.any { it.contains(aiTask, true) || aiTask.contains(it, true) }
-                                if (!dup && aiTask.isNotBlank()) allTasks.add(aiTask)
-                            }
+                            GroqService.extractTasksFromNote(finalTitle, textOnly)
+                                .forEach { aiTask ->
+                                    val dup = allTasks.any {
+                                        it.contains(aiTask, true) || aiTask.contains(
+                                            it, true
+                                        )
+                                    }
+                                    if (!dup && aiTask.isNotBlank()) allTasks.add(aiTask)
+                                }
                         }.onFailure { Log.e("NoteViewModel", "extractTasks: ${it.message}") }
                     }
                 }
@@ -313,10 +332,10 @@ class NoteViewModel(
                 if (allTasks.isNotEmpty() && savedId > 0) {
                     repository.insertTasks(allTasks.mapIndexed { i, t ->
                         TaskEntity(
-                            title    = t,
-                            source   = finalTitle,
-                            noteId   = savedId,
-                            date     = date,
+                            title = t,
+                            source = finalTitle,
+                            noteId = savedId,
+                            date = date,
                             isUrgent = i < manualTasks.size,
                         )
                     })
@@ -330,16 +349,15 @@ class NoteViewModel(
                 Log.e("NoteViewModel", "saveNote: ${e.message}")
                 runCatching {
                     val fallback = Note(
-                        id         = if (noteId > 0) noteId else 0,
-                        title      = state.title.trim().ifBlank { str(R.string.default_note_title2) },
-                        content    = state.contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
+                        id = if (noteId > 0) noteId else 0,
+                        title = state.title.trim().ifBlank { str(R.string.default_note_title2) },
+                        content = state.contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
                             .joinToString("\n") { it.text },
-                        category   = "General",
-                        imageUri   = state.contentBlocks.filterIsInstance<ContentBlock.ImageBlock>()
+                        category = "General",
+                        imageUri = state.contentBlocks.filterIsInstance<ContentBlock.ImageBlock>()
                             .firstOrNull()?.uri?.path,
-                        audioPaths = if (isVoiceStorageEnabled())
-                            state.contentBlocks.filterIsInstance<ContentBlock.AudioBlock>()
-                                .joinToString(",") { it.filePath } else null,
+                        audioPaths = if (isVoiceStorageEnabled()) state.contentBlocks.filterIsInstance<ContentBlock.AudioBlock>()
+                            .joinToString(",") { it.filePath } else null,
                         date = date,
                     )
                     if (noteId > 0) repository.updateNote(fallback)
@@ -356,12 +374,12 @@ class NoteViewModel(
     // ── Snackbar & Navigation ─────────────────────────────────────────────────
 
     fun showSnackbar(message: String) = _uiState.update { it.copy(snackbarMessage = message) }
-    fun snackbarShown()               = _uiState.update { it.copy(snackbarMessage = null) }
-    fun navigationHandled()           = _uiState.update { it.copy(shouldNavigateBack = false) }
+    fun snackbarShown() = _uiState.update { it.copy(snackbarMessage = null) }
+    fun navigationHandled() = _uiState.update { it.copy(shouldNavigateBack = false) }
 
     // ── Privacy helpers ───────────────────────────────────────────────────────
 
-    fun isAiProcessingEnabled()    = privacyPrefs.getBoolean("privacy_ai_processing", true)
+    fun isAiProcessingEnabled() = privacyPrefs.getBoolean("privacy_ai_processing", true)
     private fun isVoiceStorageEnabled() = privacyPrefs.getBoolean("privacy_voice_storage", true)
 
     // ── Statistics ────────────────────────────────────────────────────────────
@@ -372,16 +390,16 @@ class NoteViewModel(
         }
         val charCount = blocks.sumOf { b ->
             when (b) {
-                is ContentBlock.TextBlock   -> b.text.length
+                is ContentBlock.TextBlock -> b.text.length
                 is ContentBlock.BulletBlock -> b.text.length
-                else                        -> 0
+                else -> 0
             }
         }
         _uiState.update {
             it.copy(
-                wordCount       = wordCount,
-                readingMinutes  = maxOf(1, wordCount / 200),
-                characterCount  = charCount,
+                wordCount = wordCount,
+                readingMinutes = maxOf(1, wordCount / 200),
+                characterCount = charCount,
             )
         }
     }
