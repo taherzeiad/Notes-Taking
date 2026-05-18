@@ -1,6 +1,5 @@
 package com.example.notes_taking.Repository
 
-import TasksViewModel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -8,6 +7,7 @@ import com.example.notes_taking.Screens.presentations.Editor.NoteViewModel
 import com.example.notes_taking.Screens.presentations.Home.HomeViewModel
 import com.example.notes_taking.Screens.presentations.Notes.NotesViewModel
 import com.example.notes_taking.Screens.presentations.Summary.SummaryViewModel
+import com.example.notes_taking.Screens.presentations.Tasks.TasksViewModel
 
 @Suppress("UNCHECKED_CAST")
 class GenericViewModelFactory(

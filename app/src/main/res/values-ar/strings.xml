@@ -141,6 +141,24 @@
     <string name="delete_note_title">حذف الملاحظة؟</string>
     <string name="delete_note_desc">سيتم حذف هذه الملاحظة بشكل دائم ولا يمكن استرجاعها.</string>
     <string name="delete">حذف</string>
+    <string name="ai_processing_disabled">معالجة AI معطلة من مركز الخصوصية</string>
+
+    <!-- Errors -->
+    <string name="images_permission_required">يجب منح صلاحية الوصول للصور</string>
+    <string name="audio_permission_required">يجب منح صلاحية الوصول للملفات الصوتية</string>
+    <string name="microphone_permission_required">يجب منح صلاحية الميكروفون</string>
+    <string name="failed_to_start_recording">فشل في بدء التسجيل</string>
+    <string name="image_add_error">حدث خطأ أثناء إضافة الصورة</string>
+    <string name="note_load_error">فشل في تحميل الملاحظة</string>
+    <string name="rephrase_no_text">لا يوجد نص لإعادة صياغته</string>
+    <string name="diacritize_no_text">لا يوجد نص لتشكيله</string>
+    <string name="save_success">تم حفظ الملاحظة بنجاح</string>
+    <string name="save_error">تم الحفظ مع بعض الأخطاء</string>
+    <string name="delete_error">فشل في حذف الملاحظة: </string>
+
+    <!-- Content & Categories -->
+    <string name="new_note">ملاحظة جديدة</string>
+    <string name="pause">إيقاف مؤقت</string>
 
     ///////////////////////////////////////////////////
     <!-- Edit Notes Screen -->

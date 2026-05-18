@@ -10,10 +10,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.core.content.edit
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.example.notes_taking.Navmain.NavGraph
 import com.example.notes_taking.Notification.NotificationHelper
@@ -25,7 +27,6 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
-    // 1. تعريف الـ ViewModel على مستوى النشاط (Activity) لضمان مشاركة الحالة
     private val settingsViewModel: SettingsViewModel by viewModels {
         val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
         SettingsViewModel.Factory(prefs, application)
@@ -49,10 +50,8 @@ class MainActivity : ComponentActivity() {
         setTheme(R.style.Theme_NotesTaking)
         super.onCreate(savedInstanceState)
 
-        // ← إنشاء قناة الإشعارات عند بدء التطبيق
         NotificationHelper.createNotificationChannel(this)
 
-        // ← جدولة الإشعار إذا كان مفعلاً
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         if (prefs.getBoolean("notifications_enabled", true)) {
             val hour = prefs.getInt("reminder_hour", 20)
@@ -60,23 +59,20 @@ class MainActivity : ComponentActivity() {
             NotificationScheduler.scheduleDailyReminder(this, hour, minute)
         }
 
-
         val lang = prefs.getString("language", "en") ?: "en"
 
         setContent {
-            // 2. مراقبة حالة الوضع المظلم من الـ ViewModel
-            val isDarkMode = settingsViewModel.isDarkModeEnabled
+            val uiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
 
             val navController = rememberNavController()
 
-            // 3. تغليف التطبيق بالثيم وتمرير حالة الوضع المظلم له
-            NotesTakingTheme(darkTheme = isDarkMode) {
+            NotesTakingTheme(darkTheme = uiState.isDarkModeEnabled) {
                 CompositionLocalProvider(
                     LocalLayoutDirection provides if (lang == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr
                 ) {
-                    // 4. تمرير الـ ViewModel للـ NavGraph لضمان أن شاشة الإعدادات تستخدم نفس النسخة
                     NavGraph(
-                        navController = navController, settingsViewModel = settingsViewModel
+                        navController = navController,
+                        settingsViewModel = settingsViewModel,
                     )
                 }
             }
