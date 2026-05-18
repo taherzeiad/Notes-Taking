@@ -160,6 +160,34 @@
     <string name="new_note">ملاحظة جديدة</string>
     <string name="pause">إيقاف مؤقت</string>
 
+
+    <string name="error_add_image">حدث خطأ أثناء إضافة الصورة</string>
+    <string name="error_no_text_rephrase">لا يوجد نص لإعادة صياغته</string>
+    <string name="success_rephrase">تمت إعادة الصياغة بنجاح</string>
+    <string name="error_no_text_diacritize">لا يوجد نص لتشكيله</string>
+    <string name="success_diacritize">تم تشكيل النص بنجاح</string>
+    <string name="error_no_content_save">لا يوجد محتوى لحفظه</string>
+    <string name="success_note_saved">تم حفظ الملاحظة بنجاح</string>
+    <string name="error_save_with_issues">تم الحفظ مع بعض الأخطاء</string>
+    <string name="error_load_note">فشل في تحميل الملاحظة</string>
+    <string name="error_delete_note">فشل في حذف الملاحظة: %s</string>
+    <string name="error_recording_start">فشل في بدء التسجيل</string>
+    <string name="default_note_title2">ملاحظة جديدة</string>
+    <string name="action_close">إغلاق</string>
+    <string name="action_delete">حذف</string>
+    <string name="error_ai_failed">فشل الذكاء الاصطناعي: %s</string>
+
+
+    <!-- ── NoteEditorScreen — Permission messages ── -->
+    <string name="permission_images_required">يجب منح صلاحية الوصول للصور</string>
+    <string name="permission_audio_required">يجب منح صلاحية الوصول للملفات الصوتية</string>
+    <string name="permission_microphone_required">يجب منح صلاحية الميكروفون</string>
+    <string name="ai_disabled_privacy">معالجة AI معطلة من مركز الخصوصية</string>
+
+    <!-- ── SettingsScreen — Reminder time row ── -->
+    <string name="reminder_time_label">وقت التذكير</string>
+    <string name="reminder_time_dialog_title">اختر وقت التذكير</string>
+
     ///////////////////////////////////////////////////
     <!-- Edit Notes Screen -->
     <string name="editor_save">حفظ</string>

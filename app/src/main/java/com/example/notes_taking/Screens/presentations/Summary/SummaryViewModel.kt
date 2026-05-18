@@ -4,79 +4,85 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.notes_taking.API.GroqService
 import com.example.notes_taking.Repository.NoteRepository
-import com.example.notes_taking.RoomDatabase.Note
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-data class DailySummary(
-    val date: String, val notesCount: Int, val summary: String, val notes: List<Note>
-)
+class SummaryViewModel(
+    private val repository: NoteRepository,
+) : ViewModel() {
 
-sealed class SummaryState {
-    object Idle : SummaryState()
-    object Loading : SummaryState()
-    object EmptyToday : SummaryState()
-    data class Success(val summary: DailySummary) : SummaryState()
-    data class Error(val message: String) : SummaryState()
-}
+    // ─── State ───────────────────────────────────────────────────────────────
 
-class SummaryViewModel(private val repository: NoteRepository) : ViewModel() {
+    private val _uiState = MutableStateFlow<SummaryUiState>(SummaryUiState.Idle)
+    val uiState: StateFlow<SummaryUiState> = _uiState.asStateFlow()
 
-    private val _summaryState = MutableStateFlow<SummaryState>(SummaryState.Idle)
-    val summaryState = _summaryState.asStateFlow()
+    // ─── Public API ──────────────────────────────────────────────────────────
 
-    fun summarizeDay(date: String) {
+    fun summarizeToday() {
+        summarizeDay(getTodayDate())
+    }
+
+    fun getTodayDate(): String =
+        SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(Date())
+
+    // ─── Private logic ───────────────────────────────────────────────────────
+
+    private fun summarizeDay(date: String) {
         viewModelScope.launch {
-            _summaryState.value = SummaryState.Loading
-            try {
-                val allNotes = repository.getRecentNotes()
+            _uiState.update { SummaryUiState.Loading }
 
-                val todayNotes = allNotes.filter { it.date == date }
-
-                if (todayNotes.isEmpty()) {
-                    _summaryState.value = SummaryState.EmptyToday
+            val todayNotes = runCatching { repository.getRecentNotes() }
+                .getOrElse { e ->
+                    _uiState.update { SummaryUiState.Error(buildErrorMessage(e)) }
                     return@launch
                 }
+                .filter { it.date == date }
 
-                val notesText =
-                    todayNotes.filter { it.content.isNotBlank() || it.title.isNotBlank() }
-                        .map { "${it.title}: ${it.content}" }
+            if (todayNotes.isEmpty()) {
+                _uiState.update { SummaryUiState.EmptyToday(date) }
+                return@launch
+            }
 
-                if (notesText.isEmpty()) {
-                    _summaryState.value = SummaryState.EmptyToday
-                    return@launch
-                }
+            val notesText = todayNotes
+                .filter { it.content.isNotBlank() || it.title.isNotBlank() }
+                .map { "${it.title}: ${it.content}" }
 
-                val summary = try {
-                    GroqService.summarizeNotes(notesText, date)
-                } catch (e: Exception) {
-                    if (Locale.getDefault().language == "ar") "فشل في تلخيص ملاحظات اليوم"
-                    else "Failed to summarize today's notes"
-                }
+            if (notesText.isEmpty()) {
+                _uiState.update { SummaryUiState.EmptyToday(date) }
+                return@launch
+            }
 
-                _summaryState.value = SummaryState.Success(
+            val summaryText = runCatching { GroqService.summarizeNotes(notesText, date) }
+                .getOrElse { buildFallbackSummary() }
+
+            _uiState.update {
+                SummaryUiState.Success(
                     DailySummary(
                         date = date,
                         notesCount = todayNotes.size,
-                        summary = summary,
-                        notes = todayNotes
+                        summary = summaryText,
+                        notes = todayNotes,
                     )
-                )
-
-            } catch (e: Exception) {
-                _summaryState.value = SummaryState.Error(
-                    if (Locale.getDefault().language == "ar") "حدث خطأ: ${e.message}"
-                    else "An error occurred: ${e.message}"
                 )
             }
         }
     }
 
-    fun getTodayDate(): String {
-        return SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(Date())
-    }
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    private fun buildErrorMessage(e: Throwable): String =
+        if (isArabic()) "حدث خطأ: ${e.message}"
+        else "An error occurred: ${e.message}"
+
+    private fun buildFallbackSummary(): String =
+        if (isArabic()) "فشل في تلخيص ملاحظات اليوم"
+        else "Failed to summarize today's notes"
+
+    private fun isArabic(): Boolean = Locale.getDefault().language == "ar"
 }
