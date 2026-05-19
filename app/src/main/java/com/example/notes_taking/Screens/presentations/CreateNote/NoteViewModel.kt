@@ -25,7 +25,7 @@ class NoteViewModel(
     private val appContext: Context,
 ) : ViewModel() {
 
-    private val aiRateLimiter = AiRateLimiter()
+    private val aiRateLimiter = AiRateLimiter.getInstance()
 
     init {
         startRateLimitTicker()
