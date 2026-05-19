@@ -83,6 +83,20 @@ class AiRateLimiter {
         }
     }
 
+    fun refundCall() {
+        if (callTimestamps.isNotEmpty()) {
+            callTimestamps.removeLast()
+        }
+        val now = System.currentTimeMillis()
+        pruneOldCalls(now)
+        _state.update {
+            it.copy(
+                usedCount        = callTimestamps.size,
+                isLimited        = false,
+                secondsRemaining = 0,
+            )
+        }
+    }
     private fun pruneOldCalls(now: Long) {
         val cutoff = now - RateLimitState.WINDOW_MS
         while (callTimestamps.isNotEmpty() && callTimestamps.first() < cutoff) {

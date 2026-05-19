@@ -211,18 +211,20 @@ class NoteViewModel(
     }
 
     fun rephraseText() {
-        val text = _uiState.value.contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
+        val text = _uiState.value.contentBlocks
+            .filterIsInstance<ContentBlock.TextBlock>()
             .joinToString("\n") { it.text }.trim()
 
         if (text.isBlank()) {
-            showSnackbar(str(R.string.error_no_text_rephrase)); return  // ← يرجع بدون حجز
+            showSnackbar(str(R.string.error_no_text_rephrase)); return
         }
 
-        if (!aiRateLimiter.tryConsume()) {  // ← يحجز فقط إذا النص موجود
+        if (!aiRateLimiter.tryConsume()) {
             _uiState.update { it.copy(rateLimitState = aiRateLimiter.state.value) }
             showSnackbar(
                 str(
-                    R.string.error_ai_rate_limit, aiRateLimiter.state.value.secondsRemaining
+                    R.string.error_ai_rate_limit,
+                    aiRateLimiter.state.value.secondsRemaining
                 )
             )
             return
@@ -240,25 +242,33 @@ class NoteViewModel(
                 showSnackbar(str(R.string.success_rephrase))
             } catch (e: Exception) {
                 Log.e("NoteViewModel", "rephraseText: ${e.message}")
+                aiRateLimiter.refundCall()
+                _uiState.update {
+                    it.copy(
+                        isAiLoading = false,
+                        rateLimitState = aiRateLimiter.state.value
+                    )
+                }
                 showSnackbar(str(R.string.error_ai_failed, e.message ?: ""))
-                _uiState.update { it.copy(isAiLoading = false) }
             }
         }
     }
 
     fun diacritizeText() {
-        val text = _uiState.value.contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
+        val text = _uiState.value.contentBlocks
+            .filterIsInstance<ContentBlock.TextBlock>()
             .joinToString("\n") { it.text }.trim()
 
         if (text.isBlank()) {
-            showSnackbar(str(R.string.error_no_text_diacritize)); return  // ← يرجع بدون حجز
+            showSnackbar(str(R.string.error_no_text_diacritize)); return
         }
 
-        if (!aiRateLimiter.tryConsume()) {  // ← يحجز فقط إذا النص موجود
+        if (!aiRateLimiter.tryConsume()) {
             _uiState.update { it.copy(rateLimitState = aiRateLimiter.state.value) }
             showSnackbar(
                 str(
-                    R.string.error_ai_rate_limit, aiRateLimiter.state.value.secondsRemaining
+                    R.string.error_ai_rate_limit,
+                    aiRateLimiter.state.value.secondsRemaining
                 )
             )
             return
@@ -276,12 +286,17 @@ class NoteViewModel(
                 showSnackbar(str(R.string.success_diacritize))
             } catch (e: Exception) {
                 Log.e("NoteViewModel", "diacritizeText: ${e.message}")
+                aiRateLimiter.refundCall() // ← أعد المحاولة عند فشل الـ API
+                _uiState.update {
+                    it.copy(
+                        isAiLoading = false,
+                        rateLimitState = aiRateLimiter.state.value
+                    )
+                }
                 showSnackbar(str(R.string.error_ai_failed, e.message ?: ""))
-                _uiState.update { it.copy(isAiLoading = false) }
             }
         }
     }
-
     // ── Save Note ─────────────────────────────────────────────────────────────
 
     fun saveNote(noteId: Int, date: String) {
