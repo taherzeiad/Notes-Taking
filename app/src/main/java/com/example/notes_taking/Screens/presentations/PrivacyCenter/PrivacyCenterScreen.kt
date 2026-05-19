@@ -2,6 +2,7 @@ package com.example.notes_taking.Screens.presentations.Privacy
 
 import android.content.Intent
 import android.net.Uri
+import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -28,113 +29,116 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
 import com.example.notes_taking.Repository.NoteRepository
-import com.example.notes_taking.Screens.presentations.PrivacyCenter.DeleteState
-import com.example.notes_taking.Screens.presentations.PrivacyCenter.ExportState
-import com.example.notes_taking.Screens.presentations.PrivacyCenter.PrivacyViewModel
+import com.example.notes_taking.Screens.presentations.PrivacyCenter.*
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrivacyScreen(
-    navController: NavHostController, repository: NoteRepository
+    navController: NavHostController,
+    repository: NoteRepository
 ) {
     val context = LocalContext.current
-    val prefs =
-        remember { context.getSharedPreferences("settings", android.content.Context.MODE_PRIVATE) }
+    val prefs = remember {
+        context.getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
+    }
 
-    val privacyViewModel: PrivacyViewModel = viewModel(
+    val viewModel: PrivacyViewModel = viewModel(
         factory = PrivacyViewModel.Factory(repository, prefs, context)
     )
 
-    val layoutDirection = LocalLayoutDirection.current
-    val isRtl = layoutDirection == LayoutDirection.Rtl
-
-    // ======= States من ViewModel =======
-    val aiProcessingEnabled by privacyViewModel.aiProcessingEnabled.collectAsState()
-    val voiceStorageEnabled by privacyViewModel.voiceStorageEnabled.collectAsState()
-    val analyticsEnabled by privacyViewModel.analyticsEnabled.collectAsState()
-    val exportState by privacyViewModel.exportState.collectAsState()
-    val deleteState by privacyViewModel.deleteState.collectAsState()
-
-    // ======= Dialog States =======
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    var showExportDialog by remember { mutableStateOf(false) }
-
-    // ======= Snackbar =======
+    val uiState by viewModel.uiState.collectAsState()
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val snackbarHostState = remember { SnackbarHostState() }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    // ======= Handle Export State =======
-    LaunchedEffect(exportState) {
-        when (val state = exportState) {
-            is ExportState.Success -> {
-                snackbarHostState.showSnackbar(
-                    if (isRtl) "تم التصدير بنجاح: ${state.filePath}"
-                    else "Exported successfully: ${state.filePath}"
-                )
-                // ← فتح الملف
-                try {
-                    val file = java.io.File(state.filePath)
-                    val uri = androidx.core.content.FileProvider.getUriForFile(
-                        context, "${context.packageName}.provider", file
-                    )
-                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(uri, "text/plain")
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    // ======= Permissions — رُفعت لمستوى Screen بعيداً عن Column =======
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                val micGranted = androidx.core.content.ContextCompat.checkSelfPermission(
+                    context, android.Manifest.permission.RECORD_AUDIO
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+                val storageGranted =
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                        androidx.core.content.ContextCompat.checkSelfPermission(
+                            context, android.Manifest.permission.READ_MEDIA_IMAGES
+                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                    } else {
+                        androidx.core.content.ContextCompat.checkSelfPermission(
+                            context, android.Manifest.permission.READ_EXTERNAL_STORAGE
+                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
                     }
-                    context.startActivity(intent)
-                } catch (e: Exception) {
-                    e.printStackTrace()
+
+                viewModel.refreshPermissions(micGranted, storageGranted)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // ======= One-shot Events =======
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is PrivacyEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
+
+                is PrivacyEvent.OpenFile -> {
+                    try {
+                        val file = java.io.File(event.filePath)
+                        val uri = androidx.core.content.FileProvider.getUriForFile(
+                            context, "${context.packageName}.provider", file
+                        )
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(uri, "text/plain")
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                        )
+                    } catch (e: Exception) {
+                        snackbarHostState.showSnackbar("Cannot open file")
+                    }
+                    viewModel.resetExportState()
                 }
-                privacyViewModel.resetExportState()
-            }
 
-            is ExportState.Error -> {
-                snackbarHostState.showSnackbar(
-                    if (isRtl) "فشل التصدير: ${state.message}"
-                    else "Export failed: ${state.message}"
-                )
-                privacyViewModel.resetExportState()
+                is PrivacyEvent.OpenAppSettings -> {
+                    context.startActivity(
+                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.fromParts("package", context.packageName, null)
+                        }
+                    )
+                }
             }
-
-            else -> {}
         }
     }
 
-    // ======= Handle Delete State =======
-    LaunchedEffect(deleteState) {
-        when (deleteState) {
-            is DeleteState.Success -> {
-                snackbarHostState.showSnackbar(
-                    if (isRtl) "تم حذف جميع البيانات بنجاح"
-                    else "All data deleted successfully"
-                )
-                privacyViewModel.resetDeleteState()
-            }
-
-            is DeleteState.Error -> {
-                val msg = (deleteState as DeleteState.Error).message
-                snackbarHostState.showSnackbar(
-                    if (isRtl) "فشل الحذف: $msg" else "Delete failed: $msg"
-                )
-                privacyViewModel.resetDeleteState()
-            }
-
-            else -> {}
+    // ======= Export Error Snackbar =======
+    LaunchedEffect(uiState.exportState) {
+        if (uiState.exportState is ExportState.Error) {
+            viewModel.resetExportState()
         }
     }
 
-    // ======= Privacy Score =======
-    val score = listOf(aiProcessingEnabled, voiceStorageEnabled, !analyticsEnabled).count { it }
-    val scorePercent = score / 3f
+    // ======= Delete Success Snackbar =======
+    LaunchedEffect(uiState.deleteState) {
+        if (uiState.deleteState is DeleteState.Success) {
+            viewModel.resetDeleteState()
+        }
+    }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }, topBar = {
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
             TopAppBar(
                 title = {
                     Text(
@@ -143,18 +147,22 @@ fun PrivacyScreen(
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
                     )
-                }, navigationIcon = {
+                },
+                navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = if (isRtl) Icons.AutoMirrored.Filled.ArrowForward
-                            else Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null
+                            else Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null
                         )
                     }
-                }, colors = TopAppBarDefaults.topAppBarColors(
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
             )
-        }, containerColor = MaterialTheme.colorScheme.background
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
 
         Column(
@@ -166,155 +174,21 @@ fun PrivacyScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // ======= Header =======
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
-                Row(
-                    modifier = Modifier.padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    if (isRtl) {
-                        Column(
-                            modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End
-                        ) {
-                            Text(
-                                text = stringResource(R.string.privacy_center_title),
-                                fontFamily = MansalvaFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                textAlign = TextAlign.End
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = stringResource(R.string.privacy_center_subtitle),
-                                fontFamily = ManropeFontFamily,
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-                                lineHeight = 20.sp,
-                                textAlign = TextAlign.End
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .size(52.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                    CircleShape
-                                ), contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Outlined.Shield,
-                                null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .size(52.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                    CircleShape
-                                ), contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Outlined.Shield,
-                                null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(R.string.privacy_center_title),
-                                fontFamily = MansalvaFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = stringResource(R.string.privacy_center_subtitle),
-                                fontFamily = ManropeFontFamily,
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-                                lineHeight = 20.sp
-                            )
-                        }
-                    }
-                }
-            }
+            PrivacyHeaderCard(isRtl = isRtl)
 
-            // ======= Privacy Score =======
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    horizontalAlignment = if (isRtl) Alignment.End else Alignment.Start
-                ) {
-                    Text(
-                        text = stringResource(R.string.privacy_score),
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = if (isRtl) TextAlign.End else TextAlign.Start
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    LinearProgressIndicator(
-                        progress = { scorePercent },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(10.dp)
-                            .clip(CircleShape),
-                        color = when {
-                            scorePercent >= 0.8f -> Color(0xFF4CAF50)
-                            scorePercent >= 0.5f -> Color(0xFFFFC107)
-                            else -> MaterialTheme.colorScheme.error
-                        },
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = when {
-                            scorePercent >= 0.8f -> stringResource(R.string.privacy_score_high)
-                            scorePercent >= 0.5f -> stringResource(R.string.privacy_score_medium)
-                            else -> stringResource(R.string.privacy_score_low)
-                        },
-                        fontFamily = ManropeFontFamily,
-                        fontSize = 13.sp,
-                        color = when {
-                            scorePercent >= 0.8f -> Color(0xFF2E7D32)
-                            scorePercent >= 0.5f -> Color(0xFFF57F17)
-                            else -> MaterialTheme.colorScheme.error
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = if (isRtl) TextAlign.End else TextAlign.Start
-                    )
-                }
-            }
+            PrivacyScoreCard(
+                scorePercent = uiState.privacyScorePercent,
+                isRtl = isRtl
+            )
 
-            // ======= Data Controls =======
             SectionHeader(title = stringResource(R.string.privacy_data_controls), isRtl = isRtl)
 
             PrivacyToggleItem(
                 icon = Icons.Outlined.Psychology,
                 title = stringResource(R.string.privacy_ai_processing),
                 subtitle = stringResource(R.string.privacy_ai_processing_desc),
-                checked = aiProcessingEnabled,
-                onCheckedChange = { privacyViewModel.setAiProcessing(it) },
+                checked = uiState.aiProcessingEnabled,
+                onCheckedChange = viewModel::setAiProcessing,
                 isRtl = isRtl
             )
 
@@ -322,8 +196,8 @@ fun PrivacyScreen(
                 icon = Icons.Outlined.Mic,
                 title = stringResource(R.string.privacy_voice_storage),
                 subtitle = stringResource(R.string.privacy_voice_storage_desc),
-                checked = voiceStorageEnabled,
-                onCheckedChange = { privacyViewModel.setVoiceStorage(it) },
+                checked = uiState.voiceStorageEnabled,
+                onCheckedChange = viewModel::setVoiceStorage,
                 isRtl = isRtl
             )
 
@@ -331,300 +205,390 @@ fun PrivacyScreen(
                 icon = Icons.Outlined.Analytics,
                 title = stringResource(R.string.privacy_analytics),
                 subtitle = stringResource(R.string.privacy_analytics_desc),
-                checked = analyticsEnabled,
-                onCheckedChange = { privacyViewModel.setAnalytics(it) },
+                checked = uiState.analyticsEnabled,
+                onCheckedChange = viewModel::setAnalytics,
                 isRtl = isRtl,
-                isWarning = analyticsEnabled
+                isWarning = uiState.analyticsEnabled
             )
 
-            // ======= Your Data =======
             SectionHeader(title = stringResource(R.string.privacy_your_data), isRtl = isRtl)
 
             PrivacyActionItem(
                 icon = Icons.Outlined.FileDownload,
                 title = stringResource(R.string.privacy_export_data),
                 subtitle = stringResource(R.string.privacy_export_data_desc),
-                actionLabel = if (exportState is ExportState.Loading) if (isRtl) "جاري..." else "Loading..."
-                else stringResource(R.string.privacy_export_btn),
+                actionLabel = stringResource(R.string.privacy_export_btn),
                 actionColor = MaterialTheme.colorScheme.primary,
                 isRtl = isRtl,
-                isLoading = exportState is ExportState.Loading,
-                onClick = { showExportDialog = true })
+                isLoading = uiState.exportState is ExportState.Loading,
+                onClick = viewModel::showExportDialog
+            )
 
             PrivacyActionItem(
                 icon = Icons.Outlined.DeleteForever,
                 title = stringResource(R.string.privacy_delete_data),
                 subtitle = stringResource(R.string.privacy_delete_data_desc),
-                actionLabel = if (deleteState is DeleteState.Loading) if (isRtl) "جاري..." else "Loading..."
-                else stringResource(R.string.privacy_delete_btn),
+                actionLabel = stringResource(R.string.privacy_delete_btn),
                 actionColor = MaterialTheme.colorScheme.error,
                 isRtl = isRtl,
-                isLoading = deleteState is DeleteState.Loading,
-                onClick = { showDeleteDialog = true })
+                isLoading = uiState.deleteState is DeleteState.Loading,
+                onClick = viewModel::showDeleteDialog
+            )
 
-            // ======= Permissions =======
             SectionHeader(title = stringResource(R.string.privacy_permissions), isRtl = isRtl)
-
-            var micGranted by remember { mutableStateOf(false) }
-            var storageGranted by remember { mutableStateOf(false) }
-
-            fun refreshPermissions() {
-
-                micGranted = androidx.core.content.ContextCompat.checkSelfPermission(
-                    context, android.Manifest.permission.RECORD_AUDIO
-                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-
-                storageGranted =
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-
-                        androidx.core.content.ContextCompat.checkSelfPermission(
-                            context, android.Manifest.permission.READ_MEDIA_IMAGES
-                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-
-                    } else {
-
-                        androidx.core.content.ContextCompat.checkSelfPermission(
-                            context, android.Manifest.permission.READ_EXTERNAL_STORAGE
-                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-                    }
-            }
-
-            val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-
-            DisposableEffect(lifecycleOwner) {
-
-                val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-
-                    if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
-                        refreshPermissions()
-                    }
-                }
-
-                lifecycleOwner.lifecycle.addObserver(observer)
-
-                onDispose {
-                    lifecycleOwner.lifecycle.removeObserver(observer)
-                }
-            }
 
             PermissionInfoItem(
                 icon = Icons.Outlined.Mic,
                 title = stringResource(R.string.permission_microphone),
                 description = stringResource(R.string.permission_microphone_desc),
-                isGranted = micGranted,
+                isGranted = uiState.isMicGranted,
                 isRtl = isRtl,
-                onManage = {
-                    // ← فتح إعدادات التطبيق
-                    val intent =
-                        Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                            data = Uri.fromParts("package", context.packageName, null)
-                        }
-                    context.startActivity(intent)
-                })
+                onManage = viewModel::onManagePermission
+            )
 
             PermissionInfoItem(
                 icon = Icons.Outlined.Image,
                 title = stringResource(R.string.permission_storage),
                 description = stringResource(R.string.permission_storage_desc),
-                isGranted = storageGranted,
+                isGranted = uiState.isStorageGranted,
                 isRtl = isRtl,
-                onManage = {
-                    val intent =
-                        Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                            data = Uri.fromParts("package", context.packageName, null)
-                        }
-                    context.startActivity(intent)
-                })
+                onManage = viewModel::onManagePermission
+            )
 
-            // ======= Privacy Policy Link =======
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        navController.navigate(Route.Privacy.route)
-                    }, shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    if (isRtl) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Column(
-                            modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End
-                        ) {
-                            Text(
-                                stringResource(R.string.privacy_policy),
-                                fontFamily = ManropeFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 15.sp,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                textAlign = TextAlign.End
-                            )
-                            Text(
-                                stringResource(R.string.privacy_policy_link_desc),
-                                fontFamily = ManropeFontFamily,
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.End
-                            )
-                        }
-                        Icon(
-                            Icons.Outlined.Shield,
-                            null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    } else {
-                        Icon(
-                            Icons.Outlined.Shield,
-                            null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                stringResource(R.string.privacy_policy),
-                                fontFamily = ManropeFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 15.sp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                stringResource(R.string.privacy_policy_link_desc),
-                                fontFamily = ManropeFontFamily,
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowForward,
-                            null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-            }
+            PrivacyPolicyCard(isRtl = isRtl, onClick = {
+                navController.navigate(Route.Privacy.route)
+            })
 
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
 
-    // ======= Delete Dialog =======
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false }, icon = {
-                Icon(
-                    Icons.Outlined.Warning,
-                    null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(32.dp)
-                )
-            }, title = {
-                Text(
-                    stringResource(R.string.privacy_delete_confirm_title),
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-            }, text = {
-                Text(
-                    stringResource(R.string.privacy_delete_confirm_desc),
-                    fontFamily = ManropeFontFamily,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 22.sp
-                )
-            }, confirmButton = {
-                Button(
-                    onClick = {
-                        showDeleteDialog = false
-                        privacyViewModel.deleteAllData()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = deleteState !is DeleteState.Loading
-                ) {
-                    if (deleteState is DeleteState.Loading) {
-                        CircularProgressIndicator(
-                            color = Color.White, modifier = Modifier.size(16.dp), strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text(
-                            stringResource(R.string.privacy_delete_btn),
-                            fontFamily = ManropeFontFamily
-                        )
-                    }
-                }
-            }, dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text(stringResource(R.string.cancel), fontFamily = ManropeFontFamily)
-                }
-            }, shape = RoundedCornerShape(20.dp)
+    // ======= Dialogs =======
+    if (uiState.showDeleteDialog) {
+        PrivacyDeleteDialog(
+            isLoading = uiState.deleteState is DeleteState.Loading,
+            onConfirm = {
+                viewModel.hideDeleteDialog()
+                viewModel.deleteAllData()
+            },
+            onDismiss = viewModel::hideDeleteDialog
         )
     }
 
-    // ======= Export Dialog =======
-    if (showExportDialog) {
-        AlertDialog(
-            onDismissRequest = { showExportDialog = false }, icon = {
-                Icon(
-                    Icons.Outlined.FileDownload,
-                    null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(32.dp)
-                )
-            }, title = {
-                Text(
-                    stringResource(R.string.privacy_export_confirm_title),
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-            }, text = {
-                Text(
-                    stringResource(R.string.privacy_export_confirm_desc),
-                    fontFamily = ManropeFontFamily,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 22.sp
-                )
-            }, confirmButton = {
-                Button(
-                    onClick = {
-                        showExportDialog = false
-                        privacyViewModel.exportData()
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = exportState !is ExportState.Loading
-                ) {
-                    if (exportState is ExportState.Loading) {
-                        CircularProgressIndicator(
-                            color = Color.White, modifier = Modifier.size(16.dp), strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text(
-                            stringResource(R.string.privacy_export_btn),
-                            fontFamily = ManropeFontFamily
-                        )
-                    }
-                }
-            }, dismissButton = {
-                TextButton(onClick = { showExportDialog = false }) {
-                    Text(stringResource(R.string.cancel), fontFamily = ManropeFontFamily)
-                }
-            }, shape = RoundedCornerShape(20.dp)
+    if (uiState.showExportDialog) {
+        PrivacyExportDialog(
+            isLoading = uiState.exportState is ExportState.Loading,
+            onConfirm = {
+                viewModel.hideExportDialog()
+                viewModel.exportData()
+            },
+            onDismiss = viewModel::hideExportDialog
         )
     }
+}
+
+// ======= Header Card =======
+@Composable
+private fun PrivacyHeaderCard(isRtl: Boolean) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            val icon = @Composable {
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .background(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                            CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Outlined.Shield, null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
+            val text = @Composable {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = if (isRtl) Alignment.End else Alignment.Start
+                ) {
+                    Text(
+                        text = stringResource(R.string.privacy_center_title),
+                        fontFamily = MansalvaFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        textAlign = if (isRtl) TextAlign.End else TextAlign.Start
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.privacy_center_subtitle),
+                        fontFamily = ManropeFontFamily,
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                        lineHeight = 20.sp,
+                        textAlign = if (isRtl) TextAlign.End else TextAlign.Start
+                    )
+                }
+            }
+            if (isRtl) {
+                text(); icon()
+            } else {
+                icon(); text()
+            }
+        }
+    }
+}
+
+// ======= Score Card =======
+@Composable
+private fun PrivacyScoreCard(scorePercent: Float, isRtl: Boolean) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            horizontalAlignment = if (isRtl) Alignment.End else Alignment.Start
+        ) {
+            Text(
+                text = stringResource(R.string.privacy_score),
+                fontFamily = ManropeFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = if (isRtl) TextAlign.End else TextAlign.Start
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            LinearProgressIndicator(
+                progress = { scorePercent },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp)
+                    .clip(CircleShape),
+                color = when {
+                    scorePercent >= 0.8f -> Color(0xFF4CAF50)
+                    scorePercent >= 0.5f -> Color(0xFFFFC107)
+                    else -> MaterialTheme.colorScheme.error
+                },
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = when {
+                    scorePercent >= 0.8f -> stringResource(R.string.privacy_score_high)
+                    scorePercent >= 0.5f -> stringResource(R.string.privacy_score_medium)
+                    else -> stringResource(R.string.privacy_score_low)
+                },
+                fontFamily = ManropeFontFamily,
+                fontSize = 13.sp,
+                color = when {
+                    scorePercent >= 0.8f -> Color(0xFF2E7D32)
+                    scorePercent >= 0.5f -> Color(0xFFF57F17)
+                    else -> MaterialTheme.colorScheme.error
+                },
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = if (isRtl) TextAlign.End else TextAlign.Start
+            )
+        }
+    }
+}
+
+// ======= Policy Card =======
+@Composable
+private fun PrivacyPolicyCard(isRtl: Boolean, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            val shieldIcon = @Composable {
+                Icon(
+                    Icons.Outlined.Shield, null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            val arrowIcon = @Composable {
+                Icon(
+                    if (isRtl) Icons.AutoMirrored.Filled.ArrowBack
+                    else Icons.AutoMirrored.Filled.ArrowForward,
+                    null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            val text = @Composable {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = if (isRtl) Alignment.End else Alignment.Start
+                ) {
+                    Text(
+                        stringResource(R.string.privacy_policy),
+                        fontFamily = ManropeFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 15.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = if (isRtl) TextAlign.End else TextAlign.Start
+                    )
+                    Text(
+                        stringResource(R.string.privacy_policy_link_desc),
+                        fontFamily = ManropeFontFamily,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = if (isRtl) TextAlign.End else TextAlign.Start
+                    )
+                }
+            }
+            if (isRtl) {
+                arrowIcon(); text(); shieldIcon()
+            } else {
+                shieldIcon(); text(); arrowIcon()
+            }
+        }
+    }
+}
+
+// ======= Delete Dialog =======
+@Composable
+private fun PrivacyDeleteDialog(
+    isLoading: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                Icons.Outlined.Warning, null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(32.dp)
+            )
+        },
+        title = {
+            Text(
+                stringResource(R.string.privacy_delete_confirm_title),
+                fontFamily = ManropeFontFamily,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+        },
+        text = {
+            Text(
+                stringResource(R.string.privacy_delete_confirm_desc),
+                fontFamily = ManropeFontFamily,
+                textAlign = TextAlign.Center,
+                lineHeight = 22.sp
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                enabled = !isLoading,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                if (isLoading) CircularProgressIndicator(
+                    color = Color.White,
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp
+                )
+                else Text(
+                    stringResource(R.string.privacy_delete_btn),
+                    fontFamily = ManropeFontFamily
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel), fontFamily = ManropeFontFamily)
+            }
+        },
+        shape = RoundedCornerShape(20.dp)
+    )
+}
+
+// ======= Export Dialog =======
+@Composable
+private fun PrivacyExportDialog(
+    isLoading: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                Icons.Outlined.FileDownload, null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(32.dp)
+            )
+        },
+        title = {
+            Text(
+                stringResource(R.string.privacy_export_confirm_title),
+                fontFamily = ManropeFontFamily,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+        },
+        text = {
+            Text(
+                stringResource(R.string.privacy_export_confirm_desc),
+                fontFamily = ManropeFontFamily,
+                textAlign = TextAlign.Center,
+                lineHeight = 22.sp
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                enabled = !isLoading,
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                if (isLoading) CircularProgressIndicator(
+                    color = Color.White,
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp
+                )
+                else Text(
+                    stringResource(R.string.privacy_export_btn),
+                    fontFamily = ManropeFontFamily
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel), fontFamily = ManropeFontFamily)
+            }
+        },
+        shape = RoundedCornerShape(20.dp)
+    )
 }
 
 // ======= Section Header =======
@@ -656,7 +620,8 @@ fun PrivacyToggleItem(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isWarning) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+            containerColor = if (isWarning)
+                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
             else MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(0.dp)
@@ -668,88 +633,60 @@ fun PrivacyToggleItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            if (isRtl) {
-                Switch(
-                    checked = checked,
-                    onCheckedChange = onCheckedChange,
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                        checkedTrackColor = if (isWarning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+            val iconBox = @Composable {
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(
+                            if (isWarning) MaterialTheme.colorScheme.errorContainer
+                            else MaterialTheme.colorScheme.primaryContainer
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        icon, null,
+                        tint = if (isWarning) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
                     )
-                )
-                Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
+                }
+            }
+            val textCol = @Composable {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = if (isRtl) Alignment.End else Alignment.Start
+                ) {
                     Text(
-                        title,
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
+                        title, fontFamily = ManropeFontFamily,
+                        fontWeight = FontWeight.SemiBold, fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.End
+                        textAlign = if (isRtl) TextAlign.End else TextAlign.Start
                     )
                     Spacer(modifier = Modifier.height(3.dp))
                     Text(
-                        subtitle,
-                        fontFamily = ManropeFontFamily,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        subtitle, fontFamily = ManropeFontFamily,
+                        fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 18.sp,
-                        textAlign = TextAlign.End
+                        textAlign = if (isRtl) TextAlign.End else TextAlign.Start
                     )
                 }
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(if (isWarning) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        icon,
-                        null,
-                        tint = if (isWarning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(if (isWarning) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        icon,
-                        null,
-                        tint = if (isWarning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        title,
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(3.dp))
-                    Text(
-                        subtitle,
-                        fontFamily = ManropeFontFamily,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 18.sp
-                    )
-                }
+            }
+            val switch = @Composable {
                 Switch(
                     checked = checked,
                     onCheckedChange = onCheckedChange,
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                        checkedTrackColor = if (isWarning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                        checkedTrackColor = if (isWarning) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.primary
                     )
                 )
+            }
+            if (isRtl) {
+                switch(); textCol(); iconBox()
+            } else {
+                iconBox(); textCol(); switch()
             }
         }
     }
@@ -780,75 +717,38 @@ fun PrivacyActionItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            if (isRtl) {
-                Button(
-                    onClick = onClick,
-                    enabled = !isLoading,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = actionColor),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                    modifier = Modifier.height(34.dp)
+            val iconBox = @Composable {
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(actionColor.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    if (isLoading) CircularProgressIndicator(
-                        color = Color.White, modifier = Modifier.size(14.dp), strokeWidth = 2.dp
-                    )
-                    else Text(actionLabel, fontFamily = ManropeFontFamily, fontSize = 12.sp)
+                    Icon(icon, null, tint = actionColor, modifier = Modifier.size(20.dp))
                 }
-                Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
+            }
+            val textCol = @Composable {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = if (isRtl) Alignment.End else Alignment.Start
+                ) {
                     Text(
-                        title,
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
+                        title, fontFamily = ManropeFontFamily,
+                        fontWeight = FontWeight.SemiBold, fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.End
+                        textAlign = if (isRtl) TextAlign.End else TextAlign.Start
                     )
                     Spacer(modifier = Modifier.height(3.dp))
                     Text(
-                        subtitle,
-                        fontFamily = ManropeFontFamily,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        subtitle, fontFamily = ManropeFontFamily,
+                        fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 18.sp,
-                        textAlign = TextAlign.End
+                        textAlign = if (isRtl) TextAlign.End else TextAlign.Start
                     )
                 }
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(actionColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(icon, null, tint = actionColor, modifier = Modifier.size(20.dp))
-                }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(actionColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(icon, null, tint = actionColor, modifier = Modifier.size(20.dp))
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        title,
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(3.dp))
-                    Text(
-                        subtitle,
-                        fontFamily = ManropeFontFamily,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 18.sp
-                    )
-                }
+            }
+            val btn = @Composable {
                 Button(
                     onClick = onClick,
                     enabled = !isLoading,
@@ -862,6 +762,11 @@ fun PrivacyActionItem(
                     )
                     else Text(actionLabel, fontFamily = ManropeFontFamily, fontSize = 12.sp)
                 }
+            }
+            if (isRtl) {
+                btn(); textCol(); iconBox()
+            } else {
+                iconBox(); textCol(); btn()
             }
         }
     }
@@ -890,103 +795,42 @@ fun PermissionInfoItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            if (isRtl) {
-                // ← زر الإدارة
-                TextButton(
-                    onClick = onManage,
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        if (isRtl) "إدارة" else "Manage",
-                        fontFamily = ManropeFontFamily,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                // ← Badge
+            val iconBox = @Composable {
                 Box(
                     modifier = Modifier
-                        .background(
-                            if (isGranted) Color(0xFF4CAF50).copy(alpha = 0.15f) else MaterialTheme.colorScheme.errorContainer,
-                            RoundedCornerShape(8.dp)
-                        )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .size(38.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = if (isGranted) stringResource(R.string.permission_granted) else stringResource(
-                            R.string.permission_denied
-                        ),
-                        fontFamily = ManropeFontFamily,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (isGranted) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error
+                    Icon(
+                        icon, null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
-                Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
+            }
+            val textCol = @Composable {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = if (isRtl) Alignment.End else Alignment.Start
+                ) {
                     Text(
-                        title,
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
+                        title, fontFamily = ManropeFontFamily,
+                        fontWeight = FontWeight.SemiBold, fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.End
+                        textAlign = if (isRtl) TextAlign.End else TextAlign.Start
                     )
                     Spacer(modifier = Modifier.height(3.dp))
                     Text(
-                        description,
-                        fontFamily = ManropeFontFamily,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        description, fontFamily = ManropeFontFamily,
+                        fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 18.sp,
-                        textAlign = TextAlign.End
+                        textAlign = if (isRtl) TextAlign.End else TextAlign.Start
                     )
                 }
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        icon,
-                        null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        icon,
-                        null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        title,
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(3.dp))
-                    Text(
-                        description,
-                        fontFamily = ManropeFontFamily,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 18.sp
-                    )
-                }
+            }
+            val badgeAndBtn = @Composable {
                 Column(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -994,19 +838,20 @@ fun PermissionInfoItem(
                     Box(
                         modifier = Modifier
                             .background(
-                                if (isGranted) Color(0xFF4CAF50).copy(alpha = 0.15f) else MaterialTheme.colorScheme.errorContainer,
+                                if (isGranted) Color(0xFF4CAF50).copy(alpha = 0.15f)
+                                else MaterialTheme.colorScheme.errorContainer,
                                 RoundedCornerShape(8.dp)
                             )
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = if (isGranted) stringResource(R.string.permission_granted) else stringResource(
-                                R.string.permission_denied
-                            ),
+                            text = if (isGranted) stringResource(R.string.permission_granted)
+                            else stringResource(R.string.permission_denied),
                             fontFamily = ManropeFontFamily,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = if (isGranted) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error
+                            color = if (isGranted) Color(0xFF2E7D32)
+                            else MaterialTheme.colorScheme.error
                         )
                     }
                     TextButton(
@@ -1014,13 +859,18 @@ fun PermissionInfoItem(
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                     ) {
                         Text(
-                            "Manage",
+                            if (isRtl) "إدارة" else "Manage",
                             fontFamily = ManropeFontFamily,
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
+            }
+            if (isRtl) {
+                badgeAndBtn(); textCol(); iconBox()
+            } else {
+                iconBox(); textCol(); badgeAndBtn()
             }
         }
     }

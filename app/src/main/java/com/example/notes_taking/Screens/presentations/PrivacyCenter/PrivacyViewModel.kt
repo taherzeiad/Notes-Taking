@@ -9,27 +9,16 @@ import com.example.notes_taking.Repository.NoteRepository
 import com.example.notes_taking.RoomDatabase.Note
 import com.example.notes_taking.RoomDatabase.TaskEntity
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-
-// ======= حالة الـ Export =======
-sealed class ExportState {
-    object Idle : ExportState()
-    object Loading : ExportState()
-    data class Success(val filePath: String) : ExportState()
-    data class Error(val message: String) : ExportState()
-}
-
-// ======= حالة الـ Delete =======
-sealed class DeleteState {
-    object Idle : DeleteState()
-    object Loading : DeleteState()
-    object Success : DeleteState()
-    data class Error(val message: String) : DeleteState()
-}
 
 class PrivacyViewModel(
     private val repository: NoteRepository,
@@ -37,141 +26,148 @@ class PrivacyViewModel(
     private val context: Context
 ) : ViewModel() {
 
-    // ======= إعدادات الخصوصية من SharedPreferences =======
-    private val _aiProcessingEnabled = MutableStateFlow(
-        prefs.getBoolean("privacy_ai_processing", true)
+    // ======= Single UI State =======
+    private val _uiState = MutableStateFlow(
+        PrivacyUiState(
+            aiProcessingEnabled = prefs.getBoolean("privacy_ai_processing", true),
+            voiceStorageEnabled  = prefs.getBoolean("privacy_voice_storage", true),
+            analyticsEnabled     = prefs.getBoolean("privacy_analytics", false),
+        )
     )
-    val aiProcessingEnabled = _aiProcessingEnabled.asStateFlow()
+    val uiState: StateFlow<PrivacyUiState> = _uiState.asStateFlow()
 
-    private val _voiceStorageEnabled = MutableStateFlow(
-        prefs.getBoolean("privacy_voice_storage", true)
-    )
-    val voiceStorageEnabled = _voiceStorageEnabled.asStateFlow()
+    // ======= One-shot Events Channel =======
+    private val _events = Channel<PrivacyEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
 
-    private val _analyticsEnabled = MutableStateFlow(
-        prefs.getBoolean("privacy_analytics", false)
-    )
-    val analyticsEnabled = _analyticsEnabled.asStateFlow()
+    // ======= Permissions =======
+    fun refreshPermissions(isMicGranted: Boolean, isStorageGranted: Boolean) {
+        _uiState.update {
+            it.copy(
+                isMicGranted     = isMicGranted,
+                isStorageGranted = isStorageGranted
+            )
+        }
+    }
 
-    // ======= حالات العمليات =======
-    private val _exportState = MutableStateFlow<ExportState>(ExportState.Idle)
-    val exportState = _exportState.asStateFlow()
-
-    private val _deleteState = MutableStateFlow<DeleteState>(DeleteState.Idle)
-    val deleteState = _deleteState.asStateFlow()
-
-    // ======= إعدادات Toggle =======
+    // ======= Toggle Settings =======
     fun setAiProcessing(enabled: Boolean) {
-        _aiProcessingEnabled.value = enabled
         prefs.edit().putBoolean("privacy_ai_processing", enabled).apply()
+        _uiState.update { it.copy(aiProcessingEnabled = enabled) }
     }
 
     fun setVoiceStorage(enabled: Boolean) {
-        _voiceStorageEnabled.value = enabled
         prefs.edit().putBoolean("privacy_voice_storage", enabled).apply()
+        _uiState.update { it.copy(voiceStorageEnabled = enabled) }
     }
 
     fun setAnalytics(enabled: Boolean) {
-        _analyticsEnabled.value = enabled
         prefs.edit().putBoolean("privacy_analytics", enabled).apply()
+        _uiState.update { it.copy(analyticsEnabled = enabled) }
     }
 
-    // ======= تصدير البيانات =======
+    // ======= Dialog Controls =======
+    fun showDeleteDialog()  { _uiState.update { it.copy(showDeleteDialog  = true)  } }
+    fun hideDeleteDialog()  { _uiState.update { it.copy(showDeleteDialog  = false) } }
+    fun showExportDialog()  { _uiState.update { it.copy(showExportDialog  = true)  } }
+    fun hideExportDialog()  { _uiState.update { it.copy(showExportDialog  = false) } }
+
+    // ======= Export Data =======
     fun exportData() {
         viewModelScope.launch {
-            _exportState.value = ExportState.Loading
+            _uiState.update { it.copy(exportState = ExportState.Loading) }
             try {
-                val notes = withContext(Dispatchers.IO) {
-                    repository.getRecentNotes()
-                }
-                val tasks = withContext(Dispatchers.IO) {
-                    repository.getAllTasks().let { flow ->
-                        var result = emptyList<TaskEntity>()
-                        val job = launch { flow.collect { result = it } }
-                        kotlinx.coroutines.delay(500)
-                        job.cancel()
-                        result
-                    }
+                val (notes, tasks) = withContext(Dispatchers.IO) {
+                    val notes = repository.getRecentNotes()
+                    // استخدام first() بدل الـ delay hack
+                    val tasks = repository.getAllTasks().first()
+                    Pair(notes, tasks)
                 }
 
-                val exportContent = buildExportContent(notes, tasks)
-
+                val content  = buildExportContent(notes, tasks)
                 val fileName = "notes_export_${System.currentTimeMillis()}.txt"
-                val file = File(context.getExternalFilesDir(null), fileName)
+                val file     = File(context.getExternalFilesDir(null), fileName)
 
-                withContext(Dispatchers.IO) {
-                    file.writeText(exportContent)
-                }
+                withContext(Dispatchers.IO) { file.writeText(content) }
 
-                _exportState.value = ExportState.Success(file.absolutePath)
+                _uiState.update { it.copy(exportState = ExportState.Success(file.absolutePath)) }
+                _events.send(PrivacyEvent.OpenFile(file.absolutePath))
+
             } catch (e: Exception) {
-                _exportState.value = ExportState.Error(e.message ?: "Export failed")
+                _uiState.update {
+                    it.copy(exportState = ExportState.Error(e.message ?: "Export failed"))
+                }
+                _events.send(
+                    PrivacyEvent.ShowSnackbar("Export failed: ${e.message}")
+                )
             }
         }
     }
 
-    private fun buildExportContent(notes: List<Note>, tasks: List<TaskEntity>): String {
-        val sb = StringBuilder()
-        sb.appendLine("=".repeat(50))
-        sb.appendLine("NOTES EXPORT")
-        sb.appendLine("=".repeat(50))
-        sb.appendLine()
-
-        sb.appendLine("NOTES (${notes.size}):")
-        sb.appendLine("-".repeat(30))
-        notes.forEach { note ->
-            sb.appendLine("Title: ${note.title}")
-            sb.appendLine("Date: ${note.date}")
-            sb.appendLine("Category: ${note.category}")
-            sb.appendLine("Content: ${note.content}")
-            sb.appendLine()
-        }
-
-        sb.appendLine("TASKS (${tasks.size}):")
-        sb.appendLine("-".repeat(30))
-        tasks.forEach { task ->
-            sb.appendLine("Task: ${task.title}")
-            sb.appendLine("Source: ${task.source}")
-            sb.appendLine("Completed: ${task.isCompleted}")
-            sb.appendLine()
-        }
-
-        return sb.toString()
-    }
-
-    // ======= حذف جميع البيانات =======
+    // ======= Delete All Data =======
     fun deleteAllData() {
         viewModelScope.launch {
-            _deleteState.value = DeleteState.Loading
+            _uiState.update { it.copy(deleteState = DeleteState.Loading) }
             try {
                 withContext(Dispatchers.IO) {
-                    // 1. جلب كل الملاحظات وحذفها
-                    val notes = repository.getRecentNotes()
-                    notes.forEach { note ->
+                    repository.getRecentNotes().forEach { note ->
                         repository.deleteNote(note)
-                        // حذف الصور المرتبطة
                         note.imageUri?.let { path ->
-                            val file = File(path)
-                            if (file.exists()) file.delete()
+                            File(path).takeIf { it.exists() }?.delete()
                         }
                     }
-
-                    // 2. حذف ملفات التسجيل الصوتي
-                    context.filesDir.listFiles()?.forEach { file ->
-                        if (file.name.endsWith(".mp4") || file.name.endsWith(".jpg")) {
-                            file.delete()
-                        }
-                    }
+                    context.filesDir.listFiles()
+                        ?.filter { it.name.endsWith(".mp4") || it.name.endsWith(".jpg") }
+                        ?.forEach { it.delete() }
                 }
-                _deleteState.value = DeleteState.Success
+                _uiState.update { it.copy(deleteState = DeleteState.Success) }
+                _events.send(PrivacyEvent.ShowSnackbar("All data deleted successfully"))
+
             } catch (e: Exception) {
-                _deleteState.value = DeleteState.Error(e.message ?: "Delete failed")
+                _uiState.update {
+                    it.copy(deleteState = DeleteState.Error(e.message ?: "Delete failed"))
+                }
+                _events.send(
+                    PrivacyEvent.ShowSnackbar("Delete failed: ${e.message}")
+                )
             }
         }
     }
 
-    fun resetExportState() { _exportState.value = ExportState.Idle }
-    fun resetDeleteState() { _deleteState.value = DeleteState.Idle }
+    // ======= Reset States =======
+    fun resetExportState() { _uiState.update { it.copy(exportState = ExportState.Idle) } }
+    fun resetDeleteState() { _uiState.update { it.copy(deleteState = DeleteState.Idle) } }
+
+    // ======= Open Settings =======
+    fun onManagePermission() {
+        viewModelScope.launch { _events.send(PrivacyEvent.OpenAppSettings) }
+    }
+
+    // ======= Private Helpers =======
+    private fun buildExportContent(notes: List<Note>, tasks: List<TaskEntity>): String =
+        buildString {
+            appendLine("=".repeat(50))
+            appendLine("NOTES EXPORT")
+            appendLine("=".repeat(50))
+            appendLine()
+            appendLine("NOTES (${notes.size}):")
+            appendLine("-".repeat(30))
+            notes.forEach { note ->
+                appendLine("Title: ${note.title}")
+                appendLine("Date: ${note.date}")
+                appendLine("Category: ${note.category}")
+                appendLine("Content: ${note.content}")
+                appendLine()
+            }
+            appendLine("TASKS (${tasks.size}):")
+            appendLine("-".repeat(30))
+            tasks.forEach { task ->
+                appendLine("Task: ${task.title}")
+                appendLine("Source: ${task.source}")
+                appendLine("Completed: ${task.isCompleted}")
+                appendLine()
+            }
+        }
 
     // ======= Factory =======
     class Factory(
@@ -179,9 +175,8 @@ class PrivacyViewModel(
         private val prefs: SharedPreferences,
         private val context: Context
     ) : ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            @Suppress("UNCHECKED_CAST")
-            return PrivacyViewModel(repository, prefs, context) as T
-        }
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+            PrivacyViewModel(repository, prefs, context) as T
     }
 }
