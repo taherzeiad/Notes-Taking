@@ -182,9 +182,12 @@
     <string name="reminder_time_dialog_title">Choose Reminder Time</string>
     <string name="action_close">Close</string>
     <string name="action_delete">Delete</string>
-    <string name="error_ai_failed">فشل الذكاء الاصطناعي: %s</string>
+    <string name="error_ai_failed">Failed Ai: %s</string>
 
-
+    <!-- AI Rate Limiting -->
+    <string name="error_ai_rate_limit">Maximum 3 uses every 2 minutes. Please wait %1$d seconds</string>
+    <string name="ai_rate_limit_remaining">%1$d AI calls remaining</string>
+    <string name="ai_rate_limit_wait">Temporarily blocked — wait %1$d seconds</string>
     //////////////////////////
     <!-- Edit Notes Screen -->
     <string name="editor_save">Save</string>
