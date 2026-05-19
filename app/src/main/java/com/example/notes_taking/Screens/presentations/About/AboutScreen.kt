@@ -1,38 +1,17 @@
 package com.example.notes_taking.Screens.presentations.About
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Mail
-import androidx.compose.material.icons.filled.PrivacyTip
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,42 +24,84 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.notes_taking.Navmain.Route
 import com.example.notes_taking.R
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
 
-@SuppressLint("UseKtx")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(navController: NavHostController) {
 
     val context = LocalContext.current
-    val layoutDirection = LocalLayoutDirection.current
-    val isRtl = layoutDirection == LayoutDirection.Rtl
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val viewModel = viewModel<AboutViewModel>()
+    val snackbarHost = remember { SnackbarHostState() }
+
+    // ======= معالجة الأحداث =======
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+
+                is AboutEvent.OpenUrl -> {
+                    runCatching {
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, Uri.parse(event.url))
+                        )
+                    }.onFailure {
+                        // نُعلم المستخدم بدل الصمت
+                        snackbarHost.showSnackbar(
+                            if (isRtl) "لا يوجد تطبيق لفتح الرابط"
+                            else "No app found to open the link"
+                        )
+                    }
+                }
+
+                is AboutEvent.SendEmail -> {
+                    runCatching {
+                        context.startActivity(
+                            Intent(Intent.ACTION_SENDTO).apply {
+                                data = Uri.parse("mailto:${event.email}")
+                                putExtra(
+                                    Intent.EXTRA_SUBJECT, "Support Request: Notes Taking App"
+                                )
+                            })
+                    }.onFailure {
+                        snackbarHost.showSnackbar(
+                            if (isRtl) "لا يوجد تطبيق بريد مثبّت"
+                            else "No email app found"
+                        )
+                    }
+                }
+
+                is AboutEvent.ShowSnackbar -> snackbarHost.showSnackbar(event.message)
+            }
+        }
+    }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.about_app),
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                }, navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }, colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
+        snackbarHost = { SnackbarHost(snackbarHost) }, topBar = {
+        TopAppBar(
+            title = {
+            Text(
+                stringResource(R.string.about_app),
+                fontFamily = ManropeFontFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
             )
-        }, containerColor = MaterialTheme.colorScheme.background
+        }, navigationIcon = {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+            }
+        }, colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background
+        )
+        )
+    }, containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -88,7 +109,8 @@ fun AboutScreen(navController: NavHostController) {
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 1. App Logo Section
+
+            // ======= Logo =======
             Box(
                 modifier = Modifier
                     .size(120.dp)
@@ -106,7 +128,7 @@ fun AboutScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 2. App Name & Version
+            // ======= Name & Version =======
             Text(
                 text = stringResource(R.string.intellectual_sanctuary),
                 fontSize = 28.sp,
@@ -114,7 +136,6 @@ fun AboutScreen(navController: NavHostController) {
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
-
             Text(
                 text = stringResource(R.string.app_version),
                 fontSize = 14.sp,
@@ -124,7 +145,7 @@ fun AboutScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // 3. Description
+            // ======= Description =======
             Text(
                 text = stringResource(R.string.app_description),
                 textAlign = TextAlign.Center,
@@ -136,7 +157,7 @@ fun AboutScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // 4. Links Section
+            // ======= Links =======
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -144,29 +165,15 @@ fun AboutScreen(navController: NavHostController) {
                 AboutLinkItem(
                     icon = Icons.Default.Language,
                     label = stringResource(R.string.official_website),
-                    onClick = {
-                        val url = "https://www.linkedin.com/in/taherqudeih/"
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-
-                        try {
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            // معالجة الخطأ في حال لم يتمكن الجهاز من فتح الرابط
-                        }
-                    })
+                    isRtl = isRtl,
+                    onClick = viewModel::onWebsiteClick
+                )
                 AboutLinkItem(
                     icon = Icons.Default.Mail,
                     label = stringResource(R.string.technical_support),
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_SENDTO).apply {
-                            data = "mailto:taherqudeih@gmail.com".toUri()
-                            putExtra(Intent.EXTRA_SUBJECT, "Support Request: Notes Taking App")
-                        }
-                        try {
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                        }
-                    })
+                    isRtl = isRtl,
+                    onClick = viewModel::onSupportClick
+                )
                 AboutLinkItem(
                     icon = Icons.Default.PrivacyTip,
                     label = stringResource(R.string.privacy_policy),
@@ -177,7 +184,7 @@ fun AboutScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 5. Footer
+            // ======= Footer =======
             Text(
                 text = stringResource(R.string.made_with_love),
                 fontSize = 12.sp,
@@ -188,12 +195,10 @@ fun AboutScreen(navController: NavHostController) {
     }
 }
 
+// ======= Link Item =======
 @Composable
 fun AboutLinkItem(
-    icon: ImageVector,
-    label: String,
-    isRtl: Boolean = false,
-    onClick: () -> Unit
+    icon: ImageVector, label: String, isRtl: Boolean = false, onClick: () -> Unit
 ) {
     Surface(
         onClick = onClick,
@@ -206,7 +211,15 @@ fun AboutLinkItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (isRtl) {
+            val iconView = @Composable {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            val labelView = @Composable {
                 Text(
                     text = label,
                     fontFamily = ManropeFontFamily,
@@ -214,29 +227,14 @@ fun AboutLinkItem(
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.End
+                    textAlign = if (isRtl) TextAlign.End else TextAlign.Start
                 )
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
+            }
+
+            if (isRtl) {
+                labelView(); iconView()
             } else {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-                Text(
-                    text = label,
-                    fontFamily = ManropeFontFamily,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f)
-                )
+                iconView(); labelView()
             }
         }
     }

@@ -57,13 +57,10 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             modifier = Modifier.scale(scale.value)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.sticky_notes),
+                painter = painterResource(id = R.drawable.logo),
                 contentDescription = null,
-                modifier = Modifier.size(120.dp)
+                modifier = Modifier.size(230.dp)
             )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
             Text(
                 text = stringResource(R.string.splash_app_name),
                 fontSize = 42.sp,
