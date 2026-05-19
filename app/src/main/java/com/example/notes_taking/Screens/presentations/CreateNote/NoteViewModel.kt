@@ -286,7 +286,7 @@ class NoteViewModel(
                 showSnackbar(str(R.string.success_diacritize))
             } catch (e: Exception) {
                 Log.e("NoteViewModel", "diacritizeText: ${e.message}")
-                aiRateLimiter.refundCall() // ← أعد المحاولة عند فشل الـ API
+                aiRateLimiter.refundCall()
                 _uiState.update {
                     it.copy(
                         isAiLoading = false,
