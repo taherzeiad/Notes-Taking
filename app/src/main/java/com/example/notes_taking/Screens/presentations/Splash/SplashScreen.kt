@@ -57,7 +57,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             modifier = Modifier.scale(scale.value)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.sticky_notes),
+                painter = painterResource(id = R.drawable.logo),
                 contentDescription = null,
                 modifier = Modifier.size(120.dp)
             )
