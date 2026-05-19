@@ -38,8 +38,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
 
     LaunchedEffect(Unit) {
         scale.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 800)
+            targetValue = 1f, animationSpec = tween(durationMillis = 800)
         )
         delay(800)
         onSplashFinished()

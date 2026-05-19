@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.example.notes_taking.R
+import com.example.notes_taking.Screens.presentations.CreateNote.AiRateLimitBadge
 import com.example.notes_taking.ui.theme.ManropeFontFamily
 import com.example.notes_taking.ui.theme.MansalvaFontFamily
 import kotlinx.coroutines.delay
@@ -283,6 +284,7 @@ fun NoteEditorScreen(
                     }
                 }
             }
+            AiRateLimitBadge(state = uiState.rateLimitState)
 
             // Bottom Toolbar
             EditorBottomToolbar(
@@ -709,9 +711,11 @@ private fun BulletBlockItem(
 @Composable
 private fun ImageBlockItem(block: ContentBlock.ImageBlock, onRemove: () -> Unit) {
     Spacer(modifier = Modifier.height(8.dp))
-    Box(modifier = Modifier
-        .fillMaxWidth()
-        .height(220.dp)) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(220.dp)
+    ) {
         AsyncImage(
             model = block.uri,
             contentDescription = null,
@@ -817,9 +821,11 @@ fun AudioBlockItem(block: ContentBlock.AudioBlock, onRemove: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceVariant.copy(alpha = 0.5f)),
         elevation = CardDefaults.cardElevation(0.dp),
     ) {
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .padding(12.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -1136,10 +1142,12 @@ fun RecordingDialog(
                     Icon(
                         when {
                             isRecording -> Icons.Outlined.Mic; isPlaying -> Icons.Outlined.Stop; else -> Icons.Outlined.Mic
-                        }, null,
+                        },
+                        null,
                         tint = when {
                             isRecording -> colorScheme.error; isPlaying -> colorScheme.tertiary; else -> colorScheme.primary
-                        }, modifier = Modifier.size(40.dp),
+                        },
+                        modifier = Modifier.size(40.dp),
                     )
                 }
                 Text(

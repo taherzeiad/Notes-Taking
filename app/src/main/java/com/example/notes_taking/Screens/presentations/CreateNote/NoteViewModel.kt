@@ -25,6 +25,12 @@ class NoteViewModel(
     private val appContext: Context,
 ) : ViewModel() {
 
+    private val aiRateLimiter = AiRateLimiter()
+
+    init {
+        startRateLimitTicker()
+    }
+
     private val privacyPrefs by lazy {
         appContext.getSharedPreferences("settings", Context.MODE_PRIVATE)
     }
@@ -194,8 +200,30 @@ class NoteViewModel(
 
     // ── AI — Rephrase ─────────────────────────────────────────────────────────
 
+    private fun startRateLimitTicker() {
+        viewModelScope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(1_000)
+                aiRateLimiter.tick()
+                _uiState.update { it.copy(rateLimitState = aiRateLimiter.state.value) }
+            }
+        }
+    }
+
     fun rephraseText() {
-        val text = _uiState.value.contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
+        if (!aiRateLimiter.tryConsume()) {
+            _uiState.update { it.copy(rateLimitState = aiRateLimiter.state.value) }
+            showSnackbar(
+                str(
+                    R.string.error_ai_rate_limit,
+                    aiRateLimiter.state.value.secondsRemaining
+                )
+            )
+            return
+        }
+
+        val text = _uiState.value.contentBlocks
+            .filterIsInstance<ContentBlock.TextBlock>()
             .joinToString("\n") { it.text }.trim()
 
         if (text.isBlank()) {
@@ -220,10 +248,20 @@ class NoteViewModel(
         }
     }
 
-    // ── AI — Diacritize ───────────────────────────────────────────────────────
-
     fun diacritizeText() {
-        val text = _uiState.value.contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
+        if (!aiRateLimiter.tryConsume()) {
+            _uiState.update { it.copy(rateLimitState = aiRateLimiter.state.value) }
+            showSnackbar(
+                str(
+                    R.string.error_ai_rate_limit,
+                    aiRateLimiter.state.value.secondsRemaining
+                )
+            )
+            return
+        }
+
+        val text = _uiState.value.contentBlocks
+            .filterIsInstance<ContentBlock.TextBlock>()
             .joinToString("\n") { it.text }.trim()
 
         if (text.isBlank()) {

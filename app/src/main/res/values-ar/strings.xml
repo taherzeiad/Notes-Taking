@@ -188,6 +188,10 @@
     <string name="reminder_time_label">وقت التذكير</string>
     <string name="reminder_time_dialog_title">اختر وقت التذكير</string>
 
+    <!-- في strings.xml -->
+    <string name="error_ai_rate_limit">الحد الأقصى 3 مرات كل دقيقتين. انتظر %1$d ثانية</string>
+    <string name="ai_rate_limit_remaining">متبقي %1$d استدعاءات AI</string>
+    <string name="ai_rate_limit_wait">محظور مؤقتاً — انتظر %1$d ثانية</string>
     ///////////////////////////////////////////////////
     <!-- Edit Notes Screen -->
     <string name="editor_save">حفظ</string>
