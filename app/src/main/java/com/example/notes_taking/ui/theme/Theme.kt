@@ -18,15 +18,17 @@ import androidx.core.view.WindowCompat
 // --- الألوان الأساسية المشتركة ---
 val PrimaryBrown = Color(0xFF5D4037)
 val PrimaryLight = Color(0xFF8B6B61)
-val AccentTeal = Color(0xFF4DB6AC)
+val AccentTeal = Color(0xFFF5F7FA)       // تم تحديثه للأبيض الثلجي بناءً على طلبك السابق
+
+// --- الألوان الخاصة بالتعديلات ---
+val SugaryWhite = Color(0xFFFDFBF7)      // الأبيض السكري المنطقي للخلفيات العامة
+val NewAirForceBlue = Color(0xFF005A9C)  // لون الجوية الجديد للأزرار المفرغة والحدود
+val SnowyWhite = Color(0xFFF5F7FA)       // الأبيض الثلجي المخصص للتاب غير المختار
 
 // --- لوحة الوضع الفاتح (Light Palette) ---
-val WhiteBackground = Color(0xFFFFFBFA)
 val SurfaceLight = Color(0xFFFFFFFF)
 val TextPrimaryLight = Color(0xFF211A18)
 val TextSecondaryLight = Color(0xFF756E6C)
-val OutlineLight = Color(0xFFD3C2BC)
-val SurfaceVariantLight = Color(0xFFF5EEEB)
 
 // --- لوحة الوضع الغامق (Dark Palette) ---
 val BlackBackground = Color(0xFF1A1210)
@@ -37,6 +39,7 @@ val OutlineDark = Color(0xFF53433F)
 val SurfaceVariantDark = Color(0xFF3B2F2C)
 
 val ErrorRed = Color(0xFFBA1A1A)
+
 private val DarkColorScheme = darkColorScheme(
     primary = PrimaryLight,
     onPrimary = Color(0xFF35221B),
@@ -57,17 +60,22 @@ private val DarkColorScheme = darkColorScheme(
 private val LightColorScheme = lightColorScheme(
     primary = PrimaryBrown,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFFFDBD1),
-    onPrimaryContainer = Color(0xFF3B0900),
+    primaryContainer = Color.White,          // المستطيل البرتقالي سابقاً تم تحويله لأبيض
+    onPrimaryContainer = TextPrimaryLight,
     secondary = AccentTeal,
-    onSecondary = Color.White,
-    background = WhiteBackground,
+    onSecondary = TextPrimaryLight,
+
+    // --- التعديل السحري هنا لتغيير التاب غير المحدد في كل التطبيق ---
+    secondaryContainer = SnowyWhite,          // تم تعيينه بالأبيض الثلجي ليطابق الـ TaskTab تلقائياً
+    onSecondaryContainer = TextSecondaryLight, // لون النص أو المحتوى داخل التاب غير المحدد
+
+    background = SugaryWhite,                // الخلفية السكرية للشاشات ككل
     onBackground = TextPrimaryLight,
     surface = SurfaceLight,
     onSurface = TextPrimaryLight,
-    surfaceVariant = SurfaceVariantLight,
+    surfaceVariant = SnowyWhite,
     onSurfaceVariant = TextSecondaryLight,
-    outline = OutlineLight,
+    outline = NewAirForceBlue,               // لون الجوية للأزرار المفرغة
     error = ErrorRed
 )
 
