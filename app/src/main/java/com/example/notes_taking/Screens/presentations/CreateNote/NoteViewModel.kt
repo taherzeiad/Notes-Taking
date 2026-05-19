@@ -211,23 +211,21 @@ class NoteViewModel(
     }
 
     fun rephraseText() {
-        if (!aiRateLimiter.tryConsume()) {
-            _uiState.update { it.copy(rateLimitState = aiRateLimiter.state.value) }
-            showSnackbar(
-                str(
-                    R.string.error_ai_rate_limit,
-                    aiRateLimiter.state.value.secondsRemaining
-                )
-            )
-            return
-        }
-
-        val text = _uiState.value.contentBlocks
-            .filterIsInstance<ContentBlock.TextBlock>()
+        val text = _uiState.value.contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
             .joinToString("\n") { it.text }.trim()
 
         if (text.isBlank()) {
-            showSnackbar(str(R.string.error_no_text_rephrase)); return
+            showSnackbar(str(R.string.error_no_text_rephrase)); return  // ← يرجع بدون حجز
+        }
+
+        if (!aiRateLimiter.tryConsume()) {  // ← يحجز فقط إذا النص موجود
+            _uiState.update { it.copy(rateLimitState = aiRateLimiter.state.value) }
+            showSnackbar(
+                str(
+                    R.string.error_ai_rate_limit, aiRateLimiter.state.value.secondsRemaining
+                )
+            )
+            return
         }
 
         viewModelScope.launch {
@@ -249,23 +247,21 @@ class NoteViewModel(
     }
 
     fun diacritizeText() {
-        if (!aiRateLimiter.tryConsume()) {
-            _uiState.update { it.copy(rateLimitState = aiRateLimiter.state.value) }
-            showSnackbar(
-                str(
-                    R.string.error_ai_rate_limit,
-                    aiRateLimiter.state.value.secondsRemaining
-                )
-            )
-            return
-        }
-
-        val text = _uiState.value.contentBlocks
-            .filterIsInstance<ContentBlock.TextBlock>()
+        val text = _uiState.value.contentBlocks.filterIsInstance<ContentBlock.TextBlock>()
             .joinToString("\n") { it.text }.trim()
 
         if (text.isBlank()) {
-            showSnackbar(str(R.string.error_no_text_diacritize)); return
+            showSnackbar(str(R.string.error_no_text_diacritize)); return  // ← يرجع بدون حجز
+        }
+
+        if (!aiRateLimiter.tryConsume()) {  // ← يحجز فقط إذا النص موجود
+            _uiState.update { it.copy(rateLimitState = aiRateLimiter.state.value) }
+            showSnackbar(
+                str(
+                    R.string.error_ai_rate_limit, aiRateLimiter.state.value.secondsRemaining
+                )
+            )
+            return
         }
 
         viewModelScope.launch {
