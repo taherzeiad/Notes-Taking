@@ -25,7 +25,7 @@ class NoteViewModel(
     private val appContext: Context,
 ) : ViewModel() {
 
-    private val aiRateLimiter = AiRateLimiter()
+    private val aiRateLimiter = AiRateLimiter.getInstance()
 
     init {
         startRateLimitTicker()
@@ -211,6 +211,14 @@ class NoteViewModel(
     }
 
     fun rephraseText() {
+        val text = _uiState.value.contentBlocks
+            .filterIsInstance<ContentBlock.TextBlock>()
+            .joinToString("\n") { it.text }.trim()
+
+        if (text.isBlank()) {
+            showSnackbar(str(R.string.error_no_text_rephrase)); return
+        }
+
         if (!aiRateLimiter.tryConsume()) {
             _uiState.update { it.copy(rateLimitState = aiRateLimiter.state.value) }
             showSnackbar(
@@ -220,14 +228,6 @@ class NoteViewModel(
                 )
             )
             return
-        }
-
-        val text = _uiState.value.contentBlocks
-            .filterIsInstance<ContentBlock.TextBlock>()
-            .joinToString("\n") { it.text }.trim()
-
-        if (text.isBlank()) {
-            showSnackbar(str(R.string.error_no_text_rephrase)); return
         }
 
         viewModelScope.launch {
@@ -242,13 +242,27 @@ class NoteViewModel(
                 showSnackbar(str(R.string.success_rephrase))
             } catch (e: Exception) {
                 Log.e("NoteViewModel", "rephraseText: ${e.message}")
+                aiRateLimiter.refundCall()
+                _uiState.update {
+                    it.copy(
+                        isAiLoading = false,
+                        rateLimitState = aiRateLimiter.state.value
+                    )
+                }
                 showSnackbar(str(R.string.error_ai_failed, e.message ?: ""))
-                _uiState.update { it.copy(isAiLoading = false) }
             }
         }
     }
 
     fun diacritizeText() {
+        val text = _uiState.value.contentBlocks
+            .filterIsInstance<ContentBlock.TextBlock>()
+            .joinToString("\n") { it.text }.trim()
+
+        if (text.isBlank()) {
+            showSnackbar(str(R.string.error_no_text_diacritize)); return
+        }
+
         if (!aiRateLimiter.tryConsume()) {
             _uiState.update { it.copy(rateLimitState = aiRateLimiter.state.value) }
             showSnackbar(
@@ -258,14 +272,6 @@ class NoteViewModel(
                 )
             )
             return
-        }
-
-        val text = _uiState.value.contentBlocks
-            .filterIsInstance<ContentBlock.TextBlock>()
-            .joinToString("\n") { it.text }.trim()
-
-        if (text.isBlank()) {
-            showSnackbar(str(R.string.error_no_text_diacritize)); return
         }
 
         viewModelScope.launch {
@@ -280,12 +286,17 @@ class NoteViewModel(
                 showSnackbar(str(R.string.success_diacritize))
             } catch (e: Exception) {
                 Log.e("NoteViewModel", "diacritizeText: ${e.message}")
+                aiRateLimiter.refundCall()
+                _uiState.update {
+                    it.copy(
+                        isAiLoading = false,
+                        rateLimitState = aiRateLimiter.state.value
+                    )
+                }
                 showSnackbar(str(R.string.error_ai_failed, e.message ?: ""))
-                _uiState.update { it.copy(isAiLoading = false) }
             }
         }
     }
-
     // ── Save Note ─────────────────────────────────────────────────────────────
 
     fun saveNote(noteId: Int, date: String) {
