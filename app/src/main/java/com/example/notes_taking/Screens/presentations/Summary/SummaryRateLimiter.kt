@@ -13,7 +13,7 @@ class SummaryRateLimiter(context: Context) {
         private const val PREFS_NAME = "summary_rate_limiter"
         private const val KEY_DATE = "last_date"
         private const val KEY_COUNT = "attempts_count"
-        const val MAX_ATTEMPTS = 3
+        const val MAX_ATTEMPTS = 4
     }
 
     private fun todayKey(): String =
