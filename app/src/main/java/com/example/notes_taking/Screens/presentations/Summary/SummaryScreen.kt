@@ -1,5 +1,6 @@
 package com.example.notes_taking.Screens.presentations.Summary
 
+import SummaryViewModel
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -88,20 +89,22 @@ fun SummaryScreen(
                 SummaryUiState.Idle -> Unit
                 SummaryUiState.Loading -> LoadingContent()
 
-                is SummaryUiState.Success ->
-                    TodaySummaryContent(summary = state.summary)
+                is SummaryUiState.Success -> TodaySummaryContent(summary = state.summary)
 
-                is SummaryUiState.EmptyToday ->
-                    EmptyTodayContent(
-                        date = state.date,
-                        onRefresh = viewModel::summarizeToday,
-                    )
+                is SummaryUiState.EmptyToday -> EmptyTodayContent(
+                    date = state.date,
+                    onRefresh = viewModel::summarizeToday,
+                )
 
-                is SummaryUiState.Error ->
-                    ErrorContent(
-                        message = state.message,
-                        onRetry = viewModel::summarizeToday,
-                    )
+                is SummaryUiState.Error -> ErrorContent(
+                    message = state.message,
+                    onRetry = viewModel::summarizeToday,
+                )
+
+                is SummaryUiState.LimitReached -> LimitReachedContent(
+                    attemptsUsed = state.attemptsUsed,
+                    maxAttempts = state.maxAttempts,
+                )
             }
         }
     }
@@ -522,5 +525,60 @@ fun DailySummaryCard(daily: DailySummary) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun LimitReachedContent(attemptsUsed: Int, maxAttempts: Int) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .background(MaterialTheme.colorScheme.tertiaryContainer, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.AutoAwesome,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.tertiary,
+                modifier = Modifier.size(48.dp),
+            )
+        }
+        Spacer(Modifier.height(24.dp))
+        Text(
+            text = stringResource(R.string.limit_reached_title),   // "انتهت محاولاتك اليوم"
+            fontFamily = ManropeFontFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = stringResource(
+                // "استخدمت 3 من 3 محاولات"
+                R.string.limit_reached_desc,
+                attemptsUsed,
+                maxAttempts,
+            ),
+            fontFamily = ManropeFontFamily,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            lineHeight = 22.sp,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = stringResource(R.string.limit_reached_reset),   // "ستُجدَّد المحاولات غداً"
+            fontFamily = ManropeFontFamily,
+            fontSize = 13.sp,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Medium,
+        )
     }
 }

@@ -1,4 +1,4 @@
-package com.example.notes_taking.API
+package com.example.notes_taking.API.Groq
 
 // طلب OpenAI يتوقع موديل ورائمة رسائل
 data class ChatRequest(

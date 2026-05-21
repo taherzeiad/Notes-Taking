@@ -20,4 +20,6 @@ sealed interface SummaryUiState {
     data class Success(val summary: DailySummary) : SummaryUiState
 
     data class Error(val message: String) : SummaryUiState
+    data class LimitReached(val attemptsUsed: Int, val maxAttempts: Int) : SummaryUiState
+
 }
