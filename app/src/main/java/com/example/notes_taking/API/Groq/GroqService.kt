@@ -1,4 +1,4 @@
-package com.example.notes_taking.API
+package com.example.notes_taking.API.Groq
 
 import android.util.Log
 import com.example.notes_taking.BuildConfig

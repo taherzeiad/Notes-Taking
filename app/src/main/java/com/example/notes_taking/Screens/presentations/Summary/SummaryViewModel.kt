@@ -1,8 +1,11 @@
 package com.example.notes_taking.Screens.presentations.Summary
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.notes_taking.API.GroqService
+import com.example.notes_taking.API.Gemini.SummaryAiProvider
+import com.example.notes_taking.API.Gemini.GeminiService
+import com.example.notes_taking.API.Groq.GroqService
 import com.example.notes_taking.Repository.NoteRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,23 +18,21 @@ import java.util.Locale
 
 class SummaryViewModel(
     private val repository: NoteRepository,
+    // الخيار الافتراضي Groq — غيّره لـ GEMINI متى تريد
+    private val aiProvider: SummaryAiProvider = SummaryAiProvider.GROQ,
 ) : ViewModel() {
-
-    // ─── State ───────────────────────────────────────────────────────────────
 
     private val _uiState = MutableStateFlow<SummaryUiState>(SummaryUiState.Idle)
     val uiState: StateFlow<SummaryUiState> = _uiState.asStateFlow()
 
-    // ─── Public API ──────────────────────────────────────────────────────────
+    // ─── Public ───────────────────────────────────────────────────────────
 
-    fun summarizeToday() {
-        summarizeDay(getTodayDate())
-    }
+    fun summarizeToday() = summarizeDay(getTodayDate())
 
     fun getTodayDate(): String =
         SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(Date())
 
-    // ─── Private logic ───────────────────────────────────────────────────────
+    // ─── Private ──────────────────────────────────────────────────────────
 
     private fun summarizeDay(date: String) {
         viewModelScope.launch {
@@ -58,8 +59,17 @@ class SummaryViewModel(
                 return@launch
             }
 
-            val summaryText = runCatching { GroqService.summarizeNotes(notesText, date) }
-                .getOrElse { buildFallbackSummary() }
+            // ✅ اختيار الـ provider هنا
+            val summaryText = runCatching {
+                when (aiProvider) {
+                    SummaryAiProvider.GROQ -> GroqService.summarizeNotes(notesText, date)
+                    SummaryAiProvider.GEMINI -> GeminiService.summarizeNotes(notesText, date)
+                }
+            }.getOrElse { e ->
+                Log.e("GeminiDebug", "الخطأ الحقيقي: ${e.message}", e)
+                _uiState.update { SummaryUiState.Error("${e.message}") }
+                return@launch
+            }
 
             _uiState.update {
                 SummaryUiState.Success(
@@ -74,8 +84,6 @@ class SummaryViewModel(
         }
     }
 
-    // ─── Helpers ─────────────────────────────────────────────────────────────
-
     private fun buildErrorMessage(e: Throwable): String =
         if (isArabic()) "حدث خطأ: ${e.message}"
         else "An error occurred: ${e.message}"
@@ -83,6 +91,7 @@ class SummaryViewModel(
     private fun buildFallbackSummary(): String =
         if (isArabic()) "فشل في تلخيص ملاحظات اليوم"
         else "Failed to summarize today's notes"
+
 
     private fun isArabic(): Boolean = Locale.getDefault().language == "ar"
 }

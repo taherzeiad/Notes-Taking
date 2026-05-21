@@ -5,7 +5,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.notes_taking.API.GroqService
+import com.example.notes_taking.API.Groq.GroqService
 import com.example.notes_taking.R
 import com.example.notes_taking.Repository.NoteRepository
 import com.example.notes_taking.RoomDatabase.Note
