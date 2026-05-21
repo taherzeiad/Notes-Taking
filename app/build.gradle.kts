@@ -43,7 +43,7 @@ android {
     }
 }
 secrets {
-    defaultPropertiesFileName = "local.properties"
+    propertiesFileName = "local.properties"
 }
 dependencies {
     implementation(libs.androidx.core.ktx)
@@ -70,6 +70,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core:1.6.7")
     implementation("io.coil-kt:coil-compose:2.6.0")
 
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")

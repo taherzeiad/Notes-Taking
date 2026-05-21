@@ -19,7 +19,7 @@ import java.util.Locale
 
 class SummaryViewModel(
     private val repository: NoteRepository,
-    private val rateLimiter: SummaryRateLimiter,          // ← جديد
+    private val rateLimiter: SummaryRateLimiter,
     private val aiProvider: SummaryAiProvider = SummaryAiProvider.GROQ,
 ) : ViewModel() {
 
