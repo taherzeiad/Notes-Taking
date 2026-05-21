@@ -4,6 +4,7 @@
 
 package com.example.notes_taking.Navmain
 
+import SummaryViewModel
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
@@ -36,7 +37,6 @@ import com.example.notes_taking.Screens.presentations.Settings.SettingsScreen
 import com.example.notes_taking.Screens.presentations.Settings.SettingsViewModel
 import com.example.notes_taking.Screens.presentations.Splash.SplashScreen
 import com.example.notes_taking.Screens.presentations.Summary.SummaryScreen
-import com.example.notes_taking.Screens.presentations.Summary.SummaryViewModel
 import com.example.notes_taking.Screens.presentations.Tasks.TasksScreen
 import com.example.notes_taking.Screens.presentations.Tasks.TasksViewModel
 
@@ -52,7 +52,7 @@ fun NavGraph(
     val taskDao = remember { NoteDatabase.getDatabase(context).taskDao() }
     val repository = remember { NoteRepositoryImpl(dao, taskDao) }
 
-    val factory = remember { GenericViewModelFactory(repository,context) }
+    val factory = remember { GenericViewModelFactory(repository, context) }
 
 
     val prefs = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }

@@ -1,12 +1,13 @@
 package com.example.notes_taking.Repository
 
+import SummaryViewModel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.notes_taking.Screens.presentations.Editor.NoteViewModel
 import com.example.notes_taking.Screens.presentations.Home.HomeViewModel
 import com.example.notes_taking.Screens.presentations.Notes.NotesViewModel
-import com.example.notes_taking.Screens.presentations.Summary.SummaryViewModel
+import com.example.notes_taking.Screens.presentations.Summary.SummaryRateLimiter
 import com.example.notes_taking.Screens.presentations.Tasks.TasksViewModel
 
 @Suppress("UNCHECKED_CAST")
@@ -21,7 +22,11 @@ class GenericViewModelFactory(
                 repository, context
             ) as T
 
-            modelClass.isAssignableFrom(SummaryViewModel::class.java) -> SummaryViewModel(repository) as T
+            modelClass.isAssignableFrom(SummaryViewModel::class.java) -> SummaryViewModel(
+                repository = repository,
+                rateLimiter = SummaryRateLimiter(context),
+            ) as T
+
             modelClass.isAssignableFrom(TasksViewModel::class.java) -> TasksViewModel(repository) as T
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
