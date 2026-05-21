@@ -100,7 +100,7 @@ $langInstruction"""
         val notesText = notes.mapIndexed { i, note -> "${i + 1}. $note" }.joinToString("\n")
 
         val request = ChatRequest(
-            model = "llama-3.3-70b-versatile", messages = listOf(
+            model = "meta-llama/llama-4-scout-17b-16e-instruct", messages = listOf(
                 ChatMessage(
                     "system", if (isArabic) {
                         """أنت مساعد ذكي متخصص في تلخيص الملاحظات اليومية.
