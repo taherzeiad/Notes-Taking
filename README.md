@@ -1,4 +1,4 @@
-🚀 Excited to share my latest project: Text Notes Keeper!
+Excited to share my latest project: Text Notes Keeper!
 
 I developed this modern Android application to provide a seamless and efficient experience for managing daily thoughts, study notes, and reminders. The goal was to build a tool that balances high performance with a clean, intuitive UI.
 
