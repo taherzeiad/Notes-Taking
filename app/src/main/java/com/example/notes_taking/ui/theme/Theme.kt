@@ -14,74 +14,130 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-
-// --- الألوان الأساسية المشتركة ---
+// ============================================
+// Light Mode Colors
+// ============================================
 val PrimaryBrown = Color(0xFF5D4037)
-val PrimaryLight = Color(0xFF8B6B61)
-val AccentTeal = Color(0xFFF5F7FA)       // تم تحديثه للأبيض الثلجي بناءً على طلبك السابق
+val PrimaryLight = Color(0xFFF2F2F7)
 
-// --- الألوان الخاصة بالتعديلات ---
-val SugaryWhite = Color(0xFFFDFBF7)      // الأبيض السكري المنطقي للخلفيات العامة
-val NewAirForceBlue = Color(0xFF005A9C)  // لون الجوية الجديد للأزرار المفرغة والحدود
-val SnowyWhite = Color(0xFFF5F7FA)       // الأبيض الثلجي المخصص للتاب غير المختار
+// ============================================
+// Light Mode Colors
+// ============================================
+val SugaryWhite = Color(0xFFF2F2F7)    // ← خلفية الشاشات — أبيض بدرجة رمادية خفيفة
+val SurfaceWhite = Color(0xFFFFFFFF)   // ← الكاردات — أبيض نقي
+val SnowyWhite = Color(0xFFEFEFF4)     // ← surfaceVariant والتابات
 
-// --- لوحة الوضع الفاتح (Light Palette) ---
-val SurfaceLight = Color(0xFFFFFFFF)
 val TextPrimaryLight = Color(0xFF211A18)
 val TextSecondaryLight = Color(0xFF756E6C)
-
-// --- لوحة الوضع الغامق (Dark Palette) ---
-val BlackBackground = Color(0xFF1A1210)
-val SurfaceDark = Color(0xFF251D1B)
-val TextPrimaryDark = Color(0xFFF0E0DB)
-val TextSecondaryDark = Color(0xFFA08D89)
-val OutlineDark = Color(0xFF53433F)
-val SurfaceVariantDark = Color(0xFF3B2F2C)
-
+val OutlineLight = Color(0xFFD3C2BC)
+val AirForceBlue = Color(0xFF005A9C)
 val ErrorRed = Color(0xFFBA1A1A)
 
-private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryLight,
-    onPrimary = Color(0xFF35221B),
-    primaryContainer = PrimaryBrown,
-    onPrimaryContainer = Color(0xFFFFDBD1),
-    secondary = AccentTeal,
-    onSecondary = Color(0xFF003733),
-    background = BlackBackground,
-    onBackground = TextPrimaryDark,
-    surface = SurfaceDark,
-    onSurface = TextPrimaryDark,
-    surfaceVariant = SurfaceVariantDark,
-    onSurfaceVariant = TextSecondaryDark,
-    outline = OutlineDark,
-    error = ErrorRed
-)
+// ============================================
+// Dark Mode Colors — متناسقة مع الـ Light
+// ============================================
+val DarkBackground = Color(0xFF1C1612)    // بني غامق جداً — يتناسب مع البني الفاتح
+val DarkSurface = Color(0xFF26201D)       // سطح الكاردات
+val DarkSurfaceVariant = Color(0xFF32281F) // للـ inputs والتابات
+val DarkPrimary = Color(0xFFBB9085)       // بني فاتح مضيء للـ Dark
+val DarkPrimaryContainer = Color(0xFF4A342D) // container غامق بني
+val DarkSecondaryContainer = Color(0xFF3A2E28)
+val DarkOnSecondaryContainer = Color(0xFFCCB8B1)
+val DarkTextPrimary = Color(0xFFF2E4DF)
+val DarkTextSecondary = Color(0xFFA89490)
+val DarkOutline = Color(0xFF5C4840)
 
+// ============================================
+// Light Color Scheme
+// ============================================
 private val LightColorScheme = lightColorScheme(
     primary = PrimaryBrown,
     onPrimary = Color.White,
-    primaryContainer = Color.White,          // المستطيل البرتقالي سابقاً تم تحويله لأبيض
-    onPrimaryContainer = TextPrimaryLight,
-    secondary = AccentTeal,
-    onSecondary = TextPrimaryLight,
+    primaryContainer = Color(0xFFFFFFFF),
+    onPrimaryContainer = Color(0xFF3B0D05),
 
-    // --- التعديل السحري هنا لتغيير التاب غير المحدد في كل التطبيق ---
-    secondaryContainer = SnowyWhite,          // تم تعيينه بالأبيض الثلجي ليطابق الـ TaskTab تلقائياً
-    onSecondaryContainer = TextSecondaryLight, // لون النص أو المحتوى داخل التاب غير المحدد
+    secondary = PrimaryLight,
+    onSecondary = Color.White,
+    secondaryContainer = SnowyWhite,
+    onSecondaryContainer = TextSecondaryLight,
 
-    background = SugaryWhite,                // الخلفية السكرية للشاشات ككل
+    tertiary = Color(0xFF6D5E4F),
+    onTertiary = Color.White,
+    tertiaryContainer = Color(0xFFF5EDE8),
+    onTertiaryContainer = Color(0xFF251810),
+
+    background = SugaryWhite,
     onBackground = TextPrimaryLight,
-    surface = SurfaceLight,
+
+    surface = SurfaceWhite,
     onSurface = TextPrimaryLight,
     surfaceVariant = SnowyWhite,
     onSurfaceVariant = TextSecondaryLight,
-    outline = NewAirForceBlue,               // لون الجوية للأزرار المفرغة
-    error = ErrorRed
+
+    outline = OutlineLight,
+    outlineVariant = Color(0xFFEDE0DB),
+
+    error = ErrorRed,
+    onError = Color.White,
+    errorContainer = Color(0xFFFFDAD6),
+    onErrorContainer = Color(0xFF410002),
+
+    inverseSurface = Color(0xFF362F2C),
+    inverseOnSurface = Color(0xFFFEEDE8),
+    inversePrimary = DarkPrimary,
+
+    scrim = Color(0xFF000000)
 )
 
+// ============================================
+// Dark Color Scheme — متناسق مع Light
+// ============================================
+private val DarkColorScheme = darkColorScheme(
+    primary = DarkPrimary,
+    onPrimary = Color(0xFF3B1A12),
+    primaryContainer = DarkPrimaryContainer,
+    onPrimaryContainer = Color(0xFFFFDBD1),
+
+    secondary = Color(0xFFA8897E),
+    onSecondary = Color(0xFF2E1A14),
+    secondaryContainer = DarkSecondaryContainer,
+    onSecondaryContainer = DarkOnSecondaryContainer,
+
+    tertiary = Color(0xFF9C8678),
+    onTertiary = Color(0xFF2A1C14),
+    tertiaryContainer = Color(0xFF3D2D24),
+    onTertiaryContainer = Color(0xFFD9C2B8),
+
+    background = DarkBackground,
+    onBackground = DarkTextPrimary,
+
+    surface = DarkSurface,
+    onSurface = DarkTextPrimary,
+    surfaceVariant = DarkSurfaceVariant,
+    onSurfaceVariant = DarkTextSecondary,
+
+    outline = DarkOutline,
+    outlineVariant = Color(0xFF3D2E28),
+
+    error = Color(0xFFFFB4AB),
+    onError = Color(0xFF690005),
+    errorContainer = Color(0xFF93000A),
+    onErrorContainer = Color(0xFFFFDAD6),
+
+    inverseSurface = Color(0xFFF2E4DF),
+    inverseOnSurface = Color(0xFF26201D),
+    inversePrimary = PrimaryBrown,
+
+    scrim = Color(0xFF000000)
+)
+
+// ============================================
+// Theme
+// ============================================
 @Composable
 fun NotesTakingTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
@@ -90,12 +146,14 @@ fun NotesTakingTheme(
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.background.toArgb()
-
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            WindowCompat.getInsetsController(window, view)
+                .isAppearanceLightStatusBars = !darkTheme
         }
     }
 
     MaterialTheme(
-        colorScheme = colorScheme, typography = Typography, content = content
+        colorScheme = colorScheme,
+        typography = Typography,
+        content = content
     )
 }

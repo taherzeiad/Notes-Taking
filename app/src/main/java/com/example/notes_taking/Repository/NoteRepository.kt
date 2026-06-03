@@ -21,6 +21,8 @@ interface NoteRepository {
     suspend fun insertTasks(tasks: List<TaskEntity>)
     suspend fun updateTask(task: TaskEntity)
     suspend fun deleteTasksByNoteId(noteId: Int)
+
+    suspend fun getTasksByNoteId(noteId: Int): List<TaskEntity>
 }
 
 class NoteRepositoryImpl(
@@ -39,4 +41,6 @@ class NoteRepositoryImpl(
     override suspend fun insertTasks(tasks: List<TaskEntity>) = taskDao.insertTasks(tasks)
     override suspend fun updateTask(task: TaskEntity) = taskDao.updateTask(task)
     override suspend fun deleteTasksByNoteId(noteId: Int) = taskDao.deleteTasksByNoteId(noteId)
+    override suspend fun getTasksByNoteId(noteId: Int): List<TaskEntity> =
+        taskDao.getTasksByNoteId(noteId)
 }
