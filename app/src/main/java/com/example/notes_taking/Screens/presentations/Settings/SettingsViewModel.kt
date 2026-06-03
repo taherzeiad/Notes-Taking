@@ -23,12 +23,19 @@ class SettingsViewModel(
     // ── Single source of truth ────────────────────────────────────────────────
     private val _uiState = MutableStateFlow(
         SettingsUiState(
-            isDarkModeEnabled      = prefs.getBoolean("dark_mode", false),
+            isDarkModeEnabled = prefs.getBoolean("dark_mode", false),
             isNotificationsEnabled = prefs.getBoolean("notifications_enabled", true),
-            reminderHour           = prefs.getInt("reminder_hour", 20),
-            reminderMinute         = prefs.getInt("reminder_minute", 0),
+            reminderHour = prefs.getInt("reminder_hour", 20),
+            reminderMinute = prefs.getInt("reminder_minute", 0),
+            notificationMessage = prefs.getString("notification_message", "") ?: ""
         )
     )
+
+    fun updateNotificationMessage(message: String) {
+        _uiState.update { it.copy(notificationMessage = message) }
+        prefs.edit { putString("notification_message", message) }
+    }
+
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     // ── User intents ──────────────────────────────────────────────────────────
@@ -45,7 +52,9 @@ class SettingsViewModel(
         if (enabled) {
             val state = _uiState.value
             NotificationHelper.createNotificationChannel(context)
-            NotificationScheduler.scheduleDailyReminder(context, state.reminderHour, state.reminderMinute)
+            NotificationScheduler.scheduleDailyReminder(
+                context, state.reminderHour, state.reminderMinute
+            )
         } else {
             NotificationScheduler.cancelDailyReminder(context)
         }

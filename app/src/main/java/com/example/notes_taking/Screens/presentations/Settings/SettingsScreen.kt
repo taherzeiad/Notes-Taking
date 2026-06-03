@@ -44,6 +44,7 @@ sealed interface SettingsIntent {
     data class ToggleDarkMode(val enabled: Boolean) : SettingsIntent
     data class ToggleNotifications(val enabled: Boolean) : SettingsIntent
     data class ConfirmReminderTime(val hour: Int, val minute: Int) : SettingsIntent
+    data class UpdateNotificationMessage(val message: String) : SettingsIntent
     data object OpenTimePicker : SettingsIntent
     data object DismissTimePicker : SettingsIntent
 }
@@ -112,6 +113,9 @@ private fun handleIntent(
             viewModel.dismissTimePicker()
         }
 
+        is SettingsIntent.UpdateNotificationMessage ->
+            viewModel.updateNotificationMessage(intent.message)
+
         is SettingsIntent.OpenTimePicker -> viewModel.openTimePicker()
         is SettingsIntent.DismissTimePicker -> viewModel.dismissTimePicker()
     }
@@ -153,8 +157,10 @@ private fun SettingsContent(
                 NotificationsSection(
                     isEnabled = state.isNotificationsEnabled,
                     reminderTime = state.reminderTimeFormatted,
+                    notificationMessage = state.notificationMessage,
                     onToggle = { onIntent(SettingsIntent.ToggleNotifications(it)) },
                     onTimeClick = { onIntent(SettingsIntent.OpenTimePicker) },
+                    onMessageChange = { onIntent(SettingsIntent.UpdateNotificationMessage(it)) }
                 )
             }
 
@@ -216,12 +222,15 @@ private fun CustomizationSection(
 private fun NotificationsSection(
     isEnabled: Boolean,
     reminderTime: String,
+    notificationMessage: String,          // ← أضف
     onToggle: (Boolean) -> Unit,
     onTimeClick: () -> Unit,
+    onMessageChange: (String) -> Unit     // ← أضف
 ) {
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
 
     SettingsSection(title = stringResource(R.string.item_notifications)) {
+
         SettingsItemWithToggle(
             label = stringResource(R.string.notif_daily_reminder),
             subLabel = stringResource(R.string.notif_daily_reminder_desc),
@@ -238,15 +247,102 @@ private fun NotificationsSection(
             Column {
                 HorizontalDivider(
                     color = MaterialTheme.colorScheme.outlineVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
+
+                // ← وقت التذكير
                 ReminderTimeRow(
                     isRtl = isRtl,
                     timeDisplay = reminderTime,
-                    onClick = onTimeClick,
+                    onClick = onTimeClick
+                )
+
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                // ← خانة نص الإشعار
+                NotificationMessageField(
+                    message = notificationMessage,
+                    isRtl = isRtl,
+                    onMessageChange = onMessageChange
                 )
             }
         }
+    }
+}
+
+// ======= Notification Message Field =======
+@Composable
+private fun NotificationMessageField(
+    message: String,
+    isRtl: Boolean,
+    onMessageChange: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            SettingsIconBox(Icons.Outlined.EditNote)
+            Text(
+                text = if (isRtl) "نص الإشعار" else "Notification Message",
+                fontSize = 15.sp,
+                fontFamily = ManropeFontFamily,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+
+        OutlinedTextField(
+            value = message,
+            onValueChange = onMessageChange,
+            placeholder = {
+                Text(
+                    text = if (isRtl)
+                        "اكتب نص الإشعار... (اتركه فارغاً للنص الافتراضي)"
+                    else
+                        "Write notification text... (leave empty for default)",
+                    fontFamily = ManropeFontFamily,
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            minLines = 2,
+            maxLines = 3,
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
+            ),
+            textStyle = androidx.compose.ui.text.TextStyle(
+                fontFamily = ManropeFontFamily,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurface
+            ),
+            supportingText = {
+                Text(
+                    text = "${message.length}/100",
+                    fontFamily = ManropeFontFamily,
+                    fontSize = 11.sp,
+                    color = if (message.length > 100)
+                        MaterialTheme.colorScheme.error
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = if (isRtl) TextAlign.Start else TextAlign.End
+                )
+            }
+        )
     }
 }
 

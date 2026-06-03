@@ -16,4 +16,7 @@ interface TaskDao {
 
     @Query("DELETE FROM tasks_table WHERE noteId = :noteId")
     suspend fun deleteTasksByNoteId(noteId: Int)
+
+    @Query("SELECT * FROM tasks_table WHERE noteId = :noteId")
+    suspend fun getTasksByNoteId(noteId: Int): List<TaskEntity>
 }

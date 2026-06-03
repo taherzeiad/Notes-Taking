@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.contentpager)
     implementation(libs.androidx.ui)
+    implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.generativeai)
     implementation(libs.androidx.constraintlayout)
     testImplementation(libs.junit)
@@ -77,7 +78,7 @@ dependencies {
 
     // OkHttp للتصحيح (Logging) - مهم جداً لمعرفة سبب الرفض من السيرفر
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-    val room_version = "2.6.1" // أو النسخة التي تستخدمها
+    val room_version = "2.7.1" // أو النسخة التي تستخدمها
 
     implementation("androidx.room:room-runtime:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
