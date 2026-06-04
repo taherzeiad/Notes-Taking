@@ -51,7 +51,7 @@ object GroqService {
     }
 
     suspend fun extractTasksFromNote(noteTitle: String, noteContent: String): List<String> {
-        val langInstruction = getResponseLanguageInstruction()
+
         val isArabic = Locale.getDefault().language == "ar"
 
         val request = ChatRequest(
@@ -59,18 +59,38 @@ object GroqService {
                 ChatMessage(
                     "system", if (isArabic) {
                         """أنت مساعد متخصص في استخراج المهام من الملاحظات.
-استخرج المهام القابلة للتنفيذ من النص فقط.
-أعد قائمة المهام، كل مهمة في سطر منفصل.
-لا تضف أرقاماً أو نقاطاً أو أي تنسيق إضافي.
-إذا لم تجد مهاماً واضحة، أعد كلمة NONE فقط.
-$langInstruction"""
+
+استخرج المهام القابلة للتنفيذ فقط.
+
+مهم جداً:
+انسخ المهمة كما هي حرفياً من النص الأصلي.
+لا تترجم.
+لا تعيد الصياغة.
+لا تختصر.
+لا تعدل أي كلمة.
+حافظ على النص الأصلي كما هو تماماً.
+
+كل مهمة في سطر منفصل.
+
+إذا لم توجد مهام واضحة أعد NONE فقط.
+"""
                     } else {
                         """You are an assistant specialized in extracting tasks from notes.
+
 Extract only actionable tasks from the text.
-Return a list of tasks, one per line.
-Do not add numbers, bullets, or any extra formatting.
-If no clear tasks are found, return the word NONE only.
-$langInstruction"""
+
+IMPORTANT:
+Copy tasks exactly from the original note.
+Do not translate.
+Do not rephrase.
+Do not summarize.
+Do not modify any words.
+Preserve the original wording exactly.
+
+Return one task per line.
+
+If no clear tasks are found, return NONE only.
+"""
                     }
                 ), ChatMessage(
                     "user",
