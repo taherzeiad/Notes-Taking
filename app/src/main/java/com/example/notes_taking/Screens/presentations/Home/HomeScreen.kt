@@ -380,8 +380,7 @@ fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
     ) {
         val tabs = remember {
             listOf(
-          import androidx.compose.ui.graphics.Color.Companion.White
-      Triple("Settings", Icons.Outlined.Settings, Route.Settings.route),
+                Triple("Settings", Icons.Outlined.Settings, Route.Settings.route),
                 Triple("Tasks", Icons.Outlined.CheckCircle, Route.Tasks.route),
                 Triple("Notes", Icons.Outlined.NoteAlt, Route.Notes.route),
                 Triple("Home", Icons.Filled.Home, Route.Home.route)
