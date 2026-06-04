@@ -376,11 +376,12 @@ fun WaveChart(modifier: Modifier = Modifier) {
 @Composable
 fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.background, tonalElevation = 4.dp
+        containerColor = MaterialTheme.colorScheme.primaryContainer
     ) {
         val tabs = remember {
             listOf(
-                Triple("Settings", Icons.Outlined.Settings, Route.Settings.route),
+          import androidx.compose.ui.graphics.Color.Companion.White
+      Triple("Settings", Icons.Outlined.Settings, Route.Settings.route),
                 Triple("Tasks", Icons.Outlined.CheckCircle, Route.Tasks.route),
                 Triple("Notes", Icons.Outlined.NoteAlt, Route.Notes.route),
                 Triple("Home", Icons.Filled.Home, Route.Home.route)
@@ -397,33 +398,33 @@ fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
         tabs.forEachIndexed { index, (_, icon, route) ->
             NavigationBarItem(
                 selected = selectedTab == index, onClick = {
-                if (selectedTab != index) {
-                    navController.navigate(route) {
-                        popUpTo(Route.Home.route) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                    if (selectedTab != index) {
+                        navController.navigate(route) {
+                            popUpTo(Route.Home.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
-                }
-            }, icon = {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = labels[index],
-                    modifier = Modifier.size(24.dp)
+                }, icon = {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = labels[index],
+                        modifier = Modifier.size(24.dp)
+                    )
+                }, label = {
+                    Text(
+                        text = labels[index],
+                        fontSize = 10.sp,
+                        fontFamily = ManropeFontFamily,
+                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                    )
+                }, colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                 )
-            }, label = {
-                Text(
-                    text = labels[index],
-                    fontSize = 10.sp,
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
-                )
-            }, colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = MaterialTheme.colorScheme.primary,
-                selectedTextColor = MaterialTheme.colorScheme.primary,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-            )
             )
         }
     }
@@ -491,9 +492,7 @@ fun QuickActionButton(
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                alpha = 0.5f
-            )
+            containerColor = MaterialTheme.colorScheme.primaryContainer
         )
     ) {
         Row(
