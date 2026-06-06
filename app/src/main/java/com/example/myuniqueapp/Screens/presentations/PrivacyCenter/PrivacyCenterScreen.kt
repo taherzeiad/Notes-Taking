@@ -1,5 +1,6 @@
 package com.example.myuniqueapp.Screens.presentations.Privacy
 
+import com.notestalking.myuniqueapp.R
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings

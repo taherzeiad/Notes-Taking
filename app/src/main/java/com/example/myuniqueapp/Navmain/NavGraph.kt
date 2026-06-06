@@ -4,7 +4,7 @@
 
 package com.example.myuniqueapp.Navmain
 
-import SummaryViewModel
+import com.example.myuniqueapp.Screens.presentations.Summary.SummaryViewModel
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build

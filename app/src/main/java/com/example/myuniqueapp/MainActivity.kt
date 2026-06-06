@@ -24,6 +24,8 @@ import com.example.myuniqueapp.Screens.presentations.Settings.SettingsViewModel
 import com.example.myuniqueapp.ui.theme.NotesTakingTheme
 import com.example.myuniqueapp.utils.LocaleUtils
 import java.util.Locale
+import com.notestalking.myuniqueapp.R
+
 
 class MainActivity : ComponentActivity() {
 

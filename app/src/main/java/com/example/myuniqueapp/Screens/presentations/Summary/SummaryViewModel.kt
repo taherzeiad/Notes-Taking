@@ -1,3 +1,5 @@
+package com.example.myuniqueapp.Screens.presentations.Summary
+
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -5,9 +7,6 @@ import com.example.myuniqueapp.API.Gemini.GeminiService
 import com.example.myuniqueapp.API.Gemini.SummaryAiProvider
 import com.example.myuniqueapp.API.Groq.GroqService
 import com.example.myuniqueapp.Repository.NoteRepository
-import com.example.myuniqueapp.Screens.presentations.Summary.DailySummary
-import com.example.myuniqueapp.Screens.presentations.Summary.SummaryRateLimiter
-import com.example.myuniqueapp.Screens.presentations.Summary.SummaryUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

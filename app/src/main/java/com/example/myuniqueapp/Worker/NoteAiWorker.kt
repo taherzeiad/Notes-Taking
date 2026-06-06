@@ -38,7 +38,8 @@ class NoteAiWorker(
                 // 1. تصنيف الملاحظة
                 if (needsClassification) {
                     val category = try {
-                        val c = GroqService.classifyNoteContent(content)
+                        val c =
+                            GroqService.classifyNoteContent(content)
                         when {
                             c.contains("Philo", ignoreCase = true) -> "Philosophy"
                             c.contains("Liter", ignoreCase = true) -> "Literature"

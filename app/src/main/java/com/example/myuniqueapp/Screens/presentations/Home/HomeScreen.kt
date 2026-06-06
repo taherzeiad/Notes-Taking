@@ -41,6 +41,8 @@ import com.example.myuniqueapp.RoomDatabase.Note
 import com.example.myuniqueapp.Screens.presentations.AppTopBar
 import com.example.myuniqueapp.ui.theme.ManropeFontFamily
 import com.example.myuniqueapp.ui.theme.MansalvaFontFamily
+import com.notestalking.myuniqueapp.R
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable

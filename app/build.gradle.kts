@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.myuniqueapp"
+    namespace = "com.notestalking.myuniqueapp"
     compileSdk {
         version = release(36)
     }
@@ -38,8 +38,8 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
-        compose = true
         buildConfig = true
+        compose = true
     }
 }
 secrets {

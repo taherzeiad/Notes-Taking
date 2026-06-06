@@ -29,6 +29,8 @@ import androidx.navigation.NavHostController
 import com.example.myuniqueapp.Navmain.Route
 import com.example.myuniqueapp.ui.theme.ManropeFontFamily
 import com.example.myuniqueapp.ui.theme.MansalvaFontFamily
+import com.notestalking.myuniqueapp.R
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

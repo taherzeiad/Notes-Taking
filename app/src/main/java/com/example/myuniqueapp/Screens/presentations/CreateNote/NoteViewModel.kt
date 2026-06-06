@@ -6,7 +6,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myuniqueapp.API.Groq.GroqService
-import com.example.myuniqueapp.R
+import com.notestalking.myuniqueapp.R
 import com.example.myuniqueapp.Repository.NoteRepository
 import com.example.myuniqueapp.RoomDatabase.Note
 import com.example.myuniqueapp.RoomDatabase.TaskEntity

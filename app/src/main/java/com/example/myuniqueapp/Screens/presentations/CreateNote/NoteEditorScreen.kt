@@ -46,6 +46,8 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.notestalking.myuniqueapp.R
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Screen

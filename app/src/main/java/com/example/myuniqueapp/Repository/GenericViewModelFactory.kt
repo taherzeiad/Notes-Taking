@@ -1,6 +1,6 @@
 package com.example.myuniqueapp.Repository
 
-import SummaryViewModel
+import com.example.myuniqueapp.Screens.presentations.Summary.SummaryViewModel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

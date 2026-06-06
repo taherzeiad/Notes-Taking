@@ -1,6 +1,6 @@
 package com.example.myuniqueapp.Screens.presentations.Summary
 
-import SummaryViewModel
+import com.example.myuniqueapp.Screens.presentations.Summary.SummaryViewModel
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -58,8 +58,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.myuniqueapp.R
 import com.example.myuniqueapp.ui.theme.ManropeFontFamily
+import com.notestalking.myuniqueapp.R
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

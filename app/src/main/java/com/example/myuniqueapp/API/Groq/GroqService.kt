@@ -1,6 +1,9 @@
 package com.example.myuniqueapp.API.Groq
 
 import android.util.Log
+import com.example.myuniqueapp.API.Groq.ChatMessage
+import com.example.myuniqueapp.API.Groq.ChatRequest
+import com.example.myuniqueapp.API.Groq.RetrofitClient
 import com.example.myuniqueapp.BuildConfig
 import java.util.Locale
 

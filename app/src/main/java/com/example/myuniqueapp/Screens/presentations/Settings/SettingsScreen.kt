@@ -34,6 +34,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.myuniqueapp.Navmain.Route
+import com.notestalking.myuniqueapp.R
 import com.example.myuniqueapp.Screens.presentations.AppTopBar
 import com.example.myuniqueapp.Screens.presentations.Home.BottomNavBar
 import com.example.myuniqueapp.ui.theme.ManropeFontFamily

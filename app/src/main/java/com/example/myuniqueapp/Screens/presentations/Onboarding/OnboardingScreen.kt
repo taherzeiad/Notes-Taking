@@ -2,6 +2,7 @@ package com.example.myuniqueapp.Screens.presentations.Onboarding
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
+import com.notestalking.myuniqueapp.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,7 +45,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myuniqueapp.R
 import com.example.myuniqueapp.ui.theme.ManropeFontFamily
 import com.example.myuniqueapp.ui.theme.MansalvaFontFamily
 
