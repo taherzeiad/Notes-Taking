@@ -1,7 +1,7 @@
 package com.example.myuniqueapp.API.Gemini
 
 import android.util.Log
-import com.example.myuniqueapp.BuildConfig
+import com.notestalking.myuniqueapp.BuildConfig
 import java.util.Locale
 
 object GeminiService {
