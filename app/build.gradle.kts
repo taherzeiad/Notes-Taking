@@ -8,13 +8,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.notes_taking"
+    namespace = "com.notestalking.myuniqueapp"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "com.example.notes_taking"
+        applicationId = "com.notestalking.myuniqueapp"
         minSdk = 23
         targetSdk = 36
         versionCode = 1
@@ -38,8 +38,8 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
-        compose = true
         buildConfig = true
+        compose = true
     }
 }
 secrets {
