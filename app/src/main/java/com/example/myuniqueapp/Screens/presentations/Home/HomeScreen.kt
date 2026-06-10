@@ -377,7 +377,7 @@ fun WaveChart(modifier: Modifier = Modifier) {
 @Composable
 fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.primaryContainer
+        containerColor = MaterialTheme.colorScheme.surface
     ) {
         val tabs = remember {
             listOf(
