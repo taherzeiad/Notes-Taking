@@ -80,15 +80,5 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
                 textAlign = TextAlign.Center
             )
         }
-
-        Text(
-            text = stringResource(R.string.splash_designed_by),
-            fontSize = 12.sp,
-            fontFamily = ManropeFontFamily,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 32.dp)
-        )
     }
 }
