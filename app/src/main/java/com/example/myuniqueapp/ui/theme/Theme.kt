@@ -15,18 +15,13 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 // ============================================
-// Light Mode Colors
+// Light Mode Colors — لا تغيير
 // ============================================
 val PrimaryBrown = Color(0xFF5D4037)
 val PrimaryLight = Color(0xFFF2F2F7)
-
-// ============================================
-// Light Mode Colors
-// ============================================
-val SugaryWhite = Color(0xFFF2F2F7)    // ← خلفية الشاشات — أبيض بدرجة رمادية خفيفة
-val SurfaceWhite = Color(0xFFFFFFFF)   // ← الكاردات — أبيض نقي
-val SnowyWhite = Color(0xFFEFEFF4)     // ← surfaceVariant والتابات
-
+val SugaryWhite = Color(0xFFF2F2F7)
+val SurfaceWhite = Color(0xFFFFFFFF)
+val SnowyWhite = Color(0xFFEFEFF4)
 val TextPrimaryLight = Color(0xFF211A18)
 val TextSecondaryLight = Color(0xFF756E6C)
 val OutlineLight = Color(0xFFD3C2BC)
@@ -34,21 +29,47 @@ val AirForceBlue = Color(0xFF005A9C)
 val ErrorRed = Color(0xFFBA1A1A)
 
 // ============================================
-// Dark Mode Colors — متناسقة مع الـ Light
+// Dark Mode Colors — محترفة وعصرية
 // ============================================
-val DarkBackground = Color(0xFF1C1612)    // بني غامق جداً — يتناسب مع البني الفاتح
-val DarkSurface = Color(0xFF26201D)       // سطح الكاردات
-val DarkSurfaceVariant = Color(0xFF32281F) // للـ inputs والتابات
-val DarkPrimary = Color(0xFFBB9085)       // بني فاتح مضيء للـ Dark
-val DarkPrimaryContainer = Color(0xFF4A342D) // container غامق بني
-val DarkSecondaryContainer = Color(0xFF3A2E28)
-val DarkOnSecondaryContainer = Color(0xFFCCB8B1)
-val DarkTextPrimary = Color(0xFFF2E4DF)
-val DarkTextSecondary = Color(0xFFA89490)
-val DarkOutline = Color(0xFF5C4840)
+
+// ← خلفية عميقة نظيفة — رمادي داكن محايد (مش بني)
+val DarkBackground = Color(0xFF121212)
+
+// ← سطح الكاردات — رمادي داكن مرتفع قليلاً
+val DarkSurface = Color(0xFF1E1E1E)
+
+// ← للـ inputs والتابات والـ surfaceVariant
+val DarkSurfaceVariant = Color(0xFF2C2C2C)
+
+// ← Primary محترف — بني دافئ مضيء (يتناسق مع الـ Light)
+val DarkPrimary = Color(0xFFD4A574)
+
+// ← Primary Container — داكن دافئ
+val DarkPrimaryContainer = Color(0xFF3D2B1F)
+
+// ← Secondary
+val DarkSecondary = Color(0xFFBFA58A)
+val DarkSecondaryContainer = Color(0xFF2A2218)
+val DarkOnSecondaryContainer = Color(0xFFE0CEBC)
+
+// ← Tertiary — بيج دافئ
+val DarkTertiary = Color(0xFFA89070)
+val DarkTertiaryContainer = Color(0xFF2E2318)
+
+// ← نصوص
+val DarkTextPrimary = Color(0xFFEDEDED)
+val DarkTextSecondary = Color(0xFF9E9E9E)
+
+// ← حدود
+val DarkOutline = Color(0xFF3A3A3A)
+val DarkOutlineVariant = Color(0xFF2A2A2A)
+
+// ← Error
+val DarkError = Color(0xFFCF6679)
+val DarkErrorContainer = Color(0xFF3B1219)
 
 // ============================================
-// Light Color Scheme
+// Light Color Scheme — لا تغيير إطلاقاً
 // ============================================
 private val LightColorScheme = lightColorScheme(
     primary = PrimaryBrown,
@@ -90,42 +111,50 @@ private val LightColorScheme = lightColorScheme(
 )
 
 // ============================================
-// Dark Color Scheme — متناسق مع Light
+// Dark Color Scheme — محترف وعصري
 // ============================================
 private val DarkColorScheme = darkColorScheme(
+    // ← Primary: بني ذهبي دافئ مضيء
     primary = DarkPrimary,
-    onPrimary = Color(0xFF3B1A12),
+    onPrimary = Color(0xFF1A0F08),
     primaryContainer = DarkPrimaryContainer,
-    onPrimaryContainer = Color(0xFFFFDBD1),
+    onPrimaryContainer = Color(0xFFFFDCBE),
 
-    secondary = Color(0xFFA8897E),
-    onSecondary = Color(0xFF2E1A14),
+    // ← Secondary: بيج دافئ
+    secondary = DarkSecondary,
+    onSecondary = Color(0xFF1A1208),
     secondaryContainer = DarkSecondaryContainer,
     onSecondaryContainer = DarkOnSecondaryContainer,
 
-    tertiary = Color(0xFF9C8678),
-    onTertiary = Color(0xFF2A1C14),
-    tertiaryContainer = Color(0xFF3D2D24),
-    onTertiaryContainer = Color(0xFFD9C2B8),
+    // ← Tertiary: أدفأ قليلاً
+    tertiary = DarkTertiary,
+    onTertiary = Color(0xFF1A1208),
+    tertiaryContainer = DarkTertiaryContainer,
+    onTertiaryContainer = Color(0xFFD9C4AC),
 
+    // ← Backgrounds
     background = DarkBackground,
     onBackground = DarkTextPrimary,
 
+    // ← Surfaces
     surface = DarkSurface,
     onSurface = DarkTextPrimary,
     surfaceVariant = DarkSurfaceVariant,
     onSurfaceVariant = DarkTextSecondary,
 
+    // ← Outlines
     outline = DarkOutline,
-    outlineVariant = Color(0xFF3D2E28),
+    outlineVariant = DarkOutlineVariant,
 
-    error = Color(0xFFFFB4AB),
-    onError = Color(0xFF690005),
-    errorContainer = Color(0xFF93000A),
-    onErrorContainer = Color(0xFFFFDAD6),
+    // ← Error
+    error = DarkError,
+    onError = Color(0xFF1A0008),
+    errorContainer = DarkErrorContainer,
+    onErrorContainer = Color(0xFFFFB3C1),
 
-    inverseSurface = Color(0xFFF2E4DF),
-    inverseOnSurface = Color(0xFF26201D),
+    // ← Inverse
+    inverseSurface = Color(0xFFEDEDED),
+    inverseOnSurface = Color(0xFF1E1E1E),
     inversePrimary = PrimaryBrown,
 
     scrim = Color(0xFF000000)
