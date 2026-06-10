@@ -239,7 +239,7 @@ fun EmptyNoteCard(onAddNote: () -> Unit) {
                 Icon(
                     imageVector = Icons.Outlined.NoteAlt,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(32.dp)
                 )
             }
