@@ -483,7 +483,7 @@ fun TaskTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
             .clip(RoundedCornerShape(20.dp))
             .background(
                 if (isSelected) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.primaryContainer,
+                else MaterialTheme.colorScheme.surface,
             )
             .clickable { onClick() }
             .padding(horizontal = 18.dp, vertical = 10.dp),
