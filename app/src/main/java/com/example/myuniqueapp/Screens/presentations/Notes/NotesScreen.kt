@@ -409,7 +409,7 @@ fun EmptyNotesState(message: String) {
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.MenuBook,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(36.dp)
             )
         }
