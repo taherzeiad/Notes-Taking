@@ -217,10 +217,10 @@ private fun CustomizationSection(
 private fun NotificationsSection(
     isEnabled: Boolean,
     reminderTime: String,
-    notificationMessage: String,          // ← أضف
+    notificationMessage: String,
     onToggle: (Boolean) -> Unit,
     onTimeClick: () -> Unit,
-    onMessageChange: (String) -> Unit     // ← أضف
+    onMessageChange: (String) -> Unit
 ) {
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
 
@@ -245,7 +245,6 @@ private fun NotificationsSection(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
 
-                // ← وقت التذكير
                 ReminderTimeRow(
                     isRtl = isRtl, timeDisplay = reminderTime, onClick = onTimeClick
                 )
@@ -255,7 +254,6 @@ private fun NotificationsSection(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
 
-                // ← خانة نص الإشعار
                 NotificationMessageField(
                     message = notificationMessage, isRtl = isRtl, onMessageChange = onMessageChange
                 )
