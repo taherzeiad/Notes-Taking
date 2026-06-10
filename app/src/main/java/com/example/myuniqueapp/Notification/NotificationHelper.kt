@@ -7,7 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import com.example.myuniqueapp.MainActivity
+import com.notestalking.myuniqueapp.MainActivity
 import com.notestalking.myuniqueapp.R
 
 object NotificationHelper {

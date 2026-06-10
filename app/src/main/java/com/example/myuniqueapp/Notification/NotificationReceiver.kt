@@ -1,8 +1,10 @@
-package com.example.myuniqueapp.Notification
+package com.notestalking.myuniqueapp.Notification
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.example.myuniqueapp.Notification.NotificationHelper
+import com.example.myuniqueapp.Notification.NotificationScheduler
 
 class NotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {

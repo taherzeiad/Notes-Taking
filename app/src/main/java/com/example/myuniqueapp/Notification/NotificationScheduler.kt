@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import com.notestalking.myuniqueapp.Notification.NotificationReceiver
 import java.util.Calendar
 
 object NotificationScheduler {
