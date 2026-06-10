@@ -555,7 +555,7 @@ fun SettingsIconBox(icon: ImageVector) {
     Box(
         modifier = Modifier
             .size(36.dp)
-            .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
+            .background(MaterialTheme.colorScheme.surface, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
