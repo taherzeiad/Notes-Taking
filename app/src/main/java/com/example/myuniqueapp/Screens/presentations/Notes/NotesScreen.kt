@@ -386,7 +386,7 @@ fun CategoryTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
             fontSize = 14.sp,
             fontFamily = ManropeFontFamily,
             color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.ExtraBold
+            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold
         )
     }
 }
