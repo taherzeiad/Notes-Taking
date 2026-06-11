@@ -510,9 +510,9 @@ fun QuickActionButton(
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = label,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Bold,
                 fontFamily = ManropeFontFamily
             )
         }
