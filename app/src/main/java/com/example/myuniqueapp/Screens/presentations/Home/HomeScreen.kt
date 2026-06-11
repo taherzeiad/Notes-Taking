@@ -461,7 +461,7 @@ fun AICardSection(navController: NavController) {
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = MansalvaFontFamily,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                color = MaterialTheme.colorScheme.onBackground,
                 lineHeight = 26.sp
             )
             Spacer(modifier = Modifier.height(16.dp))
