@@ -321,7 +321,6 @@ class NoteViewModel(
                     .map { it.text.trim() }
                     .filter { it.isNotBlank() }
 
-                // ← احفظ الملاحظة مباشرة بفئة General — Worker سيُحدّثها لاحقاً
                 val note = Note(
                     id = if (noteId > 0) noteId else 0,
                     title = finalTitle,
@@ -330,6 +329,7 @@ class NoteViewModel(
                     category = "General",
                     imageUri = imageUri,
                     date = date,
+                    updatedAt = System.currentTimeMillis()
                 )
 
                 if (noteId > 0) repository.updateNote(note)
