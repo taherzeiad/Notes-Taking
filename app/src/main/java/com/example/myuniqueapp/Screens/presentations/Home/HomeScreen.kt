@@ -239,7 +239,7 @@ fun EmptyNoteCard(onAddNote: () -> Unit) {
                 Icon(
                     imageVector = Icons.Outlined.NoteAlt,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(32.dp)
                 )
             }
@@ -377,7 +377,7 @@ fun WaveChart(modifier: Modifier = Modifier) {
 @Composable
 fun BottomNavBar(navController: NavHostController, selectedTab: Int) {
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.primaryContainer
+        containerColor = MaterialTheme.colorScheme.surface
     ) {
         val tabs = remember {
             listOf(
@@ -435,7 +435,7 @@ fun AICardSection(navController: NavController) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -492,7 +492,7 @@ fun QuickActionButton(
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Row(

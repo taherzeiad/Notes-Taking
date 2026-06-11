@@ -83,9 +83,7 @@ fun SettingsScreen(
                 viewModel = viewModel,
                 hasNotifPermission = hasNotifPermission,
                 requestPermission = {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    }
+                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 },
             )
         },
@@ -101,9 +99,8 @@ private fun handleIntent(
     when (intent) {
         is SettingsIntent.ToggleDarkMode -> viewModel.toggleDarkMode(intent.enabled)
         is SettingsIntent.ToggleNotifications -> {
-            val needsPermission = intent.enabled &&
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                    !hasNotifPermission
+            val needsPermission =
+                intent.enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotifPermission
             if (needsPermission) requestPermission()
             else viewModel.toggleNotifications(intent.enabled)
         }
@@ -113,8 +110,7 @@ private fun handleIntent(
             viewModel.dismissTimePicker()
         }
 
-        is SettingsIntent.UpdateNotificationMessage ->
-            viewModel.updateNotificationMessage(intent.message)
+        is SettingsIntent.UpdateNotificationMessage -> viewModel.updateNotificationMessage(intent.message)
 
         is SettingsIntent.OpenTimePicker -> viewModel.openTimePicker()
         is SettingsIntent.DismissTimePicker -> viewModel.dismissTimePicker()
@@ -160,8 +156,7 @@ private fun SettingsContent(
                     notificationMessage = state.notificationMessage,
                     onToggle = { onIntent(SettingsIntent.ToggleNotifications(it)) },
                     onTimeClick = { onIntent(SettingsIntent.OpenTimePicker) },
-                    onMessageChange = { onIntent(SettingsIntent.UpdateNotificationMessage(it)) }
-                )
+                    onMessageChange = { onIntent(SettingsIntent.UpdateNotificationMessage(it)) })
             }
 
             item { PrivacySection(navController = navController) }
@@ -222,10 +217,10 @@ private fun CustomizationSection(
 private fun NotificationsSection(
     isEnabled: Boolean,
     reminderTime: String,
-    notificationMessage: String,          // ← أضف
+    notificationMessage: String,
     onToggle: (Boolean) -> Unit,
     onTimeClick: () -> Unit,
-    onMessageChange: (String) -> Unit     // ← أضف
+    onMessageChange: (String) -> Unit
 ) {
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
 
@@ -250,11 +245,8 @@ private fun NotificationsSection(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
 
-                // ← وقت التذكير
                 ReminderTimeRow(
-                    isRtl = isRtl,
-                    timeDisplay = reminderTime,
-                    onClick = onTimeClick
+                    isRtl = isRtl, timeDisplay = reminderTime, onClick = onTimeClick
                 )
 
                 HorizontalDivider(
@@ -262,11 +254,8 @@ private fun NotificationsSection(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
 
-                // ← خانة نص الإشعار
                 NotificationMessageField(
-                    message = notificationMessage,
-                    isRtl = isRtl,
-                    onMessageChange = onMessageChange
+                    message = notificationMessage, isRtl = isRtl, onMessageChange = onMessageChange
                 )
             }
         }
@@ -276,9 +265,7 @@ private fun NotificationsSection(
 // ======= Notification Message Field =======
 @Composable
 private fun NotificationMessageField(
-    message: String,
-    isRtl: Boolean,
-    onMessageChange: (String) -> Unit
+    message: String, isRtl: Boolean, onMessageChange: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -305,10 +292,8 @@ private fun NotificationMessageField(
             onValueChange = onMessageChange,
             placeholder = {
                 Text(
-                    text = if (isRtl)
-                        "اكتب نص الإشعار... (اتركه فارغاً للنص الافتراضي)"
-                    else
-                        "Write notification text... (leave empty for default)",
+                    text = if (isRtl) "اكتب نص الإشعار... (اتركه فارغاً للنص الافتراضي)"
+                    else "Write notification text... (leave empty for default)",
                     fontFamily = ManropeFontFamily,
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
@@ -334,15 +319,12 @@ private fun NotificationMessageField(
                     text = "${message.length}/100",
                     fontFamily = ManropeFontFamily,
                     fontSize = 11.sp,
-                    color = if (message.length > 100)
-                        MaterialTheme.colorScheme.error
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    color = if (message.length > 100) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = if (isRtl) TextAlign.Start else TextAlign.End
                 )
-            }
-        )
+            })
     }
 }
 
@@ -573,7 +555,7 @@ fun SettingsIconBox(icon: ImageVector) {
     Box(
         modifier = Modifier
             .size(36.dp)
-            .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
+            .background(MaterialTheme.colorScheme.surface, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Icon(

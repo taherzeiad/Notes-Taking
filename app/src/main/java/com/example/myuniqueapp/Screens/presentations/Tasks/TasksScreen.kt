@@ -483,7 +483,7 @@ fun TaskTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
             .clip(RoundedCornerShape(20.dp))
             .background(
                 if (isSelected) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.secondaryContainer,
+                else MaterialTheme.colorScheme.surface,
             )
             .clickable { onClick() }
             .padding(horizontal = 18.dp, vertical = 10.dp),
@@ -494,7 +494,7 @@ fun TaskTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
             fontSize = 14.sp,
             fontFamily = ManropeFontFamily,
             color = if (isSelected) MaterialTheme.colorScheme.onPrimary
-            else MaterialTheme.colorScheme.onSecondaryContainer,
+            else MaterialTheme.colorScheme.onBackground,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
             maxLines = 1,
             softWrap = false,

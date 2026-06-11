@@ -1,6 +1,6 @@
 @file:Suppress("DEPRECATION")
 
-package com.example.myuniqueapp
+package com.notestalking.myuniqueapp
 
 import android.content.Context
 import android.os.Build
