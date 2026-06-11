@@ -316,7 +316,7 @@ fun NoteCardFooter(note: Note, onContinueClick: () -> Unit) {
             Text(
                 text = stringResource(R.string.continue_writing),
                 color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Bold,
                 fontFamily = ManropeFontFamily
             )
             Icon(
