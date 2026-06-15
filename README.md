@@ -88,7 +88,3 @@ Built entirely with **Kotlin** and **Jetpack Compose**, following **MVVM + Clean
 | Navigation | Jetpack Navigation Compose |
 | DI | Manual (Factory Pattern) |
 | Notifications | AlarmManager + BroadcastReceiver |
-
----
-
-## 📁 Project Structure
