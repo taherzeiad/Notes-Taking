@@ -48,3 +48,7 @@
 # ======= Room =======
 -keep class com.example.myuniqueapp.RoomDatabase.** { *; }
 -keepclassmembers class com.example.myuniqueapp.RoomDatabase.** { *; }
+
+# OkHttp Logging
+-dontwarn okhttp3.logging.**
+-keep class okhttp3.logging.** { *; }

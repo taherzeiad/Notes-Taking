@@ -16,54 +16,57 @@ if (localFile.exists()) {
 
 android {
     namespace = "com.notestalking.myuniqueapp"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.notestalking.myuniqueapp"
         minSdk = 23
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 4
+        versionName = "1.0.3"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
 
-    defaultConfig {
         buildConfigField(
-            "String",
-            "GROQ_API_KEY",
-            "\"${localProps.getProperty("GROQ_API_KEY", "")}\""
+            "String", "GROQ_API_KEY", "\"${localProps.getProperty("GROQ_API_KEY", "")}\""
         )
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
-
             isShrinkResources = true
 
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
         }
     }
+
+    bundle {
+        language { enableSplit = true }
+        density { enableSplit = true }
+        abi { enableSplit = true }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         buildConfig = true
         compose = true
     }
 }
+
 secrets {
     propertiesFileName = "local.properties"
 }
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -86,23 +89,22 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.compose.material:material-icons-core:1.6.7")
     implementation("io.coil-kt:coil-compose:2.6.0")
 
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
-    // Retrofit
+
+    // Retrofit & Gson
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
-
-    // OkHttp للتصحيح (Logging) - مهم جداً لمعرفة سبب الرفض من السيرفر
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-    val room_version = "2.7.1" // أو النسخة التي تستخدمها
 
+    // Room Database
+    val room_version = "2.7.1"
     implementation("androidx.room:room-runtime:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
-
-    // هذا هو السطر المفقود الذي سيقوم بإنشاء NoteDatabase_Impl
     ksp("androidx.room:room-compiler:$room_version")
 
     implementation("androidx.compose.material:material-icons-extended")
