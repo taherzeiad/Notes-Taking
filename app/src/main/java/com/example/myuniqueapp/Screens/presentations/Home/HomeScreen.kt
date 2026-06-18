@@ -41,6 +41,7 @@ import com.example.myuniqueapp.RoomDatabase.Note
 import com.example.myuniqueapp.Screens.presentations.AppTopBar
 import com.example.myuniqueapp.ui.theme.ManropeFontFamily
 import com.example.myuniqueapp.ui.theme.MansalvaFontFamily
+import com.example.myuniqueapp.utils.LocaleUtils.getTimeAgo
 import com.notestalking.myuniqueapp.R
 
 
@@ -303,6 +304,11 @@ fun NoteCardFooter(note: Note, onContinueClick: () -> Unit) {
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     Spacer(modifier = Modifier.height(12.dp))
 
+    // ← احسب الوقت المنقضي من updatedAt
+    val timeAgoText = remember(note.updatedAt) {
+        getTimeAgo(note.updatedAt)
+    }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -316,7 +322,7 @@ fun NoteCardFooter(note: Note, onContinueClick: () -> Unit) {
             Text(
                 text = stringResource(R.string.continue_writing),
                 color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Bold,
                 fontFamily = ManropeFontFamily
             )
             Icon(
@@ -326,17 +332,14 @@ fun NoteCardFooter(note: Note, onContinueClick: () -> Unit) {
                 modifier = Modifier.size(16.dp)
             )
         }
-        // هنا يمكنك لاحقاً حساب الفارق الزمني الحقيقي بدلاً من تثبيت القيمة "15"
-        val formattedTime = remember(note.date) { "15" }
         Text(
-            text = stringResource(R.string.edited_time_ago, formattedTime),
+            text = timeAgoText,
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontFamily = ManropeFontFamily
         )
     }
 }
-
 @Composable
 fun WaveChart(modifier: Modifier = Modifier) {
     val waveColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f)
@@ -461,7 +464,7 @@ fun AICardSection(navController: NavController) {
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = MansalvaFontFamily,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                color = MaterialTheme.colorScheme.onBackground,
                 lineHeight = 26.sp
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -510,9 +513,9 @@ fun QuickActionButton(
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = label,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Bold,
                 fontFamily = ManropeFontFamily
             )
         }

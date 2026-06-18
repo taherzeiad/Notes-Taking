@@ -495,7 +495,7 @@ fun TaskTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
             fontFamily = ManropeFontFamily,
             color = if (isSelected) MaterialTheme.colorScheme.onPrimary
             else MaterialTheme.colorScheme.onBackground,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold,
             maxLines = 1,
             softWrap = false,
         )

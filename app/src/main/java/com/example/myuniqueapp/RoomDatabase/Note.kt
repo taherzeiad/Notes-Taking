@@ -13,5 +13,6 @@ data class Note(
     val imageUri: String? = null,
     val audioPaths: String? = null,
     val date: String,
-    val isPinned: Boolean = false
+    val isPinned: Boolean = false,
+    val updatedAt: Long = System.currentTimeMillis()
 )

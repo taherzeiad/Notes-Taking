@@ -19,3 +19,32 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# ======= Retrofit =======
+-keepattributes Signature
+-keepattributes Exceptions
+-keepattributes *Annotation*
+-keep class retrofit2.** { *; }
+-keepclasseswithmembers class * {
+    @retrofit2.http.* <methods>;
+}
+
+# ======= OkHttp =======
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-keep class okio.** { *; }
+
+# ======= Gson =======
+-keepattributes SerializedName
+-keep class com.google.gson.** { *; }
+-dontwarn com.google.gson.**
+
+# ======= كلاسات الـ API — الأهم =======
+-keep class com.example.myuniqueapp.API.** { *; }
+-keepclassmembers class com.example.myuniqueapp.API.** { *; }
+
+# ======= Room =======
+-keep class com.example.myuniqueapp.RoomDatabase.** { *; }
+-keepclassmembers class com.example.myuniqueapp.RoomDatabase.** { *; }
