@@ -1,21 +1,24 @@
 package com.example.myuniqueapp.API.Groq
 
+import com.google.gson.annotations.SerializedName
+
 // طلب OpenAI يتوقع موديل ورائمة رسائل
 data class ChatRequest(
-    val model: String = "gpt-3.5-turbo",
-    val messages: List<ChatMessage>
+    @SerializedName("model") val model: String,
+    @SerializedName("messages") val messages: List<ChatMessage>,
 )
 
 data class ChatMessage(
-    val role: String, // "system" أو "user"
-    val content: String
+    @SerializedName("role") val role: String, @SerializedName("content") val content: String
 )
 
 // استجابة OpenAI
 data class ChatResponse(
-    val choices: List<Choice>
+    @SerializedName("choices") val choices: List<Choice>
 )
 
+
 data class Choice(
-    val message: ChatMessage
+    @SerializedName("message") val message: ChatMessage
 )
+
